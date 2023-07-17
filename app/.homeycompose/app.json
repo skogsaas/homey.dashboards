@@ -1,0 +1,37 @@
+{
+  "id": "skogsaas.dashboards",
+  "version": "0.1.0",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Dashboards"
+  },
+  "description": {
+    "en": "Create customizable dashboards for easy access and overview of your devices."
+  },
+  "category": [
+    "tools"
+  ],
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Marcus Skogsaas"
+  },
+  "brandColor": "#f4502a",
+  "source": "https://github.com/skogsaas/homey.dashboards",
+  "bugs": {
+    "url": "https://github.com/skogsaas/homey.dashboards/issues"
+  },
+  "tags": {
+    "en": [
+      "dashboard"
+    ]
+  }
+}
