@@ -16,7 +16,7 @@ let menuOpen: boolean = false;
 </script>
 
 <div class="widget-container">
-  <Card>
+  <Card style="height: 100%; width: 100%;">
     {#if editing}
       <div class="widget-edit">
         
@@ -46,11 +46,6 @@ let menuOpen: boolean = false;
 
 <style>
 .widget-container {
-  height: 100%;
-  width: 100%;
-}
-
-.widget-container :global(.mdc-card) {
   height: 100%;
   width: 100%;
 }

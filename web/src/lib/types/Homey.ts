@@ -84,7 +84,7 @@ export interface DeviceObj {
     images: Image[];
     color: string;
 
-    connect() : void;
+    connect() : Promise<void>;
     disconnect(): void;
     on(event: string, callback: any) : void;
 
