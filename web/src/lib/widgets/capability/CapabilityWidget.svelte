@@ -9,7 +9,7 @@
 
     export let settings: CapabilitySettings;
     export let devices: DeviceMap;
-
+    export let editing: boolean;
     export let homey: Homey;
 
     $: device = devices[settings.deviceId ?? ''];
@@ -36,7 +36,12 @@
                 <img class="widget-icon" src={url + device?.iconObj.url} alt={device?.icon} />
             {/await}
 
-            <span class="title">{device?.name}</span>
+            <div>
+                <div>{device?.name}</div>
+                <div class="subtitle">{capability?.title}</div>
+            </div>
+            
+            
         {/if}
     </svelte:fragment>
 
@@ -50,12 +55,26 @@
         {:else}
             {#if capability?.setable === true }
                 {#if capability.type === 'boolean'}
-                    <Switch style="align-self: center;" checked={value} on:SMUISwitch:change={(e) => setCapabilityValue(e.detail.selected)} />
+                    <Switch 
+                        style="align-self: center;" 
+                        checked={value} 
+                        on:SMUISwitch:change={(e) => setCapabilityValue(e.detail.selected)} 
+                        disabled={editing} 
+                    />
                 {:else if capability.type === 'number'}
                     {#if capability.min !== undefined && capability.max !== undefined && capability.decimals !== undefined}
-                        <Slider style="flex-grow: 1; align-self: center;" value={value} on:SMUISlider:change={(e) => setCapabilityValue(e.detail.value)} min={capability.min} max={capability.max} step={Math.pow(10, -1 * capability.decimals)} discrete />
+                        <Slider 
+                            style="flex-grow: 1; align-self: center;" 
+                            value={value} 
+                            on:SMUISlider:change={(e) => setCapabilityValue(e.detail.value)} 
+                            min={capability.min} 
+                            max={capability.max} 
+                            step={Math.pow(10, -1 * capability.decimals)} 
+                            discrete 
+                            disabled={editing} 
+                        />
                     {:else}
-                        <input type="number" min={capability.min} max={capability.max} />
+                        <input type="number" min={capability.min} max={capability.max} disabled={editing} />
                     {/if}
                 {/if}
             {:else}
@@ -72,9 +91,8 @@
     margin: 4px;
 }
 
-.title {
-    align-self: center;
-    margin-left: 10px;
+.subtitle {
+    font-weight: lighter;
 }
 
 .value {
