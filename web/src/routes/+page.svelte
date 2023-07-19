@@ -17,54 +17,77 @@ import List, { Item, Text } from '@smui/list';
 
 import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
 
-import settingsMock from '../settings.json';
 import WidgetContainer from '../lib/widgets/WidgetContainer.svelte';
 import UnknownWidget from '../lib/widgets/unknown/UnknownWidget.svelte';
 import UnknownEditor from '../lib/widgets/unknown/UnknownEditor.svelte';
 
 import type { WidgetSettings } from '../lib/types/Widgets';
-import type { CapabilityEvent, DeviceObj, Homey } from '../lib/types/Homey';
+import type { CapabilityEvent, DeviceMap, DeviceObj, Homey } from '../lib/types/Homey';
 import type { GridItem } from '../lib/types/Grid';
 
 import { page } from '$app/stores';
+import {
+		PUBLIC_HOMEY_URL,
+		PUBLIC_HOMEY_API_KEY
+} from '$env/static/public';
 
 let baseUrl: string | null;
 let apiKey: string | null;
 let homey: Homey;
 
-const breakpoint: number = 1200
-const columns: number = 24
+let devices: DeviceMap = {};
 
-const cols = [[breakpoint, columns]];
-let devices: { [key: string]: DeviceObj } = {};
+const smallBreakpoint = 640;
+const mediumBreakpoint = 768;
+const largeBreakpoint = 1024;
+const xlargeBreakpoint = 1280;
+const breakpoints: number[] = [smallBreakpoint, mediumBreakpoint, largeBreakpoint, xlargeBreakpoint];
+
+const smallColumns = 6;
+const mediumColumns = 12;
+const largeColumns = 18;
+const xlargeColumns = 24;
+const columns: number[] = [smallColumns, mediumColumns, largeColumns, xlargeColumns];
+
+const breakpointColumns = [
+  [smallBreakpoint, smallColumns], 
+  [mediumBreakpoint, mediumColumns],
+  [largeBreakpoint, largeColumns],
+  [xlargeBreakpoint, xlargeColumns]
+];
 let items: GridItem[] = [];
 
-let editing: boolean = false;
-
 onMount(async () => {
-    apiKey = $page.url.searchParams.get('apiKey');
+    // For development
+    if(PUBLIC_HOMEY_API_KEY) {
+      apiKey = PUBLIC_HOMEY_API_KEY;
+    }
+    else {
+      apiKey = $page.url.searchParams.get('apiKey');
+    }
+
+    if(PUBLIC_HOMEY_URL) {
+      baseUrl = PUBLIC_HOMEY_URL;
+    }
+    else {
+      baseUrl = $page.url.hostname;
+    }
     
     homey = await HomeyAPI.createLocalAPI({
       address: baseUrl,
       token: apiKey,
     });
 
-    await homey.devices.connect();
-    loadAppSettings();
+    await loadAppSettings();
 
+    await homey.devices.connect();
     devices = await homey.devices.getDevices();
 
-    homey.devices.on('device.create', (device: DeviceObj) => onDeviceCreate(device));
-
-    Object.values(devices).forEach((device: any) => {
-      device.connect();
+    Object.values(devices).forEach(async (device) => {
+      await device.connect();
       device.on('capability', (event: CapabilityEvent) => onCapabilityUpdate(device, event));
     });
 });
-
-function onDeviceCreate(device: DeviceObj) {
-  console.log(device);
-}
 
 function onCapabilityUpdate(device: DeviceObj, event: CapabilityEvent) {
   const capability = device.capabilitiesObj[event.capabilityId];
@@ -75,7 +98,9 @@ function onCapabilityUpdate(device: DeviceObj, event: CapabilityEvent) {
   devices[device.id] = device;
 }
 
-function onEdit() {
+let editing: boolean = false;
+
+function toggleEdit() {
   editing = !editing;
 
   if(!editing) {
@@ -84,8 +109,10 @@ function onEdit() {
   }
 
   items.forEach(item => {
-    item[columns].draggable = editing;
-    item[columns].resizable = editing;
+    columns.forEach(column => {
+      item[column].draggable = editing;
+      item[column].resizable = editing;
+    });
   });
 
   items = [...items];
@@ -103,24 +130,27 @@ function addWidget() {
     const settings = { id, type: addType };
 
     let newItem: GridItem = {
-        [columns]: gridHelp.item({
-            x: 0,
-            y: 0,
-            w: 3,
-            h: 3, 
-            resizable: editing,
-            draggable: editing
-        }),
         id,
         settings,
     };
 
-    let findOutPosition = gridHelp.findSpace(newItem, items, columns);
+    columns.forEach(column => {
+      newItem[column] = gridHelp.item({
+            x: 0,
+            y: 0,
+            w: 3,
+            h: 3,
+            resizable: editing,
+            draggable: editing
+        });
+
+        let findOutPosition = gridHelp.findSpace(newItem, items, column);
     
-    newItem[columns] = {
-      ...newItem[columns],
-      ...findOutPosition
-    };
+      newItem[column] = {
+        ...newItem[column],
+        ...findOutPosition
+      };
+    })
 
     items = [...items, newItem];
 
@@ -181,7 +211,6 @@ function closeWidgetSettings() {
 }
 
 function updateWidgetSettings(event: any) {
-  console.log(event.detail);
   settingsData = event.detail;
 
   items = items;
@@ -200,15 +229,19 @@ async function loadAppSettings() {
 }
 
 async function saveAppSettings() {
+  toggleEdit();
+  
   await homey.apps.setAppSetting({ id: 'skogsaas.dashboards', name: 'dashboards', value: items });
 }
 
 function onFixed(item: GridItem, fixed: boolean) {
   items.forEach((i: GridItem) => { 
     if(i.id == item.id) {
-      i[columns].fixed = fixed;
-      i[columns].draggable = !fixed;
-      i[columns].resizable = !fixed;
+      columns.forEach(column => {
+        i[column].fixed = fixed;
+        i[column].draggable = !fixed;
+        i[column].resizable = !fixed;
+      });
     }
    });
 
@@ -248,12 +281,12 @@ function onFixed(item: GridItem, fixed: boolean) {
       </Fab>
     {/if}
 
-    <Fab color="primary" on:click={() => onEdit()}>
+    <Fab color="primary" on:click={() => toggleEdit()}>
       <Icon class="material-icons">settings</Icon>
     </Fab>
   </div>
 
-  <Grid {cols} gap={[10, 10]} bind:items={items} rowHeight={50} let:item let:dataItem>
+  <Grid cols={breakpointColumns} gap={[10, 10]} bind:items={items} rowHeight={50} let:item let:dataItem>
       <WidgetContainer 
         {editing}
         fixed={item.fixed ?? false}
