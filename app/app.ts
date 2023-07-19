@@ -1,39 +1,21 @@
 import Homey from 'homey';
 import fs from 'fs';
 import path from 'path';
-import decompress from 'decompress';
+import extract from 'extract-zip';
 
 class MyApp extends Homey.App {
 
-  /**
-   * onInit is called when the app is initialized.
-   */
   async onInit() {
-    this.log(process.cwd());
-
-    this.deleteFiles('/userdata');
-
-    await this.extractFiles('/app/assets/build.zip', '/userdata');
-
-    this.listFiles('/userdata');
+    this.installArchive('/app/assets/build.zip', '/userdata');
   }
 
-  listFiles(dir: string) : void {
-    fs.readdirSync(dir).forEach(file => {
-      console.log(dir + ': ' + file);
+  async installArchive(archive: string, dir: string) {
+    const existing = fs.readdirSync(dir);
+    existing.forEach(file => {
+      fs.rmSync(path.join(dir, file), { recursive: true });
     });
-  }
 
-  deleteFiles(dir: string) {
-    fs.readdirSync(dir).forEach(file => {
-      const filePath = path.join(dir, file);
-        
-      fs.rmSync(filePath, { recursive: true, force: true });
-    });
-  }
-
-  async extractFiles(src: string, dst: string) {
-    await decompress(src, dst);
+    await extract(archive, { dir });
   }
 }
 
