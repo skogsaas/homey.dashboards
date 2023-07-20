@@ -3,6 +3,7 @@ export interface Homey {
 
     apps: AppManager;
     devices: DeviceManager;
+    insights: InsightsManager;
 }
 
 export interface AppManager {
@@ -25,6 +26,14 @@ export interface DeviceManager {
     on(event: string, callback: any) : void;
 
     getDevices() : Promise<DeviceMap>;
+}
+
+export interface InsightsManager {
+    connect() : void;
+    disconnect(): void;
+    on(event: string, callback: any) : void;
+
+    getLogEntries(opts: { id: string, uri: string, resolution?: string }) : Promise<any>;
 }
 
 export type AppMap = { [key: string]: AppObj; }
@@ -153,4 +162,20 @@ export interface CapabilityEvent {
     value: any;
     transactionId: string;
     transactionTime: number;
+}
+
+export interface LogEntries {
+    id: string;
+    uri: string;
+    start: Date;
+    end: Date;
+    step: number;
+    updatesIn: number;
+    values: LogEntry[];
+    lastValue: LogEntry;
+}
+
+export interface LogEntry {
+    t: Date;
+    v: number;
 }

@@ -26,10 +26,6 @@ import type { CapabilityEvent, DeviceMap, DeviceObj, Homey } from '../lib/types/
 import type { GridItem } from '../lib/types/Grid';
 
 import { page } from '$app/stores';
-import {
-		PUBLIC_HOMEY_URL,
-		PUBLIC_HOMEY_API_KEY
-} from '$env/static/public';
 
 let baseUrl: string | null;
 let apiKey: string | null;
@@ -58,20 +54,8 @@ const breakpointColumns = [
 let items: GridItem[] = [];
 
 onMount(async () => {
-    // For development
-    if(PUBLIC_HOMEY_API_KEY) {
-      apiKey = PUBLIC_HOMEY_API_KEY;
-    }
-    else {
-      apiKey = $page.url.searchParams.get('apiKey');
-    }
-
-    if(PUBLIC_HOMEY_URL) {
-      baseUrl = PUBLIC_HOMEY_URL;
-    }
-    else {
-      baseUrl = $page.url.hostname;
-    }
+    apiKey = $page.url.searchParams.get('apiKey');
+    baseUrl = $page.url.hostname;
     
     homey = await HomeyAPI.createLocalAPI({
       address: baseUrl,
