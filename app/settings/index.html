@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script
+      type="text/javascript"
+      src="/homey.js"
+      data-origin="settings"
+    ></script>
+  </head>
+
+  <body>
+    <p>
+      <span style="color: red;">WARNING:</span> The following urls contains a token with access to your Homey, so be careful sharing the urls. 
+      The token has a lifetime of about 2 weeks, after this the link is invalid and has to be re-retrieved through the app settings.
+      Future versions of this app will implement auto-refresh of the token.
+    </p>
+
+    <header class="homey-header">
+      <h1 class="homey-title">Cloud url</h1>
+    </header>
+
+    <p>
+      The following url is the dashboard cloud url for your Homey. This should work over the internet.
+    </p>
+    
+    <div class="homey-form-group">
+      <label class="homey-form-label" for="cloudUrl">Url</label>
+      <input class="homey-form-input" id="cloudUrl" type="text" value="" readonly />
+    </div>
+
+    <header class="homey-header">
+      <h1 class="homey-title">Local url</h1>
+    </header>
+
+    <p>
+      The following url is the dashboard local url for your Homey. This should only work on your local network.
+    </p>
+    
+    <div class="homey-form-group">
+      <label class="homey-form-label" for="localUrl">Url</label>
+      <input class="homey-form-input" id="localUrl" type="text" value="" readonly />
+    </div>
+
+    <script type="text/javascript">
+      function onHomeyReady(Homey) {
+        Homey.get("token", function (err, token) {
+          const urlPostfix = '/app/skogsaas.dashboards/userdata?apiKey=' + token;
+          
+          const cloudElement = document.getElementById("cloudUrl");
+          cloudElement.value = location.origin + urlPostfix;
+
+          Homey.get("homeyId", function (err, homeyId) {
+            const localElement = document.getElementById("localUrl");
+            localElement.value = 'http://homey-' + homeyId + '.local' + urlPostfix;
+          });
+        });
+
+        Homey.ready();
+      }
+    </script>
+    
+  </body>
+</html>

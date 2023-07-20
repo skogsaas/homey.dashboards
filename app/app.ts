@@ -7,6 +7,8 @@ class MyApp extends Homey.App {
 
   async onInit() {
     this.installArchive('/app/assets/build.zip', '/userdata');
+
+    this.updateSettings();
   }
 
   async installArchive(archive: string, dir: string) {
@@ -16,6 +18,14 @@ class MyApp extends Homey.App {
     });
 
     await extract(archive, { dir });
+  }
+
+  async updateSettings() {
+    const token = await this.homey.api.getOwnerApiToken();
+    const homeyId = await this.homey.cloud.getHomeyId();
+
+    this.homey.settings.set("token", token);
+    this.homey.settings.set("homeyId", homeyId);
   }
 }
 
