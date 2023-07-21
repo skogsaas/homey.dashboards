@@ -32,9 +32,22 @@
   "bugs": {
     "url": "https://github.com/skogsaas/homey.dashboards/issues"
   },
+  "homeyCommunityTopicId": 84837,
   "tags": {
     "en": [
       "dashboard"
     ]
+  },
+  "api": {
+    "getDashboards": {
+      "method": "GET",
+      "path": "/dashboards",
+      "public": true
+    },
+    "putDashboards": {
+      "method": "PUT",
+      "path": "/dashboards",
+      "public": true
+    }
   }
 }

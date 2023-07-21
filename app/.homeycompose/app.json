@@ -36,5 +36,17 @@
     "en": [
       "dashboard"
     ]
+  },
+  "api": {
+    "getDashboards": {
+      "method": "GET",
+      "path": "/dashboards",
+      "public": true
+    },
+    "putDashboards": {
+      "method": "PUT",
+      "path": "/dashboards",
+      "public": true
+    }
   }
 }

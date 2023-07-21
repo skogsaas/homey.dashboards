@@ -11,8 +11,9 @@
   <body>
     <p>
       <span style="color: red;">WARNING:</span> The following urls contains a token with access to your Homey, so be careful sharing the urls. 
-      The token has a lifetime of about 2 weeks, after this the link is invalid and has to be re-retrieved through the app settings.
-      Future versions of this app will implement auto-refresh of the token.
+      The token has a lifetime of about 2 weeks, after this the link is invalid and has to be re-retrieved through the app settings. 
+      The token is also invalidated each time the app restarts during update, or when the Homey unit restarts.
+      Future versions of this app will fix these problem.
     </p>
 
     <header class="homey-header">
@@ -43,15 +44,17 @@
 
     <script type="text/javascript">
       function onHomeyReady(Homey) {
-        Homey.get("token", function (err, token) {
-          const urlPostfix = '/app/skogsaas.dashboards/userdata?apiKey=' + token;
-          
-          const cloudElement = document.getElementById("cloudUrl");
-          cloudElement.value = location.origin + urlPostfix;
+        Homey.get("homey_token", function (err, homeyToken) {
+          Homey.get("app_token", function (err, appToken) {
+            const urlPostfix = '/app/skogsaas.dashboards/userdata?homeyToken=' + homeyToken + '&appToken=' + appToken;
+            
+            const cloudElement = document.getElementById("cloudUrl");
+            cloudElement.value = location.origin + urlPostfix;
 
-          Homey.get("homeyId", function (err, homeyId) {
-            const localElement = document.getElementById("localUrl");
-            localElement.value = 'http://homey-' + homeyId + '.local' + urlPostfix;
+            Homey.get("homey_id", function (err, homeyId) {
+              const localElement = document.getElementById("localUrl");
+              localElement.value = 'http://homey-' + homeyId + '.local' + urlPostfix;
+            });
           });
         });
 

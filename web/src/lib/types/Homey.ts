@@ -49,8 +49,8 @@ export interface AppObj {
 
     call(opts: { method: 'GET'|'PUT'|'POST'|'DELETE', path: string, body: any }) : Promise<any>;
     get(opts: { path: string }): Promise<any>;
-    put(opts: { path: string }): Promise<any>;
-    post(opts: { path: string }): Promise<any>;
+    put(opts: { path: string, body: any }): Promise<any>;
+    post(opts: { path: string, body: any }): Promise<any>;
     delete(opts: { path: string }): Promise<any>;
 }
 

@@ -28,7 +28,8 @@ import type { GridItem } from '../lib/types/Grid';
 import { page } from '$app/stores';
 
 let baseUrl: string | null;
-let apiKey: string | null;
+let homeyToken: string | null;
+let appToken: string | null;
 let homey: Homey;
 
 let devices: DeviceMap = {};
@@ -54,12 +55,18 @@ const breakpointColumns = [
 let items: GridItem[] = [];
 
 onMount(async () => {
-    apiKey = $page.url.searchParams.get('apiKey');
-    baseUrl = $page.url.hostname;
+    homeyToken = $page.url.searchParams.get('homeyToken');
+    appToken = $page.url.searchParams.get('appToken');
+    baseUrl = $page.url.origin;
+
+    // Inject development variables
+    if(import.meta.env.VITE_HOMEY_URL) {
+      baseUrl = import.meta.env.VITE_HOMEY_URL;
+    }
     
     homey = await HomeyAPI.createLocalAPI({
       address: baseUrl,
-      token: apiKey,
+      token: homeyToken,
     });
 
     await loadAppSettings();
@@ -202,7 +209,8 @@ function updateWidgetSettings(event: any) {
 
 async function loadAppSettings() {
   try {
-    items = await homey.apps.getAppSetting({ id: 'skogsaas.dashboards', name: 'dashboards' });
+    const app = await homey.apps.getApp({ id: 'skogsaas.dashboards' });
+    items = await app.get({ path: '/dashboards?token=' + appToken });
 
     if(!items || !Array.isArray(items)) {
       items = [];
@@ -214,8 +222,9 @@ async function loadAppSettings() {
 
 async function saveAppSettings() {
   toggleEdit();
-  
-  await homey.apps.setAppSetting({ id: 'skogsaas.dashboards', name: 'dashboards', value: items });
+
+  const app = await homey.apps.getApp({ id: 'skogsaas.dashboards' });
+  await app.put({ path: '/dashboards?token=' + appToken, body: items });
 }
 
 function onFixed(item: GridItem, fixed: boolean) {
