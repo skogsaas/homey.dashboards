@@ -18,9 +18,10 @@
 
     $: device = devices[settings.deviceId ?? ''];
     $: insight = device?.insights.find(i => i.id === settings.insightId);
-    $: getEntries(insight);
+    $: getEntries(insight, settings.resolution);
     
-    //ChartJS.register(LineElement, LineController, PointElement, Title, Tooltip, Legend, CategoryScale, LinearScale, TimeSeriesScale, TimeScale );
+    let insightId: string;
+    let resolution: string | undefined;
 
     let entries: LogEntries;
     let data: any = {};
@@ -44,10 +45,12 @@
         maintainAspectRatio: false
     };
 
-    async function getEntries(insightObj: InsightObj | undefined) {
-        if(insightObj && !entries) {
-            entries = await homey.insights.getLogEntries({ id: insightObj.id, uri: insightObj.uri, resolution: 'last7Days' });
-            console.log(entries);
+    async function getEntries(i: InsightObj | undefined, r: string | undefined) {
+        if(i && (!entries || insightId !== i.id || resolution !== r)) {
+            insightId = i.id;
+            resolution = r;
+            
+            entries = await homey.insights.getLogEntries({ id: i.id, uri: i.uri, resolution: r });
 
             data = {
                 datasets: [
@@ -57,8 +60,6 @@
                     }
                 ]
             };
-
-            console.log(data);
         }
     };
 </script>

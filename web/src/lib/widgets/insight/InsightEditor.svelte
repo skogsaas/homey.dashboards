@@ -14,6 +14,7 @@
 
     let device: DeviceObj | null = null;
     let insight: InsightObj | undefined;
+    let resolution: string | undefined;
 
     $: flatDevices = Object.values(devices).sort((a, b) => {
         if(a.name === b.name) return 0;
@@ -22,8 +23,9 @@
     });
     $: insights = device?.insights ?? [];
 
-    $: deviceId = onDevice(device);
-    $: insightId = oninsight(insight);
+    $: onDevice(device);
+    $: onInsight(insight);
+    $: onResolution(resolution);
 
     onMount(() => {
         if(settings.deviceId) {
@@ -35,12 +37,11 @@
         }
     });
 
-    function onDevice(value: DeviceObj | null) : string | null {
+    function onDevice(value: DeviceObj | null) {
         if(value == null || value.id === settings.deviceId) {
-            return null;
+            return;
         }
 
-        device = value;
         settings.deviceId = value.id;
 
         // Reset the insight after changing device
@@ -48,21 +49,26 @@
         settings.insightId = null;
 
         dispatch('settings', settings);
-
-        return settings.deviceId;
     }
 
-    function oninsight(value: InsightObj | undefined) : string | null {
+    function onInsight(value: InsightObj | undefined) {
         if(value == null || value.id === settings.insightId) {
-            return null;
+            return;
         }
 
-        insight = value;
         settings.insightId = value.id;
 
         dispatch('settings', settings);
+    }
 
-        return settings.insightId;
+    function onResolution(value: string | undefined) {
+        if(value == null || value === settings.resolution) {
+            return;
+        }
+
+        settings.resolution = value;
+
+        dispatch('settings', settings);
     }
 </script>
 
@@ -76,10 +82,34 @@
 
 <div>
 {#if device}
-    <Select bind:value={insight} label="insight">
+    <Select bind:value={insight} label="Insight">
         {#each insights as i}
             <Option value={i}>{i.title}</Option>
         {/each}
     </Select>
 {/if}
+</div>
+
+<div>
+    {#if device && insight}
+        <Select bind:value={resolution} label="Resolution">
+            <Option value="lastHour">Last hour</Option>
+            <Option value="last6Hours">Last 6 hours</Option>
+            <Option value="last24Hours">Last 24 hours</Option>
+            <Option value="last7Days">Last 7 days</Option>
+            <Option value="last14Days">Last 14 days</Option>
+            <Option value="last31Days">Last 31 days</Option>
+            <Option value={null}>---</Option>
+            <Option value="today">Today</Option>
+            <Option value="thisWeek">This week</Option>
+            <Option value="thisMonth">This month</Option>
+            <Option value="thisYear">This year</Option>
+            <Option value={null}>---</Option>
+            <Option value="yesterday">Yesterday</Option>
+            <Option value="lastWeek">Last week</Option>
+            <Option value="lastMonth">Last month</Option>
+            <Option value="lastYear">Last year</Option>
+            <Option value="last2Years">Last 2 years</Option>
+        </Select>    
+    {/if}
 </div>
