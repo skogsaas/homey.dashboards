@@ -63,6 +63,14 @@ onMount(async () => {
     if(import.meta.env.VITE_HOMEY_URL) {
       baseUrl = import.meta.env.VITE_HOMEY_URL;
     }
+
+    if(import.meta.env.VITE_HOMEY_TOKEN) {
+      homeyToken = import.meta.env.VITE_HOMEY_TOKEN;
+    }
+
+    if(import.meta.env.VITE_APP_TOKEN) {
+      appToken = import.meta.env.VITE_APP_TOKEN;
+    }
     
     homey = await HomeyAPI.createLocalAPI({
       address: baseUrl,

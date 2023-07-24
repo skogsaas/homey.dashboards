@@ -4,12 +4,10 @@ export interface Homey {
     apps: AppManager;
     devices: DeviceManager;
     insights: InsightsManager;
+    images: ImagesManager;
 }
 
-export interface AppManager {
-    connect() : void;
-    disconnect(): void;
-    on(event: string, callback: any) : void;
+export interface AppManager extends Manager {
 
     getApps() : Promise<AppMap>;
     getApp(opts: { id: string }) : Promise<AppObj>;
@@ -20,20 +18,25 @@ export interface AppManager {
     unsetAppSetting(opts: { id: string, name: string }) : Promise<any>;
 }
 
-export interface DeviceManager {
-    connect() : void;
-    disconnect(): void;
-    on(event: string, callback: any) : void;
-
+export interface DeviceManager extends Manager {
     getDevices() : Promise<DeviceMap>;
 }
 
-export interface InsightsManager {
+export interface InsightsManager extends Manager {
+    getLogEntries(opts: { id: string, uri: string, resolution?: string }) : Promise<any>;
+}
+
+export interface ImagesManager extends Manager {
+    getImages() : Promise<any>;
+}
+
+export interface Manager {
+    homey: Homey;
+    uri: string;
+
     connect() : void;
     disconnect(): void;
     on(event: string, callback: any) : void;
-
-    getLogEntries(opts: { id: string, uri: string, resolution?: string }) : Promise<any>;
 }
 
 export type AppMap = { [key: string]: AppObj; }
