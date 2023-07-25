@@ -1,24 +1,56 @@
 import Homey from 'homey';
-import fs from 'fs';
+import fs from 'fs-extra';
+import { randomUUID } from 'crypto';
 import path from 'path';
-import extract from 'extract-zip';
-import {randomUUID } from 'crypto';
 
-class MyApp extends Homey.App {
+import * as Sentry from "@sentry/node"
 
+class DashboardApp extends Homey.App {
   async onInit() {
-    this.installArchive('/app/assets/build.zip', '/userdata');
+    this.log(Homey.env.SENTRY_DSN);
 
-    this.updateSettings();
-  }
-
-  async installArchive(archive: string, dir: string) {
-    const existing = fs.readdirSync(dir);
-    existing.forEach(file => {
-      fs.rmSync(path.join(dir, file), { recursive: true });
+    Sentry.init({
+      dsn: Homey.env.SENTRY_DSN,
+      tracesSampleRate: 1.0,
     });
 
-    await extract(archive, { dir });
+    const homeyId = await this.homey.cloud.getHomeyId();
+
+    Sentry.setTags({
+      appId: Homey.manifest.id,
+      appVersion: Homey.manifest.version,
+      homeyVersion: this.homey.version,
+      homeyId: homeyId
+    });
+
+    await this.installDashboard();
+    await this.updateSettings();
+  }
+
+  async onUninit() {
+    await Sentry.flush();
+  }
+
+  async installDashboard() {
+    const source = '/app/assets/dashboard';
+    const destination = '/userdata';
+
+    try {
+      // Delete content of destination folder
+      const existing = fs.readdirSync(destination);
+      existing.forEach(file => {
+        fs.rmSync(path.join(destination, file), { recursive: true });
+      });
+      
+      // Copy new content to destination folder
+      await fs.copy(source, destination);
+    } catch(error) {
+      const src = fs.readdirSync(source).map(e => path.join(source, e)).join('\n');
+      const dst = fs.readdirSync(destination).map(e => path.join(destination, e)).join('\n');
+
+      Sentry.captureException(error, { extra: { src, dst }});
+      Sentry.flush();
+    }
   }
 
   async updateSettings() {
@@ -32,9 +64,9 @@ class MyApp extends Homey.App {
     // This should be replaced with a JWT-looking token in the future, 
     // allowing token expire, scopes and refreshing tokens.
     if(!this.homey.settings.get('app_token')) {
-      this.homey.settings.set('app_token', randomUUID())
+      this.homey.settings.set('app_token', randomUUID());
     }
   }
 }
 
-module.exports = MyApp;
+module.exports = DashboardApp;

@@ -4,5 +4,8 @@
   },
   "0.1.1": {
     "en": "Fixed loading dashboards"
+  },
+  "0.1.2": {
+    "en": "No longer releases as .zip, and add Sentry.io logging"
   }
 }
