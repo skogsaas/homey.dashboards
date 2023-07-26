@@ -7,8 +7,15 @@
     export let editing: boolean;
     export let homey: Homey;
 
+    let refreshSlug = 0;
+    let refreshClear;
+
     $: device = devices[settings.deviceId ?? ''];
     $: image = device?.images.find(image => image.id === settings.imageId);
+    
+    if(settings.refresh !== null && settings.refresh > 0) {
+        refreshClear = setInterval(() => { refreshSlug = Date.now(); }, settings.refresh * 1000);
+    }
 </script>
 
 {#if device == undefined || image == undefined}
@@ -30,7 +37,7 @@
     {#await homey.baseUrl}
         ...
     {:then url}
-        <img class="image" src={url + image.imageObj.url} alt={image.title} />
+        <img class="image" src={url + image.imageObj.url + '?v=' + refreshSlug} alt={image.title + ' refreshed: ' + refreshSlug} />
     {/await}
 {/if}
 

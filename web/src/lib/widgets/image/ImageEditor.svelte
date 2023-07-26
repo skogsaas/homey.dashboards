@@ -2,10 +2,10 @@
     import { onMount, createEventDispatcher } from 'svelte';
 
     import Select, { Option } from "@smui/select";
-    import type CapabilitySettings from "./ImageSettings";
+    import type ImageSettings from "./ImageSettings";
     import type { Image, DeviceObj, DeviceMap, Homey } from '../../types/Homey';
 
-    export let settings: CapabilitySettings;
+    export let settings: ImageSettings;
     export let devices: DeviceMap;
     
     export let homey: Homey;
@@ -14,29 +14,34 @@
 
     let device: DeviceObj | null = null;
     let image: Image | undefined;
+    let refresh: number = 0;
 
-    $: flatDevices = Object.values(devices).sort((a, b) => {
-        if(a.name === b.name) return 0;
-        if(a.name < b.name) return -1;
-        return 1;
-    });
+    $: imageDevices = Object.values(devices)
+        .filter(d => d.images.length > 0)
+        .sort((a, b) => {
+            if(a.name === b.name) return 0;
+            if(a.name < b.name) return -1;
+            return 1;
+        });
     $: images = device?.images ? device.images : [];
 
-    $: deviceId = onDevice(device);
-    $: imageId = onImage(image);
+    $: onDevice(device);
+    $: onImage(image);
+    $: onRefresh(refresh);
 
     onMount(() => {
         if(settings.deviceId) {
             device = devices[settings.deviceId];
         }
 
-        if(device && settings.imageId)
-        {
+        if(device && settings.imageId) {
             image = device.images.find(i => i.id === settings.imageId);
         }
+
+        refresh = settings?.refresh ?? 0;
     });
 
-    function onDevice(value: DeviceObj | null) : string | null {
+    function onDevice(value: DeviceObj | null) {
         if(value == null || value.id === settings.deviceId) {
             return null;
         }
@@ -49,11 +54,9 @@
         settings.imageId = null;
 
         dispatch('settings', settings);
-
-        return settings.deviceId;
     }
 
-    function onImage(value: Image | undefined) : string | null {
+    function onImage(value: Image | undefined) {
         if(value == null || value.id === settings.imageId) {
             return null;
         }
@@ -62,15 +65,21 @@
         settings.imageId = value.id;
 
         dispatch('settings', settings);
+    }
 
-        return settings.imageId;
+    function onRefresh(value: number) {
+        if(value !== settings.refresh) {
+            settings.refresh = value;
+
+            dispatch('settings', settings);
+        }
     }
 </script>
 
 <div>
     <Select bind:value={device} label="Device">
-        {#each flatDevices as flatDevice}
-          <Option value={flatDevice}>{flatDevice.name}</Option>
+        {#each imageDevices as imageDevice}
+          <Option value={imageDevice}>{imageDevice.name}</Option>
         {/each}
     </Select>
 </div>
@@ -84,3 +93,18 @@
     </Select>
 {/if}
 </div>
+
+<Select bind:value={refresh} label="Refresh every">
+    <Option value={0}>Never</Option>
+    <Option value={5}>5 seconds</Option>
+    <Option value={15}>15 seconds</Option>
+    <Option value={30}>30 seconds</Option>
+    <Option value={60}>1 minute</Option>
+    <Option value={300}>5 minutes</Option>
+    <Option value={600}>10 minutes</Option>
+    <Option value={1800}>30 minutes</Option>
+    <Option value={3600}>1 hour</Option>
+    <Option value={21600}>6 hour</Option>
+    <Option value={43200}>12 hour</Option>
+    <Option value={86400}>24 hour</Option>
+</Select>
