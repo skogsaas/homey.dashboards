@@ -1,20 +1,24 @@
 <script lang="ts">
-    import type CapabilitySettings from './ImageSettings';
-    import type { DeviceMap, Homey } from '../../types/Homey';
+    import type { Homey } from '$lib/types/Homey';
+    import { devices } from '$lib/stores/homey';
 
+    import type CapabilitySettings from './ImageSettings';
+    
     export let settings: CapabilitySettings;
-    export let devices: DeviceMap;
     export let editing: boolean;
     export let homey: Homey;
 
     let refreshSlug = 0;
-    let refreshClear;
+    let refreshClear: number | undefined;
 
-    $: device = devices[settings.deviceId ?? ''];
+    $: device = $devices[settings.deviceId ?? ''];
     $: image = device?.images.find(image => image.id === settings.imageId);
-    
-    if(settings.refresh !== null && settings.refresh > 0) {
-        refreshClear = setInterval(() => { refreshSlug = Date.now(); }, settings.refresh * 1000);
+    $: {
+        if(refreshClear !== undefined) clearInterval(refreshClear);
+
+        if(settings.refresh !== null && settings.refresh > 0) {
+            refreshClear = setInterval(() => { refreshSlug = Date.now(); }, settings.refresh * 1000);
+        }
     }
 </script>
 

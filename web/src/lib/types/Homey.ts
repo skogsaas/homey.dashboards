@@ -74,7 +74,7 @@ export interface DeviceObj {
     data: any;
     icon: string;
     iconOverride: any;
-    iconObj: { id: string; url: string; }
+    iconObj: IconObj;
     class: string;
     virtualClass: string;
     capabilities: string[]
@@ -106,7 +106,7 @@ export interface DeviceObj {
 export interface CapabilityObj {
     id: string;
     type: string;
-    iconObj: any;
+    iconObj: IconObj;
     title: string;
     getable: boolean;
     setable: boolean;
@@ -127,6 +127,11 @@ export interface EnergyObj {
     cumulative: boolean;
     generator: boolean;
     approximated: any;
+}
+
+export interface IconObj {
+    id: string;
+    url: string;
 }
 
 export interface Image {

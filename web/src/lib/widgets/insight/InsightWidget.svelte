@@ -1,22 +1,18 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { devices } from '$lib/stores/homey';
 
     import { Line } from 'svelte-chartjs';
     import 'chart.js/auto';
     import 'chartjs-adapter-date-fns';
-    import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, LinearScale, PointElement, CategoryScale, TimeSeriesScale, TimeScale, LineController } from 'chart.js';
-
-    import WidgetHeaderBody from "../WidgetHeaderBody.svelte";
 
     import type InsightSettings from './InsightSettings';
-    import type { DeviceMap, DeviceObj, Homey, InsightObj, LogEntries } from '../../types/Homey';
+    import type { DeviceObj, Homey, InsightObj, LogEntries } from '$lib/types/Homey';
 
     export let settings: InsightSettings;
-    export let devices: DeviceMap;
-    //export let editing: boolean;
+    export let editing: boolean;
     export let homey: Homey;
 
-    $: device = devices[settings.deviceId ?? ''];
+    $: device = $devices[settings.deviceId ?? ''];
     $: insight = device?.insights.find(i => i.id === settings.insightId);
     $: getEntries(insight, settings.resolution);
     
@@ -85,6 +81,7 @@
         {/if}
 
 <style>
+
 .header {
     margin-left: 5px;
     font-size: small;

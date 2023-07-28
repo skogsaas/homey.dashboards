@@ -1,13 +1,12 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from 'svelte';
+    import { devices } from '$lib/stores/homey';
 
     import Select, { Option } from "@smui/select";
     import type InsightSettings from "./InsightSettings";
     import type { InsightObj, DeviceObj, DeviceMap, Homey } from '../../types/Homey';
 
     export let settings: InsightSettings;
-    export let devices: DeviceMap;
-    
     export let homey: Homey;
 
     const dispatch = createEventDispatcher();
@@ -16,7 +15,7 @@
     let insight: InsightObj | undefined;
     let resolution: string | undefined;
 
-    $: flatDevices = Object.values(devices).sort((a, b) => {
+    $: flatDevices = Object.values($devices).sort((a, b) => {
         if(a.name === b.name) return 0;
         if(a.name < b.name) return -1;
         return 1;
@@ -29,7 +28,7 @@
 
     onMount(() => {
         if(settings.deviceId) {
-            device = devices[settings.deviceId];
+            device = $devices[settings.deviceId];
         }
 
         if(device && settings.insightId) {

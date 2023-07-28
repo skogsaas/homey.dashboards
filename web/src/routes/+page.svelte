@@ -1,13 +1,12 @@
 <script lang="ts">
 
 import { onMount, type ComponentType } from 'svelte';
+import { devices } from '../lib/stores/homey';
 
 import { v4 as uuid } from 'uuid';
 
 import Grid from "svelte-grid";
 import gridHelp from "svelte-grid/build/helper";
-
-import widgets from '../lib/widgets/widgets';
 
 import Fab, { Icon } from '@smui/fab';
 import Dialog, { Title, Content, Actions } from '@smui/dialog';
@@ -17,13 +16,14 @@ import List, { Item, Text } from '@smui/list';
 
 import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
 
-import WidgetContainer from '../lib/widgets/WidgetContainer.svelte';
-import UnknownWidget from '../lib/widgets/unknown/UnknownWidget.svelte';
-import UnknownEditor from '../lib/widgets/unknown/UnknownEditor.svelte';
+import widgets from '$lib/widgets/widgets';
+import WidgetContainer from '$lib/widgets/WidgetContainer.svelte';
+import UnknownWidget from '$lib/widgets/unknown/UnknownWidget.svelte';
+import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
 
-import type { WidgetSettings } from '../lib/types/Widgets';
-import type { CapabilityEvent, DeviceMap, DeviceObj, Homey } from '../lib/types/Homey';
-import type { GridItem } from '../lib/types/Grid';
+import type { WidgetSettings } from '$lib/types/Widgets';
+import type { CapabilityEvent, DeviceMap, DeviceObj, Homey } from '$lib/types/Homey';
+import type { GridItem, GridResizeEvent } from '$lib/types/Grid';
 
 import { page } from '$app/stores';
 
@@ -31,8 +31,6 @@ let baseUrl: string | null;
 let homeyToken: string | null;
 let appToken: string | null;
 let homey: Homey;
-
-let devices: DeviceMap = {};
 
 const smallBreakpoint = 640;
 const mediumBreakpoint = 768;
@@ -53,6 +51,12 @@ const breakpointColumns = [
   [xlargeBreakpoint, xlargeColumns]
 ];
 let items: GridItem[] = [];
+let gaps: number[] = [5, 5];
+
+let gridCols: number; 
+let gridWidth: number;
+let gridXpx: number;
+let gridYpx: number;
 
 onMount(async () => {
     homeyToken = $page.url.searchParams.get('homeyToken');
@@ -71,7 +75,7 @@ onMount(async () => {
     if(import.meta.env.VITE_APP_TOKEN) {
       appToken = import.meta.env.VITE_APP_TOKEN;
     }
-    
+
     homey = await HomeyAPI.createLocalAPI({
       address: baseUrl,
       token: homeyToken,
@@ -80,22 +84,15 @@ onMount(async () => {
     await loadAppSettings();
 
     await homey.devices.connect();
-    devices = await homey.devices.getDevices();
-
-    Object.values(devices).forEach(async (device) => {
+    const d = await homey.devices.getDevices();
+    
+    Object.values(d).forEach(async (device) => {
       await device.connect();
-      device.on('capability', (event: CapabilityEvent) => onCapabilityUpdate(device, event));
+      device.on('capability', (event: CapabilityEvent) => devices.capabilityUpdate(device.id, event));
     });
+
+    devices.set(d);
 });
-
-function onCapabilityUpdate(device: DeviceObj, event: CapabilityEvent) {
-  const capability = device.capabilitiesObj[event.capabilityId];
-  capability.value = event.value;
-  capability.lastUpdated.setUTCMilliseconds(event.transactionTime);
-
-  // Force Svelte to detect changes to the device.
-  devices[device.id] = device;
-}
 
 let editing: boolean = false;
 
@@ -235,6 +232,10 @@ async function saveAppSettings() {
   await app.put({ path: '/dashboards?token=' + appToken, body: items });
 }
 
+function onResize(event: GridResizeEvent) {
+
+}
+
 function onFixed(item: GridItem, fixed: boolean) {
   items.forEach((i: GridItem) => { 
     if(i.id == item.id) {
@@ -261,7 +262,6 @@ function onFixed(item: GridItem, fixed: boolean) {
       <svelte:component 
         this={settingsComponent} 
         {homey}
-        {devices}
         settings={settingsData}
         on:settings={(event) => updateWidgetSettings(event)}></svelte:component>
 
@@ -287,7 +287,7 @@ function onFixed(item: GridItem, fixed: boolean) {
     </Fab>
   </div>
 
-  <Grid cols={breakpointColumns} gap={[10, 10]} bind:items={items} rowHeight={50} let:item let:dataItem>
+  <Grid cols={breakpointColumns} gap={gaps} bind:items={items} rowHeight={50} on:resize={(e) => onResize(e.detail)} let:item let:dataItem>
       <WidgetContainer 
         {editing}
         fixed={item.fixed ?? false}
@@ -298,7 +298,6 @@ function onFixed(item: GridItem, fixed: boolean) {
           <svelte:component 
               this={findWidget(dataItem.settings.type)}
               {homey}
-              {devices}
               {editing}
               settings={dataItem.settings}
           ></svelte:component>

@@ -1,18 +1,19 @@
 <script lang="ts">
+    import { devices } from '$lib/stores/homey';
+    import type { Homey } from '$lib/types/Homey';
+
     import Switch from '@smui/switch';
     import Slider from '@smui/slider';
 
     import WidgetHeaderBody from "../WidgetHeaderBody.svelte";
 
     import type CapabilitySettings from './CapabilitySettings';
-    import type { DeviceMap, Homey } from '../../types/Homey';
 
     export let settings: CapabilitySettings;
-    export let devices: DeviceMap;
     export let editing: boolean;
     export let homey: Homey;
 
-    $: device = devices[settings.deviceId ?? ''];
+    $: device = $devices[settings.deviceId ?? ''];
     $: capability = device?.capabilitiesObj[settings.capabilityId ?? ''];
     $: value = capability?.value;
 
