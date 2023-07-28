@@ -7,8 +7,6 @@ import * as Sentry from "@sentry/node"
 
 class DashboardApp extends Homey.App {
   async onInit() {
-    this.log(Homey.env.SENTRY_DSN);
-
     Sentry.init({
       dsn: Homey.env.SENTRY_DSN,
       tracesSampleRate: 1.0,
@@ -22,7 +20,7 @@ class DashboardApp extends Homey.App {
       homeyVersion: this.homey.version,
       homeyId: homeyId
     });
-
+    
     await this.installDashboard();
     await this.updateSettings();
   }
