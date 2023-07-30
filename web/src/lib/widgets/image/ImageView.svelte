@@ -38,7 +38,9 @@
     {#await $homey.baseUrl}
         ...
     {:then url}
-        <img class="image" src={url + image.imageObj.url + '?v=' + refreshSlug} alt={image.title + ' refreshed: ' + refreshSlug} />
+        <div class="image-container">
+            <img class="image" src={url + image.imageObj.url + '?v=' + refreshSlug} alt={image.title + ' refreshed: ' + refreshSlug} />
+        </div>
     {/await}
 {/if}
 
@@ -53,9 +55,17 @@
     font-weight: lighter;
 }
 
+.image-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
 .image {
     margin: 5px;
-    width: calc(100% - 10px);
-    height: calc(100% - 10px - 48px);
+    max-width: calc(100% - 10px);
+    max-height: calc(100% - 10px - 48px);
+    object-fit: cover;
 }
 </style>

@@ -34,7 +34,7 @@ export interface Manager {
     homey: Homey;
     uri: string;
 
-    connect() : void;
+    connect() : Promise<void>;
     disconnect(): void;
     on(event: string, callback: any) : void;
 }

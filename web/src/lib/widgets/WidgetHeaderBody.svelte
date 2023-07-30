@@ -12,6 +12,7 @@
     display: flex;
     flex-grow: 0;
     font-size: small;
+    overflow-x: hidden;
 }
 
 .widget-body {

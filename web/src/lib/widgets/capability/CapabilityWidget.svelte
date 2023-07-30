@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { devices } from '$lib/stores/homey';
-    import type { Homey } from '$lib/types/Homey';
+    import { devices, homey } from '$lib/stores/homey';
 
     import Switch from '@smui/switch';
     import Slider from '@smui/slider';
@@ -8,10 +7,9 @@
     import WidgetHeaderBody from "../WidgetHeaderBody.svelte";
 
     import type CapabilitySettings from './CapabilitySettings';
+    import { editing } from '$lib/stores/dashboard';
 
     export let settings: CapabilitySettings;
-    export let editing: boolean;
-    export let homey: Homey;
 
     $: device = $devices[settings.deviceId ?? ''];
     $: capability = device?.capabilitiesObj[settings.capabilityId ?? ''];
@@ -31,7 +29,7 @@
         {#if device == undefined || capability == undefined}
             <span>Error</span>
         {:else}
-            {#await homey.baseUrl}
+            {#await $homey.baseUrl}
                 ...
             {:then url}
                 <img class="widget-icon" src={url + device?.iconObj.url} alt={device?.icon} />
@@ -60,7 +58,7 @@
                         style="align-self: center;" 
                         checked={value} 
                         on:SMUISwitch:change={(e) => setCapabilityValue(e.detail.selected)} 
-                        disabled={editing} 
+                        disabled={$editing} 
                     />
                 {:else if capability.type === 'number'}
                     {#if capability.min !== undefined && capability.max !== undefined && capability.decimals !== undefined}
@@ -72,10 +70,10 @@
                             max={capability.max} 
                             step={Math.pow(10, -1 * capability.decimals)} 
                             discrete 
-                            disabled={editing} 
+                            disabled={$editing} 
                         />
                     {:else}
-                        <input type="number" min={capability.min} max={capability.max} disabled={editing} />
+                        <input type="number" min={capability.min} max={capability.max} disabled={$editing} />
                     {/if}
                 {/if}
             {:else}

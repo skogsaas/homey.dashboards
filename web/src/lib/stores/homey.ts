@@ -1,4 +1,4 @@
-import type { CapabilityEvent, DeviceMap, DeviceObj } from '$lib/types/Homey';
+import type { CapabilityEvent, DeviceMap, Homey } from '$lib/types/Homey';
 import { writable } from 'svelte/store';
 
 function createDevices() {
@@ -21,3 +21,4 @@ function onCapabilityUpdate(existing: DeviceMap, deviceId: string, event: Capabi
 }
 
 export const devices = createDevices();
+export const homey = writable({} as Homey);

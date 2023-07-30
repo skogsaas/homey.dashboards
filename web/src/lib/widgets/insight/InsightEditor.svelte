@@ -4,10 +4,9 @@
 
     import Select, { Option } from "@smui/select";
     import type InsightSettings from "./InsightSettings";
-    import type { InsightObj, DeviceObj, DeviceMap, Homey } from '../../types/Homey';
+    import type { InsightObj, DeviceObj } from '../../types/Homey';
 
     export let settings: InsightSettings;
-    export let homey: Homey;
 
     const dispatch = createEventDispatcher();
 

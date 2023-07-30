@@ -1,16 +1,14 @@
 <script lang="ts">
-    import { devices } from '$lib/stores/homey';
+    import { devices, homey } from '$lib/stores/homey';
 
     import { Line } from 'svelte-chartjs';
     import 'chart.js/auto';
     import 'chartjs-adapter-date-fns';
 
     import type InsightSettings from './InsightSettings';
-    import type { DeviceObj, Homey, InsightObj, LogEntries } from '$lib/types/Homey';
+    import type { InsightObj, LogEntries } from '$lib/types/Homey';
 
     export let settings: InsightSettings;
-    export let editing: boolean;
-    export let homey: Homey;
 
     $: device = $devices[settings.deviceId ?? ''];
     $: insight = device?.insights.find(i => i.id === settings.insightId);
@@ -46,7 +44,7 @@
             insightId = i.id;
             resolution = r;
             
-            entries = await homey.insights.getLogEntries({ id: i.id, uri: i.uri, resolution: r });
+            entries = await $homey.insights.getLogEntries({ id: i.id, uri: i.uri, resolution: r });
 
             data = {
                 datasets: [

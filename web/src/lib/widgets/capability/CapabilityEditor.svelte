@@ -1,21 +1,20 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from 'svelte';
 
+    import { devices } from '$lib/stores/homey';
+
     import Select, { Option } from "@smui/select";
     import type CapabilitySettings from "./CapabilitySettings";
-    import type { CapabilityObj, DeviceObj, DeviceMap, Homey } from '../../types/Homey';
+    import type { CapabilityObj, DeviceObj } from '../../types/Homey';
 
     export let settings: CapabilitySettings;
-    export let devices: DeviceMap;
-    
-    export let homey: Homey;
 
     const dispatch = createEventDispatcher();
 
     let device: DeviceObj | null = null;
     let capability: CapabilityObj | null = null;
 
-    $: flatDevices = Object.values(devices).sort((a, b) => {
+    $: flatDevices = Object.values($devices).sort((a, b) => {
         if(a.name === b.name) return 0;
         if(a.name < b.name) return -1;
         return 1;
@@ -27,7 +26,7 @@
 
     onMount(() => {
         if(settings.deviceId) {
-            device = devices[settings.deviceId];
+            device = $devices[settings.deviceId];
         }
 
         if(device && settings.capabilityId)

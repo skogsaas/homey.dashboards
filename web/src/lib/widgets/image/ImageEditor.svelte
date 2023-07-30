@@ -4,10 +4,9 @@
 
     import Select, { Option } from "@smui/select";
     import type ImageSettings from "./ImageSettings";
-    import type { Image, DeviceObj, DeviceMap, Homey } from '../../types/Homey';
+    import type { Image, DeviceObj } from '../../types/Homey';
 
     export let settings: ImageSettings;
-    export let homey: Homey;
 
     const dispatch = createEventDispatcher();
 
@@ -29,8 +28,6 @@
     $: onRefresh(refresh);
 
     onMount(() => {
-        console.log(settings);
-
         if(settings.deviceId) {
             device = $devices[settings.deviceId];
         }
@@ -40,10 +37,6 @@
         }
 
         refresh = settings?.refresh ?? 0;
-
-        console.log(device);
-        console.log(image);
-        console.log(refresh);
     });
 
     function onDevice(value: DeviceObj | null) {
@@ -76,7 +69,12 @@
 </script>
 
 <div>
-    <Select bind:value={device} label="Device">
+    <Select 
+        bind:value={device} 
+        label="Device"
+        menu$class="mdc-menu-surface--fixed with-parameter__menu"
+        class="with-parameter"
+    >
         {#each imageDevices as imageDevice}
           <Option value={imageDevice}>{imageDevice.name}</Option>
         {/each}
@@ -85,7 +83,12 @@
 
 <div>
 {#if device}
-    <Select bind:value={image} label="Image">
+    <Select 
+        bind:value={image} 
+        label="Image"
+        menu$class="mdc-menu-surface--fixed with-parameter__menu"
+	    class="with-parameter"
+    >
         {#each images as img}
             <Option value={img}>{img.title}</Option>
         {/each}
@@ -93,7 +96,12 @@
 {/if}
 </div>
 
-<Select bind:value={refresh} label="Refresh every">
+<Select 
+    bind:value={refresh} 
+    label="Refresh every"
+    menu$class="mdc-menu-surface--fixed with-parameter__menu"
+	class="with-parameter"
+>
     <Option value={0}>Never</Option>
     <Option value={5}>5 seconds</Option>
     <Option value={15}>15 seconds</Option>
@@ -107,3 +115,11 @@
     <Option value={43200}>12 hour</Option>
     <Option value={86400}>24 hour</Option>
 </Select>
+
+<style>
+    /* https://github.com/hperrin/svelte-material-ui/issues/242#issuecomment-1451448516 */
+    :global(.with-parameter__menu) {
+        width: 300px;
+        left: auto !important;
+    }
+</style>
