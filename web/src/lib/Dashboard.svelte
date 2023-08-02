@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { grid, items, breakpointColumns } from '$lib/stores/dashboard';
+    import { grid, items, breakpointColumns, editing } from '$lib/stores/dashboard';
 
     import Grid from "svelte-grid";
     import Dialog, { Content } from '@smui/dialog';
@@ -17,6 +17,10 @@
     let viewComponent: ComponentType | undefined;
 
     function openView(item: GridItem) {
+        if($editing) {
+            return;
+        }
+
         viewItem = item;
         viewComponent = findView(viewItem.settings.type);
 

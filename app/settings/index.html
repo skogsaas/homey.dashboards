@@ -10,10 +10,7 @@
 
   <body>
     <p>
-      <span style="color: red;">WARNING:</span> The following urls contains a token with access to your Homey, so be careful sharing the urls. 
-      The token has a lifetime of about 2 weeks, after this the link is invalid and has to be re-retrieved through the app settings. 
-      The token is also invalidated each time the app restarts during update, or when the Homey unit restarts.
-      Future versions of this app will fix these problem.
+      <span style="color: red;">WARNING:</span> The following urls contains a token with access to your Homey, so be careful sharing the urls.
     </p>
 
     <header class="homey-header">
@@ -25,9 +22,11 @@
     </p>
     
     <div class="homey-form-group">
-      <label class="homey-form-label" for="cloudUrl">Url</label>
-      <input class="homey-form-input" id="cloudUrl" type="text" value="" readonly />
+      <label class="homey-form-label" for="remoteUrl">Url</label>
+      <input class="homey-form-input" id="remoteUrl" type="text" value="" readonly />
     </div>
+
+    <button onclick="openRemote()">Open</button>
 
     <header class="homey-header">
       <h1 class="homey-title">Local url</h1>
@@ -42,23 +41,41 @@
       <input class="homey-form-input" id="localUrl" type="text" value="" readonly />
     </div>
 
-    <script type="text/javascript">
-      function onHomeyReady(Homey) {
-        Homey.get("homey_token", function (err, homeyToken) {
-          Homey.get("app_token", function (err, appToken) {
-            const urlPostfix = '/app/skogsaas.dashboards/userdata?homeyToken=' + homeyToken + '&appToken=' + appToken;
-            
-            const cloudElement = document.getElementById("cloudUrl");
-            cloudElement.value = location.origin + urlPostfix;
+    <button onclick="openLocal()">Open</button>
 
-            Homey.get("homey_id", function (err, homeyId) {
-              const localElement = document.getElementById("localUrl");
-              localElement.value = 'http://homey-' + homeyId + '.local' + urlPostfix;
-            });
+    <script type="text/javascript">
+      let localUrl;
+      let remoteUrl;
+      let homey;
+
+      function onHomeyReady(Homey) {
+        homey = Homey;
+
+        Homey.get("app_token", function (err, appToken) {
+          const urlPostfix = '/app/skogsaas.dashboards/userdata?appToken=' + appToken;
+
+          remoteUrl = location.origin + urlPostfix;
+          
+          const remoteElement = document.getElementById("remoteUrl");
+          remoteElement.value = remoteUrl;
+
+          Homey.get("homey_id", function (err, homeyId) {
+            localUrl = 'http://homey-' + homeyId + '.local' + urlPostfix;
+
+            const localElement = document.getElementById("localUrl");
+            localElement.value = localUrl;
           });
         });
 
         Homey.ready();
+      }
+
+      function openRemote() {
+        homey.openURL(remoteUrl)
+      }
+
+      function openLocal() {
+        homey.openURL(localUrl)
       }
     </script>
     

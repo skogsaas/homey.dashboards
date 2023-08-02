@@ -38,6 +38,11 @@
     ]
   },
   "api": {
+    "getToken": {
+      "method": "GET",
+      "path": "/token",
+      "public": true
+    },
     "getDashboards": {
       "method": "GET",
       "path": "/dashboards",

@@ -1,131 +1,147 @@
 <script lang="ts">
 
-import { onMount } from 'svelte';
-import { homey, devices } from '../lib/stores/homey';
-import { items, editing } from '../lib/stores/dashboard';
+    import { onMount } from 'svelte';
+    import { homey, devices } from '../lib/stores/homey';
+    import { items, editing } from '../lib/stores/dashboard';
 
-import Fab, { Icon } from '@smui/fab';
-import CircularProgress from '@smui/circular-progress';
+    import Fab, { Icon } from '@smui/fab';
+    import CircularProgress from '@smui/circular-progress';
 
-import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
-import type { CapabilityEvent } from '$lib/types/Homey';
+    import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
+    import type { CapabilityEvent } from '$lib/types/Homey';
 
-import { page } from '$app/stores';
-import Dashboard from '$lib/Dashboard.svelte';
-import AddDialog from '$lib/AddDialog.svelte';
-import EditDialog from '$lib/EditDialog.svelte';
+    import { page } from '$app/stores';
+    import Dashboard from '$lib/Dashboard.svelte';
+    import AddDialog from '$lib/AddDialog.svelte';
+    import EditDialog from '$lib/EditDialog.svelte';
 
-import type { GridItem } from '$lib/types/Grid';
-import type { WidgetSettings } from '$lib/types/Widgets';
+    import type { GridItem } from '$lib/types/Grid';
+    import type { WidgetSettings } from '$lib/types/Widgets';
+    import DashboardApi from '$lib/api/dashboards';
+    import TokenApi from '$lib/api/token';
 
-let baseUrl: string | null;
-let homeyToken: string | null;
-let appToken: string | null;
+    let baseUrl: string | null;
+    let appToken: string | null;
 
-let loading: boolean = true;
-let error: any | undefined = undefined;
+    let dashboardApi: DashboardApi;
+    let tokenApi: TokenApi;
 
-let editOpen: boolean = false;
-let editItem: GridItem;
+    let loading: boolean = true;
+    let error: any | undefined = undefined;
 
-let addOpen = false;
+    let editOpen: boolean = false;
+    let editItem: GridItem;
 
-onMount(async () => {
-    await connectHomeyAsync();
+    let addOpen = false;
 
-    // Load devices first, or else we will most likely display a lot of errors for each widget.
-    await loadDevices();
-    await loadAppSettings();
-});
+    onMount(async () => {
+        setParameters();
 
-async function connectHomeyAsync() {
-  homeyToken = $page.url.searchParams.get('homeyToken');
-  appToken = $page.url.searchParams.get('appToken');
-  baseUrl = $page.url.origin;
+        await connectHomeyAsync();
 
-  // Inject development variables
-  if(import.meta.env.VITE_HOMEY_URL) {
-    baseUrl = import.meta.env.VITE_HOMEY_URL;
-  }
-
-  if(import.meta.env.VITE_HOMEY_TOKEN) {
-    homeyToken = import.meta.env.VITE_HOMEY_TOKEN;
-  }
-
-  if(import.meta.env.VITE_APP_TOKEN) {
-    appToken = import.meta.env.VITE_APP_TOKEN;
-  }
-
-  const instance = await HomeyAPI.createLocalAPI({
-    address: baseUrl,
-    token: homeyToken,
-  });
-
-  homey.set(instance);
-}
-
-async function loadAppSettings() {
-  try {
-    const app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
-    const result = await app.get({ path: '/dashboards?token=' + appToken });
-
-    if(result != undefined && Array.isArray(result)) {
-      items.set(result);
-    }
-  } catch (e) {
-    error = e;
-  } 
-
-  loading = false;
-}
-
-async function saveAppSettings() {
-  // Ensure we don't save with the draggable and resizable flags set to true
-  toggleEdit();
-
-  const app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
-  await app.put({ path: '/dashboards?token=' + appToken, body: $items });
-}
-
-async function loadDevices() {
-  try {
-    await $homey.devices.connect();
-    const d = await $homey.devices.getDevices();
-    
-    Object.values(d).forEach(async (device) => {
-      await device.connect();
-      device.on('capability', (event: CapabilityEvent) => devices.capabilityUpdate(device.id, event));
+        // Load devices first, or else we will most likely display a lot of errors for each widget.
+        await loadDevices();
+        await loadAppSettings();
     });
 
-    devices.set(d);
-  } catch(e) {
-    error = e;
-  }
-}
+    function setParameters() {
+      appToken = $page.url.searchParams.get('appToken');
+      baseUrl = $page.url.origin;
 
-function toggleEdit() {
-  editing.toggle();
+      // Inject development variables
+      if(import.meta.env.VITE_HOMEY_URL) {
+        baseUrl = import.meta.env.VITE_HOMEY_URL;
+      }
 
-  items.setEditing($editing);
-}
+      if(import.meta.env.VITE_APP_TOKEN) {
+        appToken = import.meta.env.VITE_APP_TOKEN;
+      }
 
-function addWidget(type: string) : void {
-    if(type === undefined) {
-      return;
+      if(!baseUrl) {
+        loading = false;
+        error = 'Missing baseUrl!';
+      }
+
+      if(!appToken) {
+        loading = false;
+        error = 'Missing app token!';
+      }
+
+      dashboardApi = new DashboardApi(baseUrl!, appToken!);
+      tokenApi = new TokenApi(baseUrl!, appToken!);
     }
 
-    editItem = items.addItem(type);
-    editOpen = true;
-}
+    async function connectHomeyAsync() {
+      let homeyToken = await tokenApi.getToken();
 
-function editWidget(item: GridItem) : void {
-    editItem = item;
-    editOpen = true;
-}
+      const instance = await HomeyAPI.createLocalAPI({
+        address: baseUrl,
+        token: homeyToken,
+      });
 
-function saveWidget(settings: WidgetSettings) {
-  items.setSettings(editItem.id, settings);
-}
+      homey.set(instance);
+    }
+
+    async function loadAppSettings() {
+      try {
+        const result = await dashboardApi.getItems();
+
+        if(result != undefined && Array.isArray(result)) {
+          items.set(result);
+        }
+      } catch (e) {
+        error = e;
+      } 
+
+      loading = false;
+    }
+
+    async function saveAppSettings() {
+      // Ensure we don't save with the draggable and resizable flags set to true
+      toggleEdit();
+
+      await dashboardApi.putItems($items);
+    }
+
+    async function loadDevices() {
+      try {
+        await $homey.devices.connect();
+        const d = await $homey.devices.getDevices();
+        
+        Object.values(d).forEach(async (device) => {
+          await device.connect();
+          device.on('capability', (event: CapabilityEvent) => devices.capabilityUpdate(device.id, event));
+        });
+
+        devices.set(d);
+      } catch(e) {
+        error = e;
+      }
+    }
+
+    function toggleEdit() {
+      editing.toggle();
+
+      items.setEditing($editing);
+    }
+
+    function addWidget(type: string) : void {
+        if(type === undefined) {
+          return;
+        }
+
+        editItem = items.addItem(type);
+        editOpen = true;
+    }
+
+    function editWidget(item: GridItem) : void {
+        editItem = item;
+        editOpen = true;
+    }
+
+    function saveWidget(settings: WidgetSettings) {
+      items.setSettings(editItem.id, settings);
+    }
 
 </script>
 

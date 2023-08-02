@@ -7,13 +7,19 @@ interface Args {
     params: any;
 }
 
-function getDashboards({ homey, query }: Args) {
+async function getToken({ homey, params, query, body }: Args) {
+    authorize(homey, query);
+
+    return await homey.api.getOwnerApiToken();
+}
+
+function getDashboards({ homey, params, query, body }: Args) {
     authorize(homey, query);
 
     return homey.settings.get('dashboards');
 }
 
-function putDashboards({ homey, query, body }: Args) {
+function putDashboards({ homey, params, query, body }: Args) {
     authorize(homey, query);
 
     homey.settings.set('dashboards', body);
@@ -22,14 +28,20 @@ function putDashboards({ homey, query, body }: Args) {
 function authorize(homey: Homey, query: any) : void {
     // See app.ts for token description.
 
-    const token = homey.settings.get('app_token');
+    const expectedToken = homey.settings.get('app_token');
+    const actualToken = query['app_token'];
 
-    if(query['token'] !== token) {
-        throw Error('Invalid token');
+    if(expectedToken === undefined) {
+        throw Error('Missing app token');
+    }
+
+    if(actualToken !== expectedToken) {
+        throw Error('Invalid app token');
     }
 }
 
 module.exports = {
+    getToken,
     getDashboards,
     putDashboards
 };

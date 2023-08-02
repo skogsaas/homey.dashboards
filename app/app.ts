@@ -5,7 +5,8 @@ import path from 'path';
 
 import * as Sentry from "@sentry/node"
 
-class DashboardApp extends Homey.App {
+export class DashboardApp extends Homey.App {
+
   async onInit() {
     Sentry.init({
       dsn: Homey.env.SENTRY_DSN,
@@ -25,7 +26,7 @@ class DashboardApp extends Homey.App {
     await this.updateSettings();
   }
 
-  async onUninit() {
+  async onUninit() : Promise<void> {
     await Sentry.flush();
   }
 
@@ -52,10 +53,8 @@ class DashboardApp extends Homey.App {
   }
 
   async updateSettings() {
-    const homeyToken = await this.homey.api.getOwnerApiToken();
     const homeyId = await this.homey.cloud.getHomeyId();
 
-    this.homey.settings.set("homey_token", homeyToken);
     this.homey.settings.set("homey_id", homeyId);
 
     // A static random UUID is used as token for the app api for now. 
