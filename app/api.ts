@@ -20,7 +20,7 @@ function getAuthCode({ homey }: Args) {
     // it expire in 2 minutes.
     const scp: Scope[] = ['app_token'];
     const payload = { scp };
-    return sign(homey, payload, '2m');
+    return sign(homey, payload, '30s');
 }
 
 function getAppToken({ homey, query }: Args) {
