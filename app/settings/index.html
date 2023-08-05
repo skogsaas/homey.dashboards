@@ -1,32 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script
-      type="text/javascript"
-      src="/homey.js"
-      data-origin="settings"
-    ></script>
+    <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
   </head>
 
   <body>
-    <p>
-      <span style="color: red;">WARNING:</span> The following urls contains a token with access to your Homey, so be careful sharing the urls.
-    </p>
-
     <header class="homey-header">
-      <h1 class="homey-title">Cloud url</h1>
+      <h1 class="homey-title">Remote url</h1>
     </header>
 
     <p>
-      The following url is the dashboard cloud url for your Homey. This should work over the internet.
+      If you are connected to the same network as your Homey, and opened this configuration page using the Homey iOS or Android app, 
+      the following link will not be remote. To get the true remote url, use https://my.homey.app or disconnect temporary from the network.
     </p>
-    
-    <div class="homey-form-group">
-      <label class="homey-form-label" for="remoteUrl">Url</label>
-      <input class="homey-form-input" id="remoteUrl" type="text" value="" readonly />
-    </div>
 
-    <button onclick="openRemote()">Open</button>
+    <button onclick="openRemote()" class="homey-button-primary">Open remote URL</button>
 
     <header class="homey-header">
       <h1 class="homey-title">Local url</h1>
@@ -35,13 +23,8 @@
     <p>
       The following url is the dashboard local url for your Homey. This should only work on your local network.
     </p>
-    
-    <div class="homey-form-group">
-      <label class="homey-form-label" for="localUrl">Url</label>
-      <input class="homey-form-input" id="localUrl" type="text" value="" readonly />
-    </div>
 
-    <button onclick="openLocal()">Open</button>
+    <button onclick="openLocal()" class="homey-button-primary">Open local URL</button>
 
     <script type="text/javascript">
       let localUrl;
@@ -49,33 +32,25 @@
       let homey;
 
       function onHomeyReady(Homey) {
+        // Retain the Homey instance for later use.
         homey = Homey;
 
-        Homey.get("app_token", function (err, appToken) {
-          const urlPostfix = '/app/skogsaas.dashboards/userdata?appToken=' + appToken;
-
-          remoteUrl = location.origin + urlPostfix;
-          
-          const remoteElement = document.getElementById("remoteUrl");
-          remoteElement.value = remoteUrl;
-
-          Homey.get("homey_id", function (err, homeyId) {
-            localUrl = 'http://homey-' + homeyId + '.local' + urlPostfix;
-
-            const localElement = document.getElementById("localUrl");
-            localElement.value = localUrl;
-          });
+        const urlPostfix = '/app/skogsaas.dashboards/assets/dashboard';
+        remoteUrl = location.origin + urlPostfix;
+      
+        homey.get("homey_id", function (err, homeyId) {
+          localUrl = 'http://homey-' + homeyId + '.local' + urlPostfix;
         });
 
-        Homey.ready();
+        homey.ready();
       }
 
       function openRemote() {
-        homey.openURL(remoteUrl)
+        homey.api('GET', '/auth/code', null, (error, response) => homey.openURL(remoteUrl + '?code=' + response));
       }
 
       function openLocal() {
-        homey.openURL(localUrl)
+        homey.api('GET', '/auth/code', null, (error, response) => homey.openURL(localUrl + '?code=' + response));
       }
     </script>
     

@@ -39,9 +39,19 @@
     ]
   },
   "api": {
-    "getToken": {
+    "getAuthCode": {
       "method": "GET",
-      "path": "/token",
+      "path": "/auth/code",
+      "public": false
+    },
+    "getAppToken": {
+      "method": "GET",
+      "path": "/auth/token/app",
+      "public": true
+    },
+    "getHomeyToken": {
+      "method": "GET",
+      "path": "/auth/token/homey",
       "public": true
     },
     "getDashboards": {

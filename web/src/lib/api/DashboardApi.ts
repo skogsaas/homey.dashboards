@@ -7,10 +7,10 @@ export default class DashboardApi extends BaseApi {
     }
 
     public async getItems() : Promise<GridItem[]> {
-        return super.get('/dashboards', {});
+        return super.get('/dashboards', { });
     }
 
     public async putItems(items: GridItem[]) : Promise<void> {
-        return super.put('/dashboards', {}, items);
+        return super.put('/dashboards', { }, items);
     }
 }

@@ -1,13 +1,27 @@
 import Homey from 'homey';
 import fs from 'fs-extra';
-import { randomUUID } from 'crypto';
+import * as crypto from 'crypto';
 import path from 'path';
 
 import * as Sentry from "@sentry/node"
 
 export class DashboardApp extends Homey.App {
+  privateKey: crypto.KeyObject | undefined;
+  publicKey: crypto.KeyObject | undefined;
 
   async onInit() {
+    await this.configureSentry();
+    await this.configureAuthKeys();
+
+    //await this.installDashboard();
+    await this.updateSettings();
+  }
+
+  async onUninit() : Promise<void> {
+    await Sentry.flush();
+  }
+
+  private async configureSentry() {
     Sentry.init({
       dsn: Homey.env.SENTRY_DSN,
       tracesSampleRate: 1.0,
@@ -21,16 +35,25 @@ export class DashboardApp extends Homey.App {
       homeyVersion: this.homey.version,
       homeyId: homeyId
     });
-    
-    await this.installDashboard();
-    await this.updateSettings();
   }
 
-  async onUninit() : Promise<void> {
-    await Sentry.flush();
+  private async configureAuthKeys() {
+    if(!this.homey.settings.get('private_key')) {
+      const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 4096 });
+
+      this.homey.settings.set('public_key', publicKey.export({ type: 'spki', format: 'pem' }) as string);
+      this.homey.settings.set('private_key', privateKey.export({ type: 'pkcs8', format: 'pem' }) as string);
+
+      this.publicKey = publicKey;
+      this.privateKey = privateKey;
+    } else {
+      this.publicKey = crypto.createPublicKey(this.homey.settings.get('public_key'));
+      this.privateKey = crypto.createPrivateKey(this.homey.settings.get('private_key'));
+    }
   }
 
-  async installDashboard() {
+  /*
+  private async installDashboard() {
     const source = '/app/assets/dashboard';
     const destination = '/userdata';
 
@@ -51,18 +74,14 @@ export class DashboardApp extends Homey.App {
       Sentry.flush();
     }
   }
+  */
 
-  async updateSettings() {
+  private async updateSettings() {
     const homeyId = await this.homey.cloud.getHomeyId();
-
     this.homey.settings.set("homey_id", homeyId);
 
-    // A static random UUID is used as token for the app api for now. 
-    // This should be replaced with a JWT-looking token in the future, 
-    // allowing token expire, scopes and refreshing tokens.
-    if(!this.homey.settings.get('app_token')) {
-      this.homey.settings.set('app_token', randomUUID());
-    }
+    const localAddress = await this.homey.cloud.getLocalAddress();
+    this.homey.settings.set("local_address", localAddress);
   }
 }
 

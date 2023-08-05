@@ -1,5 +1,7 @@
+import { derived, writable } from 'svelte/store';
+import { page } from '$app/stores';
+
 import type { CapabilityEvent, DeviceMap, Homey } from '$lib/types/Homey';
-import { writable } from 'svelte/store';
 
 function createDevices() {
     const { subscribe, set, update } = writable({} as DeviceMap);
@@ -22,3 +24,14 @@ function onCapabilityUpdate(existing: DeviceMap, deviceId: string, event: Capabi
 
 export const devices = createDevices();
 export const homey = writable({} as Homey);
+
+export const baseUrl = derived(page, ($page, set) => {
+    let value = $page.url.origin;
+
+    // Inject development variables
+    if(import.meta.env.VITE_HOMEY_URL) {
+        value = import.meta.env.VITE_HOMEY_URL;
+    }
+
+    set(value);
+});

@@ -1,31 +1,47 @@
 <script lang="ts">
-
+    // Svelte
     import { onMount } from 'svelte';
-    import { homey, devices } from '../lib/stores/homey';
-    import { items, editing } from '../lib/stores/dashboard';
+    import { page } from '$app/stores';
+    import { goto } from '$app/navigation';
 
+    // Stores
+    import { homey, devices, baseUrl } from '$lib/stores/homey';
+    import { items, editing } from '$lib/stores/dashboard';
+    import { appToken, homeyToken } from '$lib/stores/auth';
+    
+    // UI components
     import Fab, { Icon } from '@smui/fab';
     import CircularProgress from '@smui/circular-progress';
 
-    import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
-    import type { CapabilityEvent } from '$lib/types/Homey';
-
-    import { page } from '$app/stores';
     import Dashboard from '$lib/Dashboard.svelte';
     import AddDialog from '$lib/AddDialog.svelte';
     import EditDialog from '$lib/EditDialog.svelte';
 
+    // Types
+    import type { CapabilityEvent } from '$lib/types/Homey';
     import type { GridItem } from '$lib/types/Grid';
     import type { WidgetSettings } from '$lib/types/Widgets';
-    import DashboardApi from '$lib/api/dashboards';
-    import TokenApi from '$lib/api/token';
 
-    let baseUrl: string | null;
-    let appToken: string | null;
+    // APIs
+    import DashboardApi from '$lib/api/DashboardApi';
+    import TokenApi from '$lib/api/TokenApi';
+    import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
+    
+    import jwtDecode from 'jwt-decode';
+    
+    let tokenApi: TokenApi;
+    $: tokenApi = new TokenApi($baseUrl as string, $appToken);
 
     let dashboardApi: DashboardApi;
-    let tokenApi: TokenApi;
+    $: dashboardApi = new DashboardApi($baseUrl as string, $appToken);
 
+    let timeoutAppToken: number|undefined;
+    $: tryRefreshAppToken($appToken);
+
+    let timeoutHomeyToken: number|undefined;
+    $: tryRefreshHomeyToken($appToken);
+    $: tryConnectHomey($homeyToken);
+    
     let loading: boolean = true;
     let error: any | undefined = undefined;
 
@@ -35,51 +51,86 @@
     let addOpen = false;
 
     onMount(async () => {
-        setParameters();
-
-        await connectHomeyAsync();
-
-        // Load devices first, or else we will most likely display a lot of errors for each widget.
-        await loadDevices();
-        await loadAppSettings();
+      await tryCodeLogin();
     });
 
-    function setParameters() {
-      appToken = $page.url.searchParams.get('appToken');
-      baseUrl = $page.url.origin;
+    function tryRefreshAppToken(token: string) {
+      if(token !== undefined) {
+        const decoded: any = jwtDecode(token);
+        const timeout = decoded.exp - Math.floor(Date.now() / 1000);
 
-      // Inject development variables
-      if(import.meta.env.VITE_HOMEY_URL) {
-        baseUrl = import.meta.env.VITE_HOMEY_URL;
+        if(timeout < 0) {
+          let code = $page.url.searchParams.get('code');
+
+          if(code === undefined) {
+            loading = false;
+            error = 'Token has expired. Login using the Homey app configuration page.'
+
+            appToken.set(undefined);
+
+            return;
+          }
+        }
+
+        if(timeoutAppToken !== undefined) clearTimeout(timeoutAppToken);
+        
+        timeoutAppToken = setTimeout(() => {
+          tokenApi.getAppToken()
+            .then(response => appToken.set(response))
+            .catch(e => { loading = false; error = e; });
+        }, ((decoded.exp - Math.floor(Date.now() / 1000)) - 600) * 1000);
       }
-
-      if(import.meta.env.VITE_APP_TOKEN) {
-        appToken = import.meta.env.VITE_APP_TOKEN;
-      }
-
-      if(!baseUrl) {
-        loading = false;
-        error = 'Missing baseUrl!';
-      }
-
-      if(!appToken) {
-        loading = false;
-        error = 'Missing app token!';
-      }
-
-      dashboardApi = new DashboardApi(baseUrl!, appToken!);
-      tokenApi = new TokenApi(baseUrl!, appToken!);
     }
 
-    async function connectHomeyAsync() {
-      let homeyToken = await tokenApi.getToken();
+    function tryRefreshHomeyToken(token: string) {
+      if(token !== undefined) {
+        // If the Homey token is undefined, get the initial token
+        if($homeyToken === undefined) {
+          tokenApi.getHomeyToken()
+            .then(response => homeyToken.set(response))
+            .catch(e => { loading = false; error = e; });
+        }
 
-      const instance = await HomeyAPI.createLocalAPI({
-        address: baseUrl,
-        token: homeyToken,
-      });
+        if(timeoutHomeyToken !== undefined) clearTimeout(timeoutHomeyToken);
 
-      homey.set(instance);
+        timeoutHomeyToken = setTimeout(
+          () => {
+            tokenApi.getHomeyToken()
+              .then(response => homeyToken.set(response))
+              .catch(e => { loading = false; error = e; }); 
+          }, 
+          60*60*24*1000); // Refresh every 24 hours if browser is not restarted
+      };
+    }
+
+    async function tryCodeLogin() {
+      let code = $page.url.searchParams.get('code');
+        
+      if(code !== null) {
+        const t = new TokenApi($baseUrl as string, code);
+        const token = await t.getAppToken();
+        
+        appToken.set(token);
+
+        goto('./', { replaceState: true });
+      } else if($appToken === undefined) {
+        loading = false;
+        error = 'No login-code or token. Login using the Homey app configuration page.'
+      }
+    }
+
+    async function tryConnectHomey(token: string) {
+      if(token !== undefined) {
+        const instance = await HomeyAPI.createLocalAPI({
+          address: $baseUrl,
+          token: token,
+        });
+
+        homey.set(instance);
+
+        await loadDevices();
+        await loadAppSettings();
+      }
     }
 
     async function loadAppSettings() {

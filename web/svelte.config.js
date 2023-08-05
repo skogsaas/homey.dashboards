@@ -15,7 +15,7 @@ const config = {
 			fallback: 'index.html'
 		}),
 		paths: {
-            base: env === 'production' ? '/app/skogsaas.dashboards/userdata' : '',
+            base: env === 'production' ? '/app/skogsaas.dashboards/assets/dashboard' : '',
         }
 	}
 };
