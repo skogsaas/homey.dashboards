@@ -17,7 +17,7 @@ interface Token extends jwt.JwtPayload {
 
 function getAuthCode({ homey }: Args) {
     // Create a token that only has the scope for retrieving an app token, and make 
-    // it expire in 2 minutes.
+    // it expire in 30 seconds.
     const scp: Scope[] = ['app_token'];
     const payload = { scp };
     return sign(homey, payload, '30s');
@@ -35,7 +35,7 @@ function getAppToken({ homey, query }: Args) {
     
     // Create new token with all scopes
     const scp: Scope[] = ['app_token', 'homey_token', 'dashboards'];
-    return sign(homey, { scp }, '11m');
+    return sign(homey, { scp }, '48h');
 }
 
 async function getHomeyToken({ homey, query }: Args) {

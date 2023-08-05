@@ -111,8 +111,8 @@
         const token = await t.getAppToken();
         
         appToken.set(token);
-
-        goto('./', { replaceState: true });
+        
+        goto($page.url.pathname, { replaceState: true });
       } else if($appToken === undefined) {
         loading = false;
         error = 'No login-code or token. Login using the Homey app configuration page.'
