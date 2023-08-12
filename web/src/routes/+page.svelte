@@ -1,46 +1,37 @@
 <script lang="ts">
     // Svelte
     import { onMount } from 'svelte';
-    import { page } from '$app/stores';
     import { goto } from '$app/navigation';
 
     // Stores
-    import { homey, devices, baseUrl } from '$lib/stores/homey';
+    import { homey, devices, baseUrl, basicFlows, advancedFlows, session, scopes } from '$lib/stores/homey';
     import { items, editing } from '$lib/stores/dashboard';
-    import { appToken, homeyToken } from '$lib/stores/auth';
+    import { apiKey } from '$lib/stores/auth';
     
     // UI components
     import Fab, { Icon } from '@smui/fab';
     import CircularProgress from '@smui/circular-progress';
+    import Drawer, {
+      AppContent,
+      Content,
+      Header,
+      Title,
+      Subtitle,
+      Scrim,
+    } from '@smui/drawer';
 
     import Dashboard from '$lib/Dashboard.svelte';
     import AddDialog from '$lib/AddDialog.svelte';
-    import EditDialog from '$lib/EditDialog.svelte';
+    import EditView from '$lib/EditView.svelte';
 
     // Types
-    import type { CapabilityEvent } from '$lib/types/Homey';
+    import type { AdvancedFlow, BasicFlow, CapabilityEvent } from '$lib/types/Homey';
     import type { GridItem } from '$lib/types/Grid';
     import type { WidgetSettings } from '$lib/types/Widgets';
+    import { findLabel } from '$lib/widgets/widgets';
 
-    // APIs
-    import DashboardApi from '$lib/api/DashboardApi';
-    import TokenApi from '$lib/api/TokenApi';
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
-    
-    import jwtDecode from 'jwt-decode';
-    
-    let tokenApi: TokenApi;
-    $: tokenApi = new TokenApi($baseUrl as string, $appToken);
-
-    let dashboardApi: DashboardApi;
-    $: dashboardApi = new DashboardApi($baseUrl as string, $appToken);
-
-    let timeoutAppToken: number|undefined;
-    $: tryRefreshAppToken($appToken);
-
-    let timeoutHomeyToken: number|undefined;
-    $: tryRefreshHomeyToken($appToken);
-    $: tryConnectHomey($homeyToken);
+    import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
     
     let loading: boolean = true;
     let error: any | undefined = undefined;
@@ -51,9 +42,19 @@
     let addOpen = false;
 
     onMount(async () => {
-      await tryCodeLogin();
+      await connectHomey();
+      await loadSession();
+
+      console.log($homey);
+
+      await loadDevices();
+      await loadFlows();
+      await loadAppSettings();
+
+      loading = false;
     });
 
+    /*
     function tryRefreshAppToken(token: string) {
       if(token !== undefined) {
         const decoded: any = jwtDecode(token);
@@ -81,65 +82,70 @@
         }, ((decoded.exp - Math.floor(Date.now() / 1000)) - 600) * 1000);
       }
     }
+    */
 
-    function tryRefreshHomeyToken(token: string) {
-      if(token !== undefined) {
-        // If the Homey token is undefined, get the initial token
-        if($homeyToken === undefined) {
-          tokenApi.getHomeyToken()
-            .then(response => homeyToken.set(response))
-            .catch(e => { loading = false; error = e; });
+    async function connectHomey() {
+      if($homey === undefined) {
+        if($apiKey !== undefined) {
+          // Local Homey API-key exists
+          const instance = await HomeyAPI.createLocalAPI({
+            address: $baseUrl,
+            token: $apiKey,
+          });
+
+          homey.set(instance);
+        } else {
+          // Athom OAuth token exists
+          const cloudApi = new AthomCloudAPI({
+            clientId: '5cbb504da1fc782009f52e46',
+            clientSecret: 'gvhs0gebgir8vz8yo2l0jfb49u9xzzhrkuo1uvs8'
+          });
+
+          const loggedIn = await cloudApi.isLoggedIn();
+
+          if (!loggedIn) {
+            await goto('/login');
+          }
+
+          const user = await cloudApi.getAuthenticatedUser();
+          const firstHomey = await user.getFirstHomey();
+          const instance = await firstHomey.authenticate();
+
+          homey.set(instance);
         }
-
-        if(timeoutHomeyToken !== undefined) clearTimeout(timeoutHomeyToken);
-
-        timeoutHomeyToken = setTimeout(
-          () => {
-            tokenApi.getHomeyToken()
-              .then(response => homeyToken.set(response))
-              .catch(e => { loading = false; error = e; }); 
-          }, 
-          60*60*24*1000); // Refresh every 24 hours if browser is not restarted
-      };
-    }
-
-    async function tryCodeLogin() {
-      let code = $page.url.searchParams.get('code');
-        
-      if(code !== null) {
-        const t = new TokenApi($baseUrl as string, code);
-        const token = await t.getAppToken();
-        
-        appToken.set(token);
-        
-        goto($page.url.pathname, { replaceState: true });
-      } else if($appToken === undefined) {
-        loading = false;
-        error = 'No login-code or token. Login using the Homey app configuration page.'
       }
     }
 
-    async function tryConnectHomey(token: string) {
-      if(token !== undefined) {
-        const instance = await HomeyAPI.createLocalAPI({
-          address: $baseUrl,
-          token: token,
-        });
+    async function loadSession() {
+      try {
+        const s = await $homey.sessions.getSessionMe();
+        session.set(s);
+      } catch (e) {
+        error = e;
+      } 
 
-        homey.set(instance);
-
-        await loadDevices();
-        await loadAppSettings();
-      }
+      loading = false;
     }
 
     async function loadAppSettings() {
       try {
-        const result = await dashboardApi.getItems();
+        if($scopes.includes('homey') || $scopes.includes('homey.app')) {
+          // Connect to skogsaas.dashboard app and load stored dashboards Homey Pro
 
-        if(result != undefined && Array.isArray(result)) {
-          items.set(result);
-        }
+          const app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
+          const result: GridItem[] = await app.get({ path: '/dashboards' });
+
+          if(result != undefined && Array.isArray(result)) {
+            items.set(result);
+          }
+        } else {
+          const stored = localStorage.dashboards;
+
+          if(stored !== undefined) {
+            const result: GridItem[] = JSON.parse(stored);
+            items.set(result);
+          }
+        }        
       } catch (e) {
         error = e;
       } 
@@ -151,20 +157,47 @@
       // Ensure we don't save with the draggable and resizable flags set to true
       toggleEdit();
 
-      await dashboardApi.putItems($items);
+      if($scopes.includes('homey') || $scopes.includes('homey.app')) {
+        const app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
+        await app.put({ path: '/dashboards', body: $items });
+      } else {
+        localStorage.dashboards = JSON.stringify($items);
+      }
     }
 
     async function loadDevices() {
       try {
-        await $homey.devices.connect();
-        const d = await $homey.devices.getDevices();
-        
-        Object.values(d).forEach(async (device) => {
-          await device.connect();
-          device.on('capability', (event: CapabilityEvent) => devices.capabilityUpdate(device.id, event));
-        });
+        if($scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.readonly') || $scopes.includes('homey.device.control')) {
+          await $homey.devices.connect();
+          const d = await $homey.devices.getDevices();
+          
+          Object.values(d).forEach(async (device) => {
+            await device.connect();
+            device.on('capability', (event: CapabilityEvent) => devices.onCapability(device.id, event));
+          });
 
-        devices.set(d);
+          devices.set(d);
+        }
+      } catch(e) {
+        error = e;
+      }
+    }
+
+    async function loadFlows() {
+      try {
+        if($scopes.includes('homey') || $scopes.includes('homey.flow') || $scopes.includes('homey.flow.readonly') || $scopes.includes('homey.flow.start')) {
+          await $homey.flow.connect();
+          const basic = await $homey.flow.getFlows();
+          const advanced = await $homey.flow.getAdvancedFlows();
+
+          basicFlows.set(basic);
+          advancedFlows.set(advanced);
+
+          $homey.flow.on('flow.create', (e: BasicFlow) => basicFlows.onCreate(e));
+          $homey.flow.on('flow.delete', (e: BasicFlow) => basicFlows.onDelete(e));
+          $homey.flow.on('advancedflow.create', (e: AdvancedFlow) => advancedFlows.onCreate(e));
+          $homey.flow.on('advancedflow.delete', (e: AdvancedFlow) => advancedFlows.onDelete(e));
+        }
       } catch(e) {
         error = e;
       }
@@ -191,44 +224,65 @@
     }
 
     function saveWidget(settings: WidgetSettings) {
+      editOpen = false;
       items.setSettings(editItem.id, settings);
     }
 
 </script>
 
-<div class="header">
-  {#if $editing}
-    <Fab color="secondary" on:click={() => (addOpen = true)}>
-      <Icon class="material-icons">add</Icon>
-    </Fab>
-
-    <Fab color="secondary" on:click={() => saveAppSettings()}>
-      <Icon class="material-icons">save</Icon>
-    </Fab>
-  {/if}
-
-  <Fab color="primary" on:click={() => toggleEdit()}>
-    <Icon class="material-icons">settings</Icon>
-  </Fab>
-</div>
-
 {#if loading}
   <div class="loading">
     <CircularProgress style="height: 128px; width: 128px;" indeterminate />
   </div>
-{/if}
+{:else}
+  {#if $homey !== undefined}
+    <Drawer variant="modal" bind:open={editOpen}>
+      <Header>
+        <Title>Settings</Title>
+        <Subtitle>Editing settings for {findLabel(editItem?.settings?.type)} widget</Subtitle>
+      </Header>
+      <Content>
+        <EditView item={editItem} on:settings={(e) => saveWidget(e.detail)} />
+      </Content>
+    </Drawer>
 
-{#if error !== undefined}
-  <div class="error">
-    {error}
-  </div>
-{/if}
+    <Scrim />
+    <AppContent>
+      <div class="container">
+        <div class="header">
+          {#if $editing}
+            <Fab color="secondary" on:click={() => (addOpen = true)}>
+              <Icon class="material-icons">add</Icon>
+            </Fab>
+        
+            <Fab color="secondary" on:click={() => saveAppSettings()}>
+              <Icon class="material-icons">save</Icon>
+            </Fab>
+          {/if}
+        
+          <Fab color="primary" on:click={() => toggleEdit()}>
+            <Icon class="material-icons">settings</Icon>
+          </Fab>
+        </div>
 
-<Dashboard on:edit={e => editWidget(e.detail)} />
-<AddDialog bind:open={addOpen} on:selected={e => addWidget(e.detail)} />
-<EditDialog bind:open={editOpen} item={editItem} on:settings={(e) => saveWidget(e.detail)} />
+        {#if error !== undefined}
+          <div class="error">
+            {error}
+          </div>
+        {/if}
+        
+        <Dashboard on:edit={e => editWidget(e.detail)} />
+        <AddDialog bind:open={addOpen} on:selected={e => addWidget(e.detail)} />
+      </div>
+    </AppContent>
+  {/if}
+{/if}
 
 <style>
+
+.container {
+  
+}
 
 .header {
   position: absolute;

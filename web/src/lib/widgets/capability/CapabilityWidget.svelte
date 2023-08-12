@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { devices, homey } from '$lib/stores/homey';
+    import { devices, homey, scopes } from '$lib/stores/homey';
 
     import Switch from '@smui/switch';
     import Slider from '@smui/slider';
@@ -14,6 +14,8 @@
     $: device = $devices[settings.deviceId ?? ''];
     $: capability = device?.capabilitiesObj[settings.capabilityId ?? ''];
     $: value = capability?.value;
+
+    $: controllable = $scopes.includes('homey') || $scopes.includes('homey.device.control');
 
     async function setCapabilityValue(v: number|boolean|string) {
         await device.setCapabilityValue({ 
@@ -32,15 +34,13 @@
             {#await $homey.baseUrl}
                 ...
             {:then url}
-                <img class="widget-icon" src={url + device?.iconObj.url} alt={device?.icon} />
+                <img class="widget-icon widget-icon-theme" src={url + device?.iconObj.url} alt={device?.icon} />
             {/await}
 
             <div>
                 <div>{device?.name}</div>
                 <div class="subtitle">{capability?.title}</div>
             </div>
-            
-            
         {/if}
     </svelte:fragment>
 
@@ -52,7 +52,7 @@
                 <span>Capability not found.</span>
             {/if}
         {:else}
-            {#if capability?.setable === true }
+            {#if capability?.setable === true && controllable }
                 {#if capability.type === 'boolean'}
                     <Switch 
                         style="align-self: center;" 
@@ -77,7 +77,11 @@
                     {/if}
                 {/if}
             {:else}
-                <h5 class="value">{capability?.value} {capability?.units}</h5>
+                {#if capability.type === 'boolean'}
+                    <h5 class="value">{capability.value ? capability.insightsTitleTrue : capability.insightsTitleFalse}</h5>
+                {:else}
+                    <h5 class="value">{capability?.value} {capability?.units ?? ''}</h5>
+                {/if}
             {/if}
         {/if}
     </svelte:fragment>

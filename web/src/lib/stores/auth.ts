@@ -1,16 +1,30 @@
 import { writable } from "svelte/store";
 
-const { subscribe, set } = writable(localStorage.token);
-
-function createAppToken() {
+function createApiKey() {
+    const { subscribe, set } = writable(localStorage.apikey);
+    
     return {
         subscribe,
-        set: (token: string|undefined) => {
-            localStorage.token = token;
-            set(token); 
+        set: (apikey: string|undefined) => {
+            localStorage.apikey = apikey;
+            set(apikey); 
         }
     };
 }
 
-export const appToken = createAppToken();
-export const homeyToken = writable<string>();
+/*
+function createOauth() {
+    const { subscribe, set } = writable(JSON.parse(localStorage.oauth));
+    
+    return {
+        subscribe,
+        set: (oauth: string|undefined) => {
+            localStorage.oauth = JSON.stringify(oauth);
+            set(oauth); 
+        }
+    };
+}
+*/
+
+export const apiKey = createApiKey();
+//export const oauth = createOauth();

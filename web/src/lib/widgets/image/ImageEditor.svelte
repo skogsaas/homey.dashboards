@@ -10,8 +10,8 @@
 
     const dispatch = createEventDispatcher();
 
-    let device: DeviceObj | null = null;
-    let image: Image | null = null;
+    let deviceId: string | undefined;
+    let imageId: string | undefined;
     let refresh: number = 0;
 
     $: imageDevices = (Object.values($devices) ?? [])
@@ -21,42 +21,37 @@
             if(a.name < b.name) return -1;
             return 1;
         });
-    $: images = device?.images ? device.images : [];
+    $: images = deviceId ? $devices[deviceId].images : [];
 
-    $: onDevice(device);
-    $: onImage(image);
+    $: onDevice(deviceId);
+    $: onImage(imageId);
     $: onRefresh(refresh);
 
     onMount(() => {
-        if(settings.deviceId) {
-            device = $devices[settings.deviceId];
-        }
-
-        if(device && settings.imageId) {
-            image = device.images.find(i => i.id === settings.imageId) ?? null;
-        }
+        deviceId = settings.deviceId;
+        imageId = settings.imageId;
 
         refresh = settings?.refresh ?? 0;
     });
 
-    function onDevice(value: DeviceObj | null) {
-        if(value == null || value.id === settings.deviceId) {
-            return null;
+    function onDevice(value: string | undefined) {
+        if(value === undefined || value === settings.deviceId) {
+            return;
         }
 
         // Reset the capability after changing device
-        image = null;
+        imageId = undefined;
         
-        const s: ImageSettings = { ...settings, deviceId: device?.id ?? null, imageId: null };
+        const s: ImageSettings = { ...settings, deviceId, imageId };
         dispatch('settings', s);
     }
 
-    function onImage(value: Image | null) {
-        if(value == null || value.id === settings.imageId) {
-            return null;
+    function onImage(value: string | undefined) {
+        if(value === undefined || value === settings.imageId) {
+            return;
         }
 
-        const s: ImageSettings = { ...settings, imageId: value.id };
+        const s: ImageSettings = { ...settings, imageId };
         dispatch('settings', s);
     }
 
@@ -70,27 +65,23 @@
 
 <div>
     <Select 
-        bind:value={device} 
+        bind:value={deviceId} 
         label="Device"
-        menu$class="mdc-menu-surface--fixed with-parameter__menu"
-        class="with-parameter"
     >
         {#each imageDevices as imageDevice}
-          <Option value={imageDevice}>{imageDevice.name}</Option>
+          <Option value={imageDevice.id}>{imageDevice.name}</Option>
         {/each}
     </Select>
 </div>
 
 <div>
-{#if device}
+{#if deviceId}
     <Select 
-        bind:value={image} 
+        bind:value={imageId} 
         label="Image"
-        menu$class="mdc-menu-surface--fixed with-parameter__menu"
-	    class="with-parameter"
     >
         {#each images as img}
-            <Option value={img}>{img.title}</Option>
+            <Option value={img.id}>{img.title}</Option>
         {/each}
     </Select>
 {/if}
@@ -99,27 +90,17 @@
 <Select 
     bind:value={refresh} 
     label="Refresh every"
-    menu$class="mdc-menu-surface--fixed with-parameter__menu"
-	class="with-parameter"
 >
-    <Option value={0}>Never</Option>
-    <Option value={5}>5 seconds</Option>
-    <Option value={15}>15 seconds</Option>
-    <Option value={30}>30 seconds</Option>
-    <Option value={60}>1 minute</Option>
-    <Option value={300}>5 minutes</Option>
-    <Option value={600}>10 minutes</Option>
-    <Option value={1800}>30 minutes</Option>
-    <Option value={3600}>1 hour</Option>
-    <Option value={21600}>6 hour</Option>
-    <Option value={43200}>12 hour</Option>
-    <Option value={86400}>24 hour</Option>
+    <Option value="0">Never</Option>
+    <Option value="5">5 seconds</Option>
+    <Option value="15">15 seconds</Option>
+    <Option value="30">30 seconds</Option>
+    <Option value="60">1 minute</Option>
+    <Option value="300">5 minutes</Option>
+    <Option value="600">10 minutes</Option>
+    <Option value="1800">30 minutes</Option>
+    <Option value="3600">1 hour</Option>
+    <Option value="21600">6 hour</Option>
+    <Option value="43200">12 hour</Option>
+    <Option value="86400">24 hour</Option>
 </Select>
-
-<style>
-    /* https://github.com/hperrin/svelte-material-ui/issues/242#issuecomment-1451448516 */
-    :global(.with-parameter__menu) {
-        width: 300px;
-        left: auto !important;
-    }
-</style>

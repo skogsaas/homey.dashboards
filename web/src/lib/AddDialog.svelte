@@ -6,7 +6,8 @@
     import Button, { Label } from '@smui/button';
     import Radio from '@smui/radio';
 
-    import { widgets } from './widgets/widgets';
+    import { hasRequiredScopes, widgets } from './widgets/widgets';
+    import { scopes } from './stores/homey';
 
     export let open: boolean;
 
@@ -31,12 +32,14 @@
     <Content>
         <List>
             {#each widgets as widget}
-                <Item>
-                    <Graphic>
-                        <Radio bind:group={selection} value={widget.type} />
-                    </Graphic>
-                    <Text>{widget.label}</Text>
-                </Item>
+                {#if hasRequiredScopes(widget.type, $scopes)}
+                    <Item>
+                        <Graphic>
+                            <Radio bind:group={selection} value={widget.type} />
+                        </Graphic>
+                        <Text>{widget.label}</Text>
+                    </Item>
+                {/if}
             {/each}
         </List>
     </Content>

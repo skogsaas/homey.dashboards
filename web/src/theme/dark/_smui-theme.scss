@@ -11,10 +11,15 @@
   $error: color-palette.$red-700
 );
 
+@use '@material/typography/index' as typography;
+
 html,
 body {
   background-color: #000;
   color: theme.$on-surface;
+  margin: 0;
+  width: 100%;
+  height: 100%;
 }
 
 a {
@@ -22,4 +27,58 @@ a {
 }
 a:visited {
   color: color.scale(#40b3ff, $lightness: -35%);
+}
+
+html {
+  @include typography.typography('body1');
+}
+
+h1 {
+  @include typography.typography('headline1');
+}
+
+h2 {
+  @include typography.typography('headline2');
+}
+
+h3 {
+  @include typography.typography('headline3');
+}
+
+h4 {
+  @include typography.typography('headline4');
+}
+
+h5 {
+  @include typography.typography('headline5');
+}
+
+h6 {
+  @include typography.typography('headline6');
+}
+
+caption {
+  @include typography.typography('caption');
+}
+
+code,
+pre {
+  font-family: 'Roboto Mono', monospace;
+}
+
+small {
+  font-size: 0.9em;
+}
+
+big {
+  font-size: 1.1em;
+}
+
+b,
+strong {
+  font-weight: bold;
+}
+
+.widget-icon-theme {
+  filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(212deg) brightness(103%) contrast(101%);
 }

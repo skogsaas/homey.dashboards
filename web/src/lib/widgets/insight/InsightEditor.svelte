@@ -4,14 +4,13 @@
 
     import Select, { Option } from "@smui/select";
     import type InsightSettings from "./InsightSettings";
-    import type { InsightObj, DeviceObj } from '../../types/Homey';
 
     export let settings: InsightSettings;
 
     const dispatch = createEventDispatcher();
 
-    let device: DeviceObj | null = null;
-    let insight: InsightObj | undefined;
+    let deviceId: string | undefined;
+    let insightId: string | undefined;
     let resolution: string | undefined;
 
     $: flatDevices = Object.values($devices).sort((a, b) => {
@@ -19,44 +18,41 @@
         if(a.name < b.name) return -1;
         return 1;
     });
-    $: insights = device?.insights ?? [];
+    $: insights = deviceId ? $devices[deviceId].insights : [];
 
-    $: onDevice(device);
-    $: onInsight(insight);
+    $: onDevice(deviceId);
+    $: onInsight(insightId);
     $: onResolution(resolution);
 
     onMount(() => {
-        if(settings.deviceId) {
-            device = $devices[settings.deviceId];
-        }
-
-        if(device && settings.insightId) {
-            insight = device.insights.find(i => i.id === settings.insightId);
-        }
+        deviceId = settings.deviceId;
+        insightId = settings.insightId;
+        resolution = settings.resolution;
     });
 
-    function onDevice(value: DeviceObj | null) {
-        if(value == null || value.id === settings.deviceId) {
+    function onDevice(value: string | undefined) {
+        if(value === undefined || value === settings.deviceId) {
             return;
         }
 
-        settings.deviceId = value.id;
+        settings.deviceId = value;
 
         // Reset the insight after changing device
-        insight = undefined;
-        settings.insightId = null;
+        insightId = undefined;
 
-        dispatch('settings', settings);
+        const s: InsightSettings = { ...settings, deviceId, insightId };
+        dispatch('settings', s);
     }
 
-    function onInsight(value: InsightObj | undefined) {
-        if(value == null || value.id === settings.insightId) {
+    function onInsight(value: string | undefined) {
+        if(value == null || value === settings.insightId) {
             return;
         }
 
-        settings.insightId = value.id;
+        insightId = value;
 
-        dispatch('settings', settings);
+        const s: InsightSettings = { ...settings, insightId };
+        dispatch('settings', s);
     }
 
     function onResolution(value: string | undefined) {
@@ -64,32 +60,33 @@
             return;
         }
 
-        settings.resolution = value;
+        resolution = value;
 
-        dispatch('settings', settings);
+        const s: InsightSettings = { ...settings, resolution };
+        dispatch('settings', s);
     }
 </script>
 
 <div>
-    <Select bind:value={device} label="Device">
+    <Select bind:value={deviceId} label="Device">
         {#each flatDevices as flatDevice}
-          <Option value={flatDevice}>{flatDevice.name}</Option>
+          <Option value={flatDevice.id}>{flatDevice.name}</Option>
         {/each}
     </Select>
 </div>
 
 <div>
-{#if device}
-    <Select bind:value={insight} label="Insight">
-        {#each insights as i}
-            <Option value={i}>{i.title}</Option>
+{#if deviceId}
+    <Select bind:value={insightId} label="Insight">
+        {#each insights as insight}
+            <Option value={insight.id}>{insight.title}</Option>
         {/each}
     </Select>
 {/if}
 </div>
 
 <div>
-    {#if device && insight}
+    {#if deviceId && insightId}
         <Select bind:value={resolution} label="Resolution">
             <Option value="lastHour">Last hour</Option>
             <Option value="last6Hours">Last 6 hours</Option>
@@ -97,12 +94,10 @@
             <Option value="last7Days">Last 7 days</Option>
             <Option value="last14Days">Last 14 days</Option>
             <Option value="last31Days">Last 31 days</Option>
-            <Option value={null}>---</Option>
             <Option value="today">Today</Option>
             <Option value="thisWeek">This week</Option>
             <Option value="thisMonth">This month</Option>
             <Option value="thisYear">This year</Option>
-            <Option value={null}>---</Option>
             <Option value="yesterday">Yesterday</Option>
             <Option value="lastWeek">Last week</Option>
             <Option value="lastMonth">Last month</Option>
