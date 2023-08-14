@@ -11,11 +11,14 @@
     import type { Homey } from '$lib/types/Homey';
     import { apiKey } from '$lib/stores/auth';
     import { goto } from '$app/navigation';
+    import { base } from '$app/paths';
+
+    import { clientId, clientSecret } from '$lib/constants';
 
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import AthomCloudAPI, { Token } from 'homey-api/lib/AthomCloudAPI';
     
-    let active = 'Url';
+    let active = 'Local';
 
     let localKey: string = '';
     let localKeyInvalid: boolean = false;
@@ -49,14 +52,14 @@
     async function setHomey(instance: Homey) {
         homey.set(instance);
 
-        await goto('/');
+        await goto(base);
     }
 
     async function oauthLogin() {
         const cloudApi = new AthomCloudAPI({
-            clientId: '5a8d4ca6eb9f7a2c9d6ccf6d',
-            clientSecret: 'e3ace394af9f615857ceaa61b053f966ddcfb12a',
-            redirectUrl: 'http://localhost/oauth2/callback',
+            clientId,
+            clientSecret,
+            redirectUrl: 'http://localhost/oauth2/callback', // TODO: Replace
         });
 
         const loggedIn = await cloudApi.isLoggedIn();
@@ -75,7 +78,7 @@
 
         homey.set(homeyApi);
 
-        await goto('/');
+        await goto(base);
     }
 
     async function homeyInkLogin() : Promise<Homey | undefined> {
@@ -98,12 +101,10 @@
 
         // Login using the client id and secret for homey.ink
         const cloudApi = new AthomCloudAPI({
-            clientId: '5cbb504da1fc782009f52e46', 
-            clientSecret: 'gvhs0gebgir8vz8yo2l0jfb49u9xzzhrkuo1uvs8',
+            clientId, 
+            clientSecret,
             token: new Token(jwt)
         });
-
-        console.log(await cloudApi.isLoggedIn());
 
         await cloudApi.authenticateWithRefreshToken(jwt.refresh_token);
 
@@ -117,7 +118,7 @@
 
 <div class="align-center">
     <div class="login">
-        <TabBar tabs={['Url', 'Local' /*, 'Online' */]} let:tab bind:active>
+        <TabBar tabs={['Local', 'Url', /*'Online'*/]} let:tab bind:active>
             <Tab {tab}>
                 <Label>{tab}</Label>
             </Tab>

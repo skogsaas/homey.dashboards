@@ -4,7 +4,9 @@
 
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
     import { goto } from "$app/navigation";
+    import { base } from "$app/paths";
     import { homey } from "$lib/stores/homey";
+    import { clientId, clientSecret } from "$lib/constants";
 
     let code: string | null;
     $: code = $page.url.searchParams.get('code');
@@ -12,8 +14,8 @@
     onMount(async () => {
         if(code != null) {
             const cloudApi = new AthomCloudAPI({
-                clientId: '5a8d4ca6eb9f7a2c9d6ccf6d',
-                clientSecret: 'e3ace394af9f615857ceaa61b053f966ddcfb12a'
+                clientId,
+                clientSecret
             });
 
             const loggedIn = await cloudApi.isLoggedIn();
@@ -37,9 +39,9 @@
                 } else {
                     // TODO: Display some error
                 }
-            } else {
-                goto('/');
             }
         }
+
+        await goto(base);
     });
 </script>

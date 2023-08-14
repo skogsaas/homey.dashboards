@@ -6,27 +6,40 @@
 
   <body>
     <header class="homey-header">
-      <h1 class="homey-title">Remote url</h1>
+      <h1 class="homey-title">Direct connect</h1>
     </header>
-
+    <p>The following URLs will load the Dashboard directly from your Homey.</p>
     <p>
-      If you are connected to the same network as your Homey, and opened this configuration page using the Homey iOS or Android app, 
-      the following link will not be remote. To get the true remote url, use https://my.homey.app or disconnect temporary from the network.
+      Direct connection to your Homey, allows you to login using an API-key from a Homey Pro 2023. 
+      This allows you to select access scopes for limited access. Can typically be used for a 
+      read-only dashboard.
     </p>
+    <p>
+      <ul>
+        <li><b>Local URL</b> is a link that only works when connected to your local network.</li>
+        <li><b>Remote URL</b> is a link that uses Athom Connect to connect directly to your Homey over the internet.</li>
+      </ul>
+    </p>
+    <button onclick="openLocal()" class="homey-button-primary">Local URL</button>
+    <button onclick="openRemote()" class="homey-button-primary">Remote URL</button>
 
-    <button onclick="openRemote()" class="homey-button-primary">Open remote URL</button>
-
-    <header class="homey-header">
-      <h1 class="homey-title">Local url</h1>
+    <header class="homey-header" style="margin-top: 32px">
+      <h1 class="homey-title">Online url</h1>
     </header>
-
     <p>
-      The following url is the dashboard local url for your Homey. This should only work on your local network.
+      The Dashboard app is also available online at GitHub.io, and allows you to log in using your Athom account.
     </p>
-
-    <button onclick="openLocal()" class="homey-button-primary">Open local URL</button>
-
+    <p>
+      <span style="color: orangered;">NOTE: </span>This will request full access to your Homey. As the 
+      Athom login don't give you an option to select exact access scopes while logging in. If you wan to limit
+      dashboard access, use the local url 
+    </p>
+    <button onclick="openOnline()" class="homey-button-primary">Open homeyboard.github.io</button>
+    
     <script type="text/javascript">
+      const urlPostfix = '/app/skogsaas.dashboards/assets/dashboard';
+
+      let onlineUrl = 'https://homeyboard.github.io';
       let localUrl;
       let remoteUrl;
       let homey;
@@ -35,22 +48,27 @@
         // Retain the Homey instance for later use.
         homey = Homey;
 
-        const urlPostfix = '/app/skogsaas.dashboards/assets/dashboard';
-        remoteUrl = location.origin + urlPostfix;
-      
         homey.get("homey_id", function (err, homeyId) {
-          localUrl = 'http://homey-' + homeyId + '.local' + urlPostfix;
+          remoteUrl = 'https://' + homeyId + '.connect.athom.com' + urlPostfix;
+        });
+
+        homey.get("local_address", function (err, localAddr) {
+          localUrl = 'https://' + localAddr.split(':')[0].replaceAll('.', '-') + '.homey.homeylocal.com' + urlPostfix;
         });
 
         homey.ready();
       }
 
-      function openRemote() {
-        homey.api('GET', '/auth/code', null, (error, response) => homey.openURL(remoteUrl + '?code=' + response));
+      function openOnline() {
+        homey.openURL(onlineUrl);
       }
 
       function openLocal() {
-        homey.api('GET', '/auth/code', null, (error, response) => homey.openURL(localUrl + '?code=' + response));
+        homey.openURL(localUrl);
+      }
+
+      function openRemote() {
+        homey.openURL(remoteUrl);
       }
     </script>
     

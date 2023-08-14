@@ -64,7 +64,7 @@ function createItems() {
             return item;
         },
         removeItem: (id: string) => update((existing) => {
-            return existing.filter(item => item.id === id);
+            return existing.filter(item => item.id !== id);
         }),
         setEditing: (edit: boolean) => update((existing: GridItem[]) => { 
             const result = [...existing];

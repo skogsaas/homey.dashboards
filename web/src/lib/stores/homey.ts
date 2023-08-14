@@ -4,15 +4,15 @@ import { page } from '$app/stores';
 import type { AdvancedFlow, AdvancedFlowMap, BasicFlow, BasicFlowMap, CapabilityEvent, DeviceMap, Homey, Session } from '$lib/types/Homey';
 
 function createBaseUrl() {
-    return derived(page, ($page, set) => {
-        let value = $page.url.origin;
-    
-        // Inject development variables
-        if(import.meta.env.VITE_HOMEY_URL) {
-            value = import.meta.env.VITE_HOMEY_URL;
+    return derived([homey, page], ([$homey, $page], set) => {
+        if($homey !== undefined) {
+            $homey.baseUrl.then(u => set(u))
+        } 
+        else if(import.meta.env.VITE_HOMEY_URL) { // Inject development variables
+            set(import.meta.env.VITE_HOMEY_URL);
+        } else {
+            set($page.url.origin);
         }
-    
-        set(value);
     });
 }
 
@@ -57,8 +57,8 @@ function createAdvancedFlows() {
     };
 }
 
-export const baseUrl = createBaseUrl();
 export const homey = writable(undefined as (Homey | undefined));
+export const baseUrl = createBaseUrl();
 export const session = writable(undefined as (Session | undefined));
 export const scopes = derived(session, (s: Session) => s?.scopes, undefined);
 export const devices = createDevices();

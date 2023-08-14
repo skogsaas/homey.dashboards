@@ -14,11 +14,10 @@
     "en": "Create customizable dashboards for easy access and overview of your devices."
   },
   "category": [
-    "tools"
+    "tools",
+    "internet"
   ],
-  "permissions": [
-    "homey:manager:api"
-  ],
+  "permissions": [],
   "images": {
     "small": "/assets/images/small.png",
     "large": "/assets/images/large.png",
@@ -32,6 +31,7 @@
   "bugs": {
     "url": "https://github.com/skogsaas/homey.dashboards/issues"
   },
+  "homepage": "https://skogsaas.github.io",
   "homeyCommunityTopicId": 84837,
   "tags": {
     "en": [
@@ -39,30 +39,15 @@
     ]
   },
   "api": {
-    "getAuthCode": {
-      "method": "GET",
-      "path": "/auth/code",
-      "public": false
-    },
-    "getAppToken": {
-      "method": "GET",
-      "path": "/auth/token/app",
-      "public": true
-    },
-    "getHomeyToken": {
-      "method": "GET",
-      "path": "/auth/token/homey",
-      "public": true
-    },
     "getDashboards": {
       "method": "GET",
       "path": "/dashboards",
-      "public": true
+      "public": false
     },
     "putDashboards": {
       "method": "PUT",
       "path": "/dashboards",
-      "public": true
+      "public": false
     }
   }
 }

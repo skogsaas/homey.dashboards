@@ -19,7 +19,7 @@
 
     let entries: LogEntries;
     let data: any = {};
-    let options = {
+    $: options = {
         plugins: {
             legend: {
                 display: false
@@ -36,7 +36,7 @@
             } 
         },
         responsive: true,
-        maintainAspectRatio: false
+        maintainAspectRatio: false,
     };
 
     async function getEntries(i: InsightObj | undefined, r: string | undefined) {
@@ -51,6 +51,7 @@
                     {
                         label: insight?.title,
                         data: entries.values.map(entry => ({ x: new Date(entry.t).getTime(), y: entry.v })),
+                        tension: 0.4
                     }
                 ]
             };

@@ -25,13 +25,15 @@
     import EditView from '$lib/EditView.svelte';
 
     // Types
-    import type { AdvancedFlow, BasicFlow, CapabilityEvent } from '$lib/types/Homey';
+    import type { AdvancedFlow, AppObj, BasicFlow, CapabilityEvent } from '$lib/types/Homey';
     import type { GridItem } from '$lib/types/Grid';
     import type { WidgetSettings } from '$lib/types/Widgets';
     import { findLabel } from '$lib/widgets/widgets';
+    import { clientId, clientSecret } from '$lib/constants';
 
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
+    import { base } from '$app/paths';
     
     let loading: boolean = true;
     let error: any | undefined = undefined;
@@ -45,44 +47,12 @@
       await connectHomey();
       await loadSession();
 
-      console.log($homey);
-
       await loadDevices();
       await loadFlows();
       await loadAppSettings();
 
       loading = false;
     });
-
-    /*
-    function tryRefreshAppToken(token: string) {
-      if(token !== undefined) {
-        const decoded: any = jwtDecode(token);
-        const timeout = decoded.exp - Math.floor(Date.now() / 1000);
-
-        if(timeout < 0) {
-          let code = $page.url.searchParams.get('code');
-
-          if(code === undefined) {
-            loading = false;
-            error = 'Token has expired. Login using the Homey app configuration page.'
-
-            appToken.set(undefined);
-
-            return;
-          }
-        }
-
-        if(timeoutAppToken !== undefined) clearTimeout(timeoutAppToken);
-        
-        timeoutAppToken = setTimeout(() => {
-          tokenApi.getAppToken()
-            .then(response => appToken.set(response))
-            .catch(e => { loading = false; error = e; });
-        }, ((decoded.exp - Math.floor(Date.now() / 1000)) - 600) * 1000);
-      }
-    }
-    */
 
     async function connectHomey() {
       if($homey === undefined) {
@@ -95,23 +65,22 @@
 
           homey.set(instance);
         } else {
-          // Athom OAuth token exists
           const cloudApi = new AthomCloudAPI({
-            clientId: '5cbb504da1fc782009f52e46',
-            clientSecret: 'gvhs0gebgir8vz8yo2l0jfb49u9xzzhrkuo1uvs8'
+            clientId,
+            clientSecret
           });
 
           const loggedIn = await cloudApi.isLoggedIn();
 
           if (!loggedIn) {
-            await goto('/login');
+            await goto(base + '/login');
+          } else {
+            const user = await cloudApi.getAuthenticatedUser();
+            const firstHomey = await user.getFirstHomey();
+            const instance = await firstHomey.authenticate();
+
+            homey.set(instance);
           }
-
-          const user = await cloudApi.getAuthenticatedUser();
-          const firstHomey = await user.getFirstHomey();
-          const instance = await firstHomey.authenticate();
-
-          homey.set(instance);
         }
       }
     }
@@ -128,27 +97,32 @@
     }
 
     async function loadAppSettings() {
+      let app: AppObj | undefined;
+      let result: GridItem[] = [];
+
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.app')) {
-          // Connect to skogsaas.dashboard app and load stored dashboards Homey Pro
+          // Connect to skogsaas.dashboard app and load stored dashboards on the Homey Pro
+          const apps = await $homey.apps.getApps();
+          app = apps['skogsaas.dashboards'];
+        }
 
-          const app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
-          const result: GridItem[] = await app.get({ path: '/dashboards' });
-
-          if(result != undefined && Array.isArray(result)) {
-            items.set(result);
-          }
+        if(app !== undefined) {
+          result = await app.get({ path: '/dashboards' });
         } else {
           const stored = localStorage.dashboards;
 
           if(stored !== undefined) {
-            const result: GridItem[] = JSON.parse(stored);
-            items.set(result);
+            result = JSON.parse(stored);
           }
-        }        
+        } 
       } catch (e) {
         error = e;
       } 
+
+      if(result != undefined && Array.isArray(result)) {
+        items.set(result);
+      }
 
       loading = false;
     }
