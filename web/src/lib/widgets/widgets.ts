@@ -1,35 +1,63 @@
 import type { ComponentType } from 'svelte';
 
+import { v4 as uuid } from 'uuid';
+
 import CapabilityEditor from "./capability/CapabilityEditor.svelte";
 import CapabilityWidget from "./capability/CapabilityWidget.svelte";
+import { 
+    create as createCapability,
+    migrate as migrateCapability 
+} from './capability/CapabilitySettings';
+
 import FlowEditor from "./flow/FlowEditor.svelte";
 import FlowWidget from "./flow/FlowWidget.svelte";
+
 import ImageWidget from "./image/ImageWidget.svelte";
 import ImageEditor from "./image/ImageEditor.svelte";
 import ImageView from "./image/ImageView.svelte";
+
 import InsightWidget from "./insight/InsightWidget.svelte";
 import InsightEditor from "./insight/InsightEditor.svelte";
+
 import UnknownWidget from '$lib/widgets/unknown/UnknownWidget.svelte';
 import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
+import type { WidgetSettings } from '$lib/types/Widgets';
 
-export const widgets = [
+export interface WidgetInfo {
+    type: string;
+    label: string;
+    widget: ComponentType;
+    editor: ComponentType | undefined;
+    view: ComponentType | undefined;
+    scopes: { oneOf: string[] }[];
+    create: () => WidgetSettings;
+    migration: (e: WidgetSettings) => WidgetSettings;
+}
+
+export const widgets: WidgetInfo[] = [
     {
         type: 'capability', 
         label: 'Capability',
         widget: CapabilityWidget, 
         editor: CapabilityEditor,
+        view: undefined,
         scopes: [
             { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] }
-        ]
+        ],
+        create: createCapability,
+        migration: migrateCapability
     },
     {
         type: 'flow', 
         label: 'Flow',
         widget: FlowWidget, 
         editor: FlowEditor,
+        view: undefined,
         scopes: [
             { oneOf: ['homey', 'homey.flow', 'homey.flow.start'] }
-        ]
+        ],
+        create: () => ({ id: uuid(), type: 'flow', version: 1 }),
+        migration: (e: WidgetSettings) => e
     },
     {
         type: 'image', 
@@ -39,17 +67,22 @@ export const widgets = [
         view: ImageView,
         scopes: [
             { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] }
-        ]
+        ],
+        create: () => ({ id: uuid(), type: 'image', version: 1 }),
+        migration: (e: WidgetSettings) => e
     },
     {
         type: 'insight', 
         label: 'Insight',
         widget: InsightWidget, 
         editor: InsightEditor,
+        view: undefined,
         scopes: [
             { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] },
             { oneOf: ['homey', 'homey.insights.readonly'] }
-        ]
+        ],
+        create: () => ({ id: uuid(), type: 'insight', version: 1 }),
+        migration: (e: WidgetSettings) => e
     }
 ];
 
@@ -83,6 +116,18 @@ export function findView(type: string) : ComponentType | undefined {
     const view = widgets.find(widget => widget.type === type)?.view;
 
     return view;
+}
+
+export function findMigration(type: string) : ((settings: WidgetSettings) => WidgetSettings) | undefined {
+    const migration = widgets.find(widget => widget.type === type)?.migration;
+
+    return migration;
+}
+
+export function findCreate(type: string) : (() => WidgetSettings) | undefined {
+    const create = widgets.find(widget => widget.type === type)?.create;
+
+    return create;
 }
 
 export function hasRequiredScopes(type: string, scopes: string[]) : boolean {

@@ -1,7 +1,7 @@
 import { derived, writable } from 'svelte/store';
 import { page } from '$app/stores';
 
-import type { AdvancedFlow, AdvancedFlowMap, BasicFlow, BasicFlowMap, CapabilityEvent, DeviceMap, Homey, Session } from '$lib/types/Homey';
+import type { AdvancedFlow, AdvancedFlowMap, BasicFlow, BasicFlowMap, CapabilityEvent, DeviceMap, Homey, Session, Zone, ZoneMap } from '$lib/types/Homey';
 
 function createBaseUrl() {
     return derived([homey, page], ([$homey, $page], set) => {
@@ -57,10 +57,20 @@ function createAdvancedFlows() {
     };
 }
 
+function createZones() {
+    const { subscribe, set, update } = writable({} as ZoneMap);
+
+    return {
+        subscribe,
+        set
+    };
+}
+
 export const homey = writable(undefined as (Homey | undefined));
 export const baseUrl = createBaseUrl();
 export const session = writable(undefined as (Session | undefined));
-export const scopes = derived(session, (s: Session) => s?.scopes, undefined);
+export const scopes = derived(session, (s: Session) => s?.scopes ?? [], []);
 export const devices = createDevices();
 export const basicFlows = createBasicFlows();
 export const advancedFlows = createAdvancedFlows();
+export const zones = createZones();

@@ -2,7 +2,6 @@ import type { Grid, GridItem, GridResizeEvent } from '$lib/types/Grid';
 import type { WidgetSettings } from '$lib/types/Widgets';
 import { writable } from 'svelte/store';
 
-import { v4 as uuid } from 'uuid';
 import gridHelp from "svelte-grid/build/helper";
 
 const smallBreakpoint = 640;
@@ -40,10 +39,7 @@ function createItems() {
     return {
         subscribe,
         set,
-        addItem: (type: string) => { 
-            const id = uuid();
-            let item: GridItem = { id, settings: { id, type } };
-            
+        addItem: (item: GridItem) => { 
             update((existing: GridItem[]) => {
                 const result = [...existing, item];
                 
@@ -107,7 +103,7 @@ function createItems() {
 
 function createGrid() {
     const { subscribe, set, update } = writable({
-        gaps: [5, 5]
+        gaps: [10, 10]
     } as Grid);
 
     return {

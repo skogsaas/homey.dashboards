@@ -1,101 +1,148 @@
 <script lang="ts">
     import { devices, homey, scopes } from '$lib/stores/homey';
 
-    import Switch from '@smui/switch';
-    import Slider from '@smui/slider';
-
-    import WidgetHeaderBody from "../WidgetHeaderBody.svelte";
-
     import type CapabilitySettings from './CapabilitySettings';
-    import { editing } from '$lib/stores/dashboard';
+    import type { DeviceObj } from '$lib/types/Homey';
+    
+    import Slider from './components/Slider.svelte';
+    import Sensor from './components/Sensor.svelte';
+    import Toggle from './components/Toggle.svelte';
+    import Button from './components/Button.svelte';
 
     export let settings: CapabilitySettings;
 
+    let device: DeviceObj;
+
     $: device = $devices[settings.deviceId ?? ''];
-    $: capability = device?.capabilitiesObj[settings.capabilityId ?? ''];
-    $: value = capability?.value;
+    $: capabilities = device && settings?.capabilityIds ? settings.capabilityIds.map(cId => device.capabilitiesObj[cId]) : [];
 
-    $: controllable = $scopes.includes('homey') || $scopes.includes('homey.device.control');
+    $: controllable = $scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.control');
 
-    async function setCapabilityValue(v: number|boolean|string) {
+    async function setCapabilityValue(capabilityId: string, value: number|boolean|string) {
         await device.setCapabilityValue({ 
-            capabilityId: capability.id,
             deviceId: device.id,
-            value: v
+            capabilityId,
+            value
         });
+    }
+
+    function getComponent(capabilityId: string) {
+        if(device !== undefined) {
+            for(var component of device.ui.components) {
+                if(component.capabilities.includes(capabilityId)) {
+                    switch(component.id) {
+                        case 'slider':
+                            return Slider;
+
+                        case 'toggle':
+                            return Toggle;
+
+                        case 'button':
+                            return Button;
+
+                        case 'battery':
+                        case 'color':
+                        case 'media':
+                        case 'picker':
+                        case 'ternary':
+                        case 'thermostat':
+                        case 'sensor':
+                        default:
+                            return Sensor;
+                    }
+                }
+            }
+        }
+
+        return Sensor;
     }
 </script>
 
-<WidgetHeaderBody>
-    <svelte:fragment slot="header">
-        {#if device == undefined || capability == undefined}
+<div class="widget-header">
+    {#if device == undefined}
+        {#if settings?.deviceId !== undefined}
             <span>Error</span>
-        {:else}
-            {#await $homey.baseUrl}
-                ...
-            {:then url}
-                <img class="widget-icon widget-icon-theme" src={url + device?.iconObj.url} alt={device?.icon} />
-            {/await}
-
-            <div>
-                <div>{device?.name}</div>
-                <div class="subtitle">{capability?.title}</div>
-            </div>
         {/if}
-    </svelte:fragment>
+    {:else}
+        {#await $homey.baseUrl}
+            ...
+        {:then url}
+            <img class="device-icon widget-icon-theme" src={url + device?.iconObj.url} alt={device?.icon} />
+        {/await}
 
-    <svelte:fragment slot="body">
-        {#if device == undefined || capability == undefined}
-            {#if device == undefined}
-                <span>Device not found.</span>
-            {:else}
-                <span>Capability not found.</span>
-            {/if}
-        {:else}
-            {#if capability?.setable === true && controllable }
-                {#if capability.type === 'boolean'}
-                    <Switch 
-                        style="align-self: center;" 
-                        checked={value} 
-                        on:SMUISwitch:change={(e) => setCapabilityValue(e.detail.selected)} 
-                        disabled={$editing} 
-                    />
-                {:else if capability.type === 'number'}
-                    {#if capability.min !== undefined && capability.max !== undefined && capability.decimals !== undefined}
-                        <Slider 
-                            style="flex-grow: 1; align-self: center;" 
-                            value={value} 
-                            on:SMUISlider:change={(e) => setCapabilityValue(e.detail.value)} 
-                            min={capability.min} 
-                            max={capability.max} 
-                            step={Math.pow(10, -1 * capability.decimals)} 
-                            discrete 
-                            disabled={$editing} 
-                        />
-                    {:else}
-                        <input type="number" min={capability.min} max={capability.max} disabled={$editing} />
-                    {/if}
-                {/if}
-            {:else}
-                {#if capability.type === 'boolean'}
-                    <h5 class="value">{capability.value ? capability.insightsTitleTrue : capability.insightsTitleFalse}</h5>
-                {:else}
-                    <h5 class="value">{capability?.value} {capability?.units ?? ''}</h5>
-                {/if}
-            {/if}
+        <span class="device-title">{device?.name}</span>
+    {/if}
+</div>
+
+<div class="widget-body">
+    {#if device === undefined}
+        {#if settings.deviceId !== undefined}
+            <span class="device-title">Device not found.</span>
         {/if}
-    </svelte:fragment>
-</WidgetHeaderBody>
+    {:else}
+        <div class="capabilities">
+            {#each capabilities as capability}
+                {#if capability !== undefined}
+                    <div class="capability">
+                        <span class="capability-title">{capability.title}</span>
+                        <svelte:component this={getComponent(capability.id)} {capability} {controllable} on:value={e => setCapabilityValue(capability.id, e.detail)}></svelte:component>
+                    </div>
+                {/if}
+            {/each}
+        </div>
+    {/if}
+</div>
 
 <style>
-.widget-icon {
-    width: 42px;
-    height: 42px;
+
+.widget-header {
+    display: flex;
+    flex-grow: 0;
+    align-items: center;
+
+    overflow: hidden;
+    
+    height: 48px;
+}
+
+.widget-body {
+    display: flex;
+    flex-grow: 1;
+    align-items: flex-start;
+}
+
+.device-icon {
+    width: 32px;
+    height: 32px;
     margin: 4px;
 }
 
-.subtitle {
+.device-title {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: calc(100% - 40px);
+}
+
+.capabilities {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.capability {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(100% - 10px);
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.capability-title {
+    font-size: 14px;
     font-weight: lighter;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 32 - 8);
 }
 
 .value {

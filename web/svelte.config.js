@@ -2,8 +2,7 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/kit/vite';
 
-const env = process.env['NODE_ENV'];
-const cmd = process.env['npm_lifecycle_event'];
+const target = process.env['PUB_TARGET'];
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -16,7 +15,7 @@ const config = {
 			fallback: 'index.html'
 		}),
 		paths: {
-            base: env === 'production' && cmd !== 'build-pages' ? '/app/skogsaas.dashboards/assets/dashboard' : '',
+            base: target === 'app' ? '/app/skogsaas.dashboards/assets/dashboard' : ''
         }
 	}
 };

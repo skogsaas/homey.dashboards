@@ -14,9 +14,9 @@
     async function triggerFlow() {
         if(!$editing && flow !== undefined) {
             if($basicFlows[flow.id]) {
-                console.log(await $homey.flow.triggerFlow({ id: flow.id }));
+                await $homey.flow.triggerFlow({ id: flow.id });
             } else if($advancedFlows[flow.id]) {
-                console.log(await $homey.flow.triggerAdvancedFlow({ id: flow.id }));
+                await $homey.flow.triggerAdvancedFlow({ id: flow.id });
             }
         }
     }
@@ -27,7 +27,7 @@
 {:else}
 <div class="flow-container">
     <div class="flow-button">
-        <Fab on:click={() => triggerFlow()}>
+        <Fab color="primary" on:click={() => triggerFlow()}>
             <Icon class="material-icons">play_arrow</Icon>
         </Fab>
     </div>
@@ -46,6 +46,7 @@
     }
 
     .flow-button {
+        margin-left: 5px;
         margin-right: 5px;
     }
 </style>

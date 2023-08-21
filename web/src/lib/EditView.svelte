@@ -10,25 +10,34 @@
 
     export let item: GridItem | undefined;
 
-    let localSettings: WidgetSettings | undefined;
-    $: if(item !== undefined && localSettings === undefined) { localSettings = { ...item.settings }};
-
     const dispatch = createEventDispatcher();
+
+    let localSettings: WidgetSettings | undefined;
+    $: onItem(item);
+
+    function onItem(i: GridItem | undefined) {
+        if(item === undefined) {
+            localSettings = undefined;
+        } else {
+            // Make a copy of the settings to use until it is saved by the user.
+            localSettings = { ...item?.settings }
+        }
+    }
 
     function cancel() {
         if(item !== undefined) { 
+            // Reset the local settings
             localSettings = { ...item.settings }
         };
+
+        // Dispatch settings to trigger closing the editor.
+        dispatch('settings', localSettings);
     }
 
     function save() {
         dispatch('settings', localSettings);
-
-        item = undefined;
-        localSettings = undefined;
     }
 </script>
-
 
 {#if item !== undefined && localSettings !== undefined}
     <div class="preview">

@@ -1,10 +1,11 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from 'svelte';
+    import { createEventDispatcher } from 'svelte';
     import { devices } from '$lib/stores/homey';
 
     import Select, { Option } from "@smui/select";
+    import FormField from '@smui/form-field';
+    import Checkbox from '@smui/checkbox';
     import type ImageSettings from "./ImageSettings";
-    import type { Image, DeviceObj } from '../../types/Homey';
 
     export let settings: ImageSettings;
 
@@ -12,7 +13,11 @@
 
     let deviceId: string | undefined;
     let imageId: string | undefined;
-    let refresh: number = 0;
+    let refresh: number;
+    let fontColor: string;
+    let fontBlur: boolean;
+
+    $: onSettings(settings);
 
     $: imageDevices = (Object.values($devices) ?? [])
         .filter(d => d.images.length > 0)
@@ -26,13 +31,17 @@
     $: onDevice(deviceId);
     $: onImage(imageId);
     $: onRefresh(refresh);
+    $: onFontColor(fontColor);
+    $: onFontBlur(fontBlur);
 
-    onMount(() => {
+    function onSettings(s: ImageSettings) {
         deviceId = settings.deviceId;
         imageId = settings.imageId;
 
         refresh = settings?.refresh ?? 0;
-    });
+        fontColor = settings?.fontColor ?? 'black';
+        fontBlur = settings?.fontBlur ?? false;
+    }
 
     function onDevice(value: string | undefined) {
         if(value === undefined || value === settings.deviceId) {
@@ -58,6 +67,20 @@
     function onRefresh(value: number) {
         if(value !== settings.refresh) {
             const s: ImageSettings = { ...settings, refresh: value };
+            dispatch('settings', s);
+        }
+    }
+
+    function onFontColor(value: string) {
+        if(value !== settings.fontColor) {
+            const s: ImageSettings = { ...settings, fontColor: value };
+            dispatch('settings', s);
+        }
+    }
+
+    function onFontBlur(value: boolean) {
+        if(value !== settings.fontBlur) {
+            const s: ImageSettings = { ...settings, fontBlur: value };
             dispatch('settings', s);
         }
     }
@@ -104,3 +127,19 @@
     <Option value="43200">12 hour</Option>
     <Option value="86400">24 hour</Option>
 </Select>
+
+<Select 
+    bind:value={fontColor} 
+    label="Font color"
+>
+    <Option value="black">Black</Option>
+    <Option value="white">White</Option>
+    <Option value="red">Red</Option>
+    <Option value="green">Green</Option>
+    <Option value="blue">Blue</Option>
+</Select>
+
+<FormField>
+    <span slot="label">Blur background</span>
+    <Checkbox bind:checked={fontBlur} />
+</FormField>

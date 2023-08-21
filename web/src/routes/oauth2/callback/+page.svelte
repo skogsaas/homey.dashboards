@@ -22,17 +22,8 @@
             if (!loggedIn) {
                 if (cloudApi.hasAuthorizationCode()) {
                     const token = await  cloudApi.authenticateWithAuthorizationCode();
-
-                    // The AthomCloudAPI takes care of storing token to local storage itself
-                    //oauth.set(token);
-
-                    // Get the logged in user
                     const user = await cloudApi.getAuthenticatedUser();
-
-                    // Get the first Homey of the logged in user
                     const firstHomey = await user.getFirstHomey();
-
-                    // Create a session on this Homey
                     const homeyApi = await firstHomey.authenticate();
 
                     homey.set(homeyApi);
@@ -42,6 +33,6 @@
             }
         }
 
-        await goto(base);
+        await goto(base + '/');
     });
 </script>

@@ -6,18 +6,26 @@
     import 'chartjs-adapter-date-fns';
 
     import type InsightSettings from './InsightSettings';
-    import type { InsightObj, LogEntries } from '$lib/types/Homey';
+    import type { InsightObj } from '$lib/types/Homey';
+    import CircularProgress from '@smui/circular-progress';
 
     export let settings: InsightSettings;
 
-    $: device = $devices[settings.deviceId ?? ''];
-    $: insight = device?.insights.find(i => i.id === settings.insightId);
-    $: getEntries(insight, settings.resolution);
-    
-    let insightId: string;
-    let resolution: string | undefined;
+    let renderSettings: InsightSettings;
+    let renderDeviceId: string | undefined;
+    let renderInsightId: string | undefined;
+    let renderInsight: InsightObj | undefined;
+    let renderResolution: string;
 
-    let entries: LogEntries;
+    $: onSettings(settings);
+
+    $: device = $devices[renderDeviceId ?? ''];
+    $: insight = device?.insights.find(i => i.id === renderInsightId);
+    $: resolution = renderSettings?.resolution ?? 'today';
+
+    $: onLoad(insight, resolution);
+    
+    let loading: Promise<void>;
     let data: any = {};
     $: options = {
         plugins: {
@@ -39,23 +47,40 @@
         maintainAspectRatio: false,
     };
 
-    async function getEntries(i: InsightObj | undefined, r: string | undefined) {
-        if(i && (!entries || insightId !== i.id || resolution !== r)) {
-            insightId = i.id;
-            resolution = r;
-            
-            entries = await $homey.insights.getLogEntries({ id: i.id, uri: i.uri, resolution: r });
+    function onSettings(s: InsightSettings) {
+        if(renderSettings !== s) {
+            renderSettings = s;
 
-            data = {
-                datasets: [
-                    {
-                        label: insight?.title,
-                        data: entries.values.map(entry => ({ x: new Date(entry.t).getTime(), y: entry.v })),
-                        tension: 0.4
-                    }
-                ]
-            };
+            if(renderDeviceId !== s.deviceId) {
+                renderDeviceId = s.deviceId;
+            }
+
+            if(renderInsightId !== s.insightId) {
+                renderInsightId = s.insightId;
+            }
         }
+    }
+
+    function onLoad(i: InsightObj | undefined, r: string) {
+        if(i !== undefined && (renderInsight !== i || renderResolution !== r)) {
+            renderInsight = i;
+            renderResolution = r;
+
+            loading = getEntries(i, r);
+        }
+    }
+
+    async function getEntries(i: InsightObj, r: string) {
+        const entries = await $homey.insights.getLogEntries({ id: i.id, uri: i.uri, resolution: r });
+
+        data = {
+            datasets: [
+                {
+                    label: insight?.title,
+                    data: entries.values.map(entry => ({ x: new Date(entry.t).getTime(), y: entry.v }))
+                }
+            ]
+        };
     };
 </script>
 
@@ -75,7 +100,15 @@
             {/if}
         {:else}
             <div class="chart">
-                <Line {data} options={options} />
+                {#await loading}
+                    <div class="loading">
+                        <CircularProgress style="height: 50%; width: 50%;" indeterminate /> 
+                    </div>
+                {:then result}
+                    <Line {data} options={options} />
+                {:catch error} 
+                    {error}
+                {/await}
             </div>
         {/if}
 
@@ -95,6 +128,15 @@
     margin: 5px;
     width: calc(100% - 10px);
     height: calc(100% - 10px - 48px);
+}
+
+.loading {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 </style>

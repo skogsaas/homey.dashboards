@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from 'svelte';
+    import { createEventDispatcher } from 'svelte';
     import { devices } from '$lib/stores/homey';
 
     import Select, { Option } from "@smui/select";
@@ -11,7 +11,9 @@
 
     let deviceId: string | undefined;
     let insightId: string | undefined;
-    let resolution: string | undefined;
+    let resolution: string;
+
+    $: onSettings(settings);
 
     $: flatDevices = Object.values($devices).sort((a, b) => {
         if(a.name === b.name) return 0;
@@ -24,46 +26,37 @@
     $: onInsight(insightId);
     $: onResolution(resolution);
 
-    onMount(() => {
-        deviceId = settings.deviceId;
-        insightId = settings.insightId;
-        resolution = settings.resolution;
-    });
+    function onSettings(s: InsightSettings) {
+        deviceId = settings?.deviceId;
+        insightId = settings?.insightId;
+        resolution = settings?.resolution ?? 'today';
+    };
 
     function onDevice(value: string | undefined) {
         if(value === undefined || value === settings.deviceId) {
             return;
         }
 
-        settings.deviceId = value;
-
         // Reset the insight after changing device
         insightId = undefined;
 
-        const s: InsightSettings = { ...settings, deviceId, insightId };
-        dispatch('settings', s);
+        dispatch('settings', { ...settings, deviceId, insightId });
     }
 
     function onInsight(value: string | undefined) {
-        if(value == null || value === settings.insightId) {
+        if(value == undefined || value === settings.insightId) {
             return;
         }
 
-        insightId = value;
-
-        const s: InsightSettings = { ...settings, insightId };
-        dispatch('settings', s);
+        dispatch('settings', { ...settings, insightId });
     }
 
     function onResolution(value: string | undefined) {
-        if(value == null || value === settings.resolution) {
+        if(value == undefined || value === settings.resolution) {
             return;
         }
 
-        resolution = value;
-
-        const s: InsightSettings = { ...settings, resolution };
-        dispatch('settings', s);
+        dispatch('settings', { ...settings, resolution });
     }
 </script>
 

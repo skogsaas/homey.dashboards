@@ -4,4 +4,7 @@ export default interface ImageSettings extends WidgetSettings {
     deviceId: string | undefined;
     imageId: string | undefined;
     refresh: number | undefined;
+
+    fontColor: string | undefined;
+    fontBlur: boolean | undefined;
 }

@@ -8,6 +8,7 @@ export interface Homey {
     images: ImagesManager;
     sessions: SessionManager;
     system: SystemManager;
+    zones: ZoneManager;
 }
 
 export interface AppManager extends Manager {
@@ -23,6 +24,9 @@ export interface AppManager extends Manager {
 
 export interface DeviceManager extends Manager {
     getDevices() : Promise<DeviceMap>;
+
+    getDeviceSettingsObj(opts: { id: string }) : Promise<any>;
+    setDeviceSettings(opts: { id: string, settings: object }) : Promise<any>;
 }
 
 export interface FlowManager extends Manager {
@@ -34,7 +38,7 @@ export interface FlowManager extends Manager {
 }
 
 export interface InsightsManager extends Manager {
-    getLogEntries(opts: { id: string, uri: string, resolution?: string }) : Promise<any>;
+    getLogEntries(opts: { id: string, uri: string, resolution?: string }) : Promise<LogEntries>;
 }
 
 export interface ImagesManager extends Manager {
@@ -49,6 +53,12 @@ export interface SystemManager extends Manager {
     getSystemName() : Promise<string>;
 }
 
+export interface ZoneManager extends Manager {
+    getZone(opts: { id: string }) : Promise<Zone>;
+    getZones() : Promise<ZoneMap>;
+    updateZone() : Promise<any>;
+}
+
 export interface Manager extends Emitter {
     homey: Homey;
     uri: string;
@@ -59,6 +69,7 @@ export type DeviceMap = { [key: string]: DeviceObj; }
 export type CapabilityMap = { [key: string]: CapabilityObj; }
 export type BasicFlowMap = { [key: string]: BasicFlow; }
 export type AdvancedFlowMap = { [key: string]: AdvancedFlow; }
+export type ZoneMap = { [key: string]: Zone; }
 
 export interface Emitter {
     connect() : Promise<void>;
@@ -177,7 +188,7 @@ export interface InsightObj {
 
 export interface Ui {
     quickAction: string;
-    components: { id: string; capabilities: string[]; }
+    components: { id: string; capabilities: string[]; }[];
     componentsStartAt: number;
 }
 
@@ -233,4 +244,15 @@ export interface Session {
     intersectedScopes: string[];
     clientId: string;
     clientName: string
+}
+
+export interface Zone extends Emitter {
+    id: string;
+    uri: string;
+    name: string;
+    icon: string;
+    parent: string;
+    active: boolean;
+    activeLastUpdated: string;
+    activeOrigins: string[];
 }

@@ -18,7 +18,7 @@
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import AthomCloudAPI, { Token } from 'homey-api/lib/AthomCloudAPI';
     
-    let active = 'Local';
+    let active = import.meta.env.VITE_DEFAULT_LOGIN ?? 'Online';
 
     let localKey: string = '';
     let localKeyInvalid: boolean = false;
@@ -52,14 +52,14 @@
     async function setHomey(instance: Homey) {
         homey.set(instance);
 
-        await goto(base);
+        await goto(base + '/');
     }
 
     async function oauthLogin() {
         const cloudApi = new AthomCloudAPI({
             clientId,
             clientSecret,
-            redirectUrl: 'http://localhost/oauth2/callback', // TODO: Replace
+            redirectUrl: import.meta.env.VITE_OAUTH_REDIRECT
         });
 
         const loggedIn = await cloudApi.isLoggedIn();
@@ -78,7 +78,7 @@
 
         homey.set(homeyApi);
 
-        await goto(base);
+        await goto(base + '/');
     }
 
     async function homeyInkLogin() : Promise<Homey | undefined> {
@@ -118,7 +118,7 @@
 
 <div class="align-center">
     <div class="login">
-        <TabBar tabs={['Local', 'Url', /*'Online'*/]} let:tab bind:active>
+        <TabBar tabs={['Local', /*'Url',*/ 'Online']} let:tab bind:active>
             <Tab {tab}>
                 <Label>{tab}</Label>
             </Tab>
@@ -243,7 +243,7 @@
                     <p>Online authentication can be used with both the newer Homey Pro 2023 and older models.</p>
                     <p>
                         With online authentication, scopes cannot be selected individually. If you want to limit access, 
-                        use the local login with API-key if the feature is available on your Homey.
+                        use local login with API-key, only available for Homey Pro 2023.
                     </p>
                     
                     <Button on:click={oauthLogin}>Sign in</Button>

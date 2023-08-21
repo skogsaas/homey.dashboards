@@ -4,7 +4,7 @@
     import { goto } from '$app/navigation';
 
     // Stores
-    import { homey, devices, baseUrl, basicFlows, advancedFlows, session, scopes } from '$lib/stores/homey';
+    import { homey, devices, baseUrl, basicFlows, advancedFlows, session, scopes, zones } from '$lib/stores/homey';
     import { items, editing } from '$lib/stores/dashboard';
     import { apiKey } from '$lib/stores/auth';
     
@@ -25,15 +25,16 @@
     import EditView from '$lib/EditView.svelte';
 
     // Types
-    import type { AdvancedFlow, AppObj, BasicFlow, CapabilityEvent } from '$lib/types/Homey';
+    import type { AdvancedFlow, AppObj, BasicFlow, CapabilityEvent, Homey } from '$lib/types/Homey';
     import type { GridItem } from '$lib/types/Grid';
     import type { WidgetSettings } from '$lib/types/Widgets';
-    import { findLabel } from '$lib/widgets/widgets';
-    import { clientId, clientSecret } from '$lib/constants';
+    import { findCreate, findLabel, findMigration } from '$lib/widgets/widgets';
+    import { clientId, clientSecret, driverId } from '$lib/constants';
 
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
     import { base } from '$app/paths';
+    import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
     
     let loading: boolean = true;
     let error: any | undefined = undefined;
@@ -49,7 +50,10 @@
 
       await loadDevices();
       await loadFlows();
+      await loadZones();
       await loadAppSettings();
+
+      await migrateAppSettings();
 
       loading = false;
     });
@@ -58,7 +62,7 @@
       if($homey === undefined) {
         if($apiKey !== undefined) {
           // Local Homey API-key exists
-          const instance = await HomeyAPI.createLocalAPI({
+          const instance: Homey = await HomeyAPI.createLocalAPI({
             address: $baseUrl,
             token: $apiKey,
           });
@@ -90,7 +94,7 @@
         const s = await $homey.sessions.getSessionMe();
         session.set(s);
       } catch (e) {
-        error = e;
+        error = 'Session: ' + e;
       } 
 
       loading = false;
@@ -102,9 +106,11 @@
 
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.app')) {
-          // Connect to skogsaas.dashboard app and load stored dashboards on the Homey Pro
-          const apps = await $homey.apps.getApps();
-          app = apps['skogsaas.dashboards'];
+          try {
+            app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
+          } catch(e) {
+            // Do nothing
+          }
         }
 
         if(app !== undefined) {
@@ -131,11 +137,42 @@
       // Ensure we don't save with the draggable and resizable flags set to true
       toggleEdit();
 
+      let app: AppObj | undefined;
+
       if($scopes.includes('homey') || $scopes.includes('homey.app')) {
-        const app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
+        try {
+          app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
+        } catch(e) {
+          // Do nothing
+        }
+      }
+
+      if(app !== undefined) {
         await app.put({ path: '/dashboards', body: $items });
       } else {
         localStorage.dashboards = JSON.stringify($items);
+      }
+    }
+
+    async function migrateAppSettings() {
+      const result: GridItem[] = [];
+      let changes: boolean = false;
+
+      for(let item of $items) {
+        const migration = findMigration(item.settings.type);
+        const migrated = migration !== undefined ? migration(item.settings) : item.settings;
+
+        if(migrated !== item.settings) {
+          changes = true;
+        }
+
+        result.push({ ...item, settings: migrated })
+      }
+
+      // If there are any changes after migration, save the app settings.
+      if(changes) {
+        items.set(result);
+        await saveAppSettings();
       }
     }
 
@@ -153,7 +190,7 @@
           devices.set(d);
         }
       } catch(e) {
-        error = e;
+        error = 'Devices: ' + e;
       }
     }
 
@@ -173,7 +210,26 @@
           $homey.flow.on('advancedflow.delete', (e: AdvancedFlow) => advancedFlows.onDelete(e));
         }
       } catch(e) {
-        error = e;
+        error = 'Flows: ' + e;
+      }
+    }
+
+    async function loadZones() {
+      try {
+        if($scopes.includes('homey') || $scopes.includes('homey.zone') || $scopes.includes('homey.zone.readonly')) {
+          await $homey.zones.connect();
+          const z = await $homey.zones.getZones();
+
+          zones.set(z);
+
+          /*
+          $homey.zones.on('zone.create', (e: Zone) => zones.onCreate(e));
+          $homey.zones.on('zone.delete', (e: Zone) => zones.onDelete(e));
+          $homey.zones.on('zone.update', (e: Zone) => zones.onUpdate(e));
+          */
+        }
+      } catch(e) {
+        error = 'Zones: ' + e;
       }
     }
 
@@ -188,8 +244,15 @@
           return;
         }
 
-        editItem = items.addItem(type);
-        editOpen = true;
+        const create = findCreate(type);
+
+        if(create !== undefined) {
+          const settings = create();
+          const item: GridItem = { id: settings?.id, settings };
+
+          editItem = items.addItem(item);
+          editOpen = true;
+        }
     }
 
     function editWidget(item: GridItem) : void {
@@ -203,6 +266,10 @@
     }
 
 </script>
+
+<svelte:head>
+  <title>Dashboard</title>
+</svelte:head>
 
 {#if loading}
   <div class="loading">

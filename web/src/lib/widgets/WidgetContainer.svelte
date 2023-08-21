@@ -17,7 +17,7 @@ let menuOpen: boolean = false;
 </script>
 
 <Card 
-  style="height: 100%; width: 100%;"
+  style="height: 100%; width: 100%; padding: 0px"
   on:click
 >
   {#if $editing}
@@ -27,7 +27,7 @@ let menuOpen: boolean = false;
           <Icon class="material-icons">menu</Icon>
       </Fab>
 
-      <Menu bind:open={menuOpen}>
+      <Menu bind:open={menuOpen} on:click>
         <List>
           <Item on:SMUI:action={() => dispatch('edit')}>
             <Text>Edit</Text>
@@ -47,11 +47,6 @@ let menuOpen: boolean = false;
 </Card>
 
 <style>
-.widget-container {
-  height: 100%;
-  width: 100%;
-}
-
 .widget-edit :global(button) {
   position: absolute;
   top: -20px;

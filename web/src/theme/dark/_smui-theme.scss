@@ -6,16 +6,24 @@
 @use '@material/theme/index' as theme with (
   $primary: #ff3e00,
   $secondary: color.scale(#676778, $whiteness: -10%),
-  $surface: color.adjust(color-palette.$grey-900, $blue: +4),
-  $background: #000,
-  $error: color-palette.$red-700
+  $surface: rgb(34, 35, 41),
+  $background: rgb(18, 19, 25),
+  $error: color-palette.$red-700,
+);
+
+@use '@material/shape/index' as shape with (
+  $small-component-radius: 10px,
+  $medium-component-radius: 10px,
+  $large-component-radius: 10px
 );
 
 @use '@material/typography/index' as typography;
 
+@use '@material/elevation/mdc-elevation';
+
 html,
 body {
-  background-color: #000;
+  background-color: theme.$background;
   color: theme.$on-surface;
   margin: 0;
   width: 100%;
