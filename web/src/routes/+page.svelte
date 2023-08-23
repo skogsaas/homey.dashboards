@@ -9,7 +9,7 @@
     import { apiKey } from '$lib/stores/auth';
     
     // UI components
-    import Fab, { Icon } from '@smui/fab';
+    import Button, { Label, Icon } from '@smui/button';
     import CircularProgress from '@smui/circular-progress';
     import Drawer, {
       AppContent,
@@ -19,6 +19,12 @@
       Subtitle,
       Scrim,
     } from '@smui/drawer';
+    import TopAppBar, {
+      Row,
+      Section,
+      AutoAdjust,
+    } from '@smui/top-app-bar';
+    import IconButton from '@smui/icon-button';
 
     import Dashboard from '$lib/Dashboard.svelte';
     import AddDialog from '$lib/AddDialog.svelte';
@@ -34,8 +40,10 @@
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
     import { base } from '$app/paths';
-    import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
     
+    let topAppBar: TopAppBar;
+    let topAppBarCollapsed: boolean = true;
+
     let loading: boolean = true;
     let error: any | undefined = undefined;
 
@@ -289,47 +297,55 @@
 
     <Scrim />
     <AppContent>
-      <div class="container">
-        <div class="header">
-          {#if $editing}
-            <Fab color="secondary" on:click={() => (addOpen = true)}>
-              <Icon class="material-icons">add</Icon>
-            </Fab>
-        
-            <Fab color="secondary" on:click={() => saveAppSettings()}>
-              <Icon class="material-icons">save</Icon>
-            </Fab>
-          {/if}
-        
-          <Fab color="primary" on:click={() => toggleEdit()}>
-            <Icon class="material-icons">settings</Icon>
-          </Fab>
-        </div>
 
-        {#if error !== undefined}
-          <div class="error">
-            {error}
-          </div>
-        {/if}
+      <TopAppBar bind:this={topAppBar} collapsed={topAppBarCollapsed} dense>
+        <Row>
+          <Section>
+            <IconButton class="material-icons" on:click={() => topAppBarCollapsed = !topAppBarCollapsed}>menu</IconButton>
+          </Section>
+
+          {#if !topAppBarCollapsed}
+            <Section align="end" toolbar>
+              
+              {#if !$editing}
+                <Button on:click={() => toggleEdit()}>
+                  <Icon class="material-icons">settings</Icon>
+                  <Label>Edit</Label>
+                </Button>
+              {:else}
+                <Button on:click={() => (addOpen = true)}>
+                  <Icon class="material-icons">add</Icon>
+                  <Label>Add</Label>
+                </Button>
+
+                <Button on:click={() => saveAppSettings()}>
+                  <Icon class="material-icons">save</Icon>
+                  <Label>Save</Label>
+                </Button>
+                {/if}
+            </Section>
+          {/if}
+        </Row>
+      </TopAppBar>
+
+      {#if !topAppBarCollapsed}
+        <AutoAdjust {topAppBar} />
+      {/if}
+
+      {#if error !== undefined}
+        <div class="error">
+          {error}
+        </div>
+      {/if}
         
-        <Dashboard on:edit={e => editWidget(e.detail)} />
-        <AddDialog bind:open={addOpen} on:selected={e => addWidget(e.detail)} />
-      </div>
+      <Dashboard on:edit={e => editWidget(e.detail)} />
+
+      <AddDialog bind:open={addOpen} on:selected={e => addWidget(e.detail)} />
     </AppContent>
   {/if}
 {/if}
 
 <style>
-
-.container {
-  
-}
-
-.header {
-  position: absolute;
-  right: 0px;
-  z-index: 6;
-}
 
 .loading {
   position: absolute;

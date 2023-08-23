@@ -1,7 +1,7 @@
 <script lang="ts">
     import { grid, items, breakpointColumns, editing } from '$lib/stores/dashboard';
 
-    import Grid from "svelte-grid";
+    import Grid from "$lib/components/grid/index.svelte";
     import Dialog, { Content } from '@smui/dialog';
     import IconButton from '@smui/icon-button';
 
@@ -61,13 +61,13 @@
     noContentPadding
     bind:open={viewOpen}
 >
-    <Content>
-        <IconButton action="close" class="material-icons">close</IconButton>
+    <div style="position: relative;">
+        <IconButton style="position: absolute; top: 0px; right: 0px;" action="close" class="material-icons">close</IconButton>
         {#if viewItem !== undefined && viewComponent !== undefined}
             <svelte:component 
                 this={viewComponent}
                 settings={viewItem.settings}
             />
         {/if}
-    </Content>
+    </div>
 </Dialog>

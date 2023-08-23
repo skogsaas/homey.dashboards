@@ -71,7 +71,10 @@
     }
 
     async function getEntries(i: InsightObj, r: string) {
-        const entries = await $homey.insights.getLogEntries({ id: i.id, uri: i.uri, resolution: r });
+        // Workaround for HP16/HP19
+        const id = i.id.startsWith('homey:') ? i.id : i.uri + ':' + i.id;
+        
+        const entries = await $homey.insights.getLogEntries({ id, uri: i.uri, resolution: r });
 
         data = {
             datasets: [

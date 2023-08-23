@@ -6,6 +6,7 @@
     import FormField from '@smui/form-field';
     import Checkbox from '@smui/checkbox';
     import type ImageSettings from "./ImageSettings";
+    import { Icon } from '@smui/icon-button';
 
     export let settings: ImageSettings;
 
@@ -115,6 +116,7 @@
     label="Refresh every"
 >
     <Option value="0">Never</Option>
+    <Option value="1">1 second<Icon class="material-icons">warning</Icon></Option>
     <Option value="5">5 seconds</Option>
     <Option value="15">15 seconds</Option>
     <Option value="30">30 seconds</Option>

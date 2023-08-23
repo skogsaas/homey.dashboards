@@ -19,22 +19,7 @@
     }
 </script>
 
-{#if device == undefined || image == undefined}
-    <span class="header">Error</span>
-{:else}
-    <div class="header">
-        <div>{device?.name}</div>
-        <div class="subtitle">{image?.title}</div>
-    </div>
-{/if}
-
-{#if device == undefined || image == undefined}
-    {#if device == undefined}
-        <span>Device not found.</span>
-    {:else}
-        <span>Image not found.</span>
-    {/if}
-{:else}
+{#if image !== undefined}
     {#await $homey.baseUrl}
         ...
     {:then url}
@@ -63,9 +48,8 @@
 }
 
 .image {
-    margin: 5px;
-    max-width: calc(100% - 10px);
-    max-height: calc(100% - 10px - 48px);
+    max-width: 100%;
+    max-height: 100%;
     object-fit: cover;
 }
 </style>
