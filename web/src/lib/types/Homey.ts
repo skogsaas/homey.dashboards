@@ -38,6 +38,7 @@ export interface FlowManager extends Manager {
 }
 
 export interface InsightsManager extends Manager {
+    getLogs() : Promise<LogMap>;
     getLogEntries(opts: { id: string, uri: string, resolution?: string }) : Promise<LogEntries>;
 }
 
@@ -70,6 +71,7 @@ export type CapabilityMap = { [key: string]: CapabilityObj; }
 export type BasicFlowMap = { [key: string]: BasicFlow; }
 export type AdvancedFlowMap = { [key: string]: AdvancedFlow; }
 export type ZoneMap = { [key: string]: Zone; }
+export type LogMap = { [key: string]: Log; }
 
 export interface Emitter {
     connect() : Promise<void>;
@@ -197,6 +199,20 @@ export interface CapabilityEvent {
     value: any;
     transactionId: string;
     transactionTime: number;
+}
+
+export interface Log extends Emitter {
+    id: string;
+    uri: string;
+    ownerId: string;
+    ownerUri: string;
+    title: string;
+    titleTrue: string | null;
+    titleFalse: string | null;
+    type: 'number' | 'boolean';
+    units: string | null;
+    decimals: number | null;
+    lastValue: number | boolean;
 }
 
 export interface LogEntries {

@@ -4,7 +4,7 @@
     import { goto } from '$app/navigation';
 
     // Stores
-    import { homey, devices, baseUrl, basicFlows, advancedFlows, session, scopes, zones } from '$lib/stores/homey';
+    import { homey, devices, dashboards, baseUrl, basicFlows, advancedFlows, session, scopes, zones, insights } from '$lib/stores/homey';
     import { items, editing } from '$lib/stores/dashboard';
     import { apiKey } from '$lib/stores/auth';
     
@@ -25,13 +25,15 @@
       AutoAdjust,
     } from '@smui/top-app-bar';
     import IconButton from '@smui/icon-button';
+    import type Menu from '@smui/menu';
+    import List, { Item, Separator, Text } from '@smui/list';
 
     import Dashboard from '$lib/Dashboard.svelte';
     import AddDialog from '$lib/AddDialog.svelte';
     import EditView from '$lib/EditView.svelte';
 
     // Types
-    import type { AdvancedFlow, AppObj, BasicFlow, CapabilityEvent, Homey } from '$lib/types/Homey';
+    import type { AdvancedFlow, AppObj, BasicFlow, CapabilityEvent, DeviceObj, Homey } from '$lib/types/Homey';
     import type { GridItem } from '$lib/types/Grid';
     import type { WidgetSettings } from '$lib/types/Widgets';
     import { findCreate, findLabel, findMigration } from '$lib/widgets/widgets';
@@ -40,6 +42,7 @@
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
     import { base } from '$app/paths';
+  
     
     let topAppBar: TopAppBar;
     let topAppBarCollapsed: boolean = true;
@@ -52,6 +55,12 @@
 
     let addOpen = false;
 
+    let dashboard: DeviceObj | undefined;
+
+    let dashboardMenu: Menu;
+    let allDashboards: DeviceObj[];
+    $: allDashboards = [ ...$dashboards ];
+
     onMount(async () => {
       await connectHomey();
       await loadSession();
@@ -59,6 +68,7 @@
       await loadDevices();
       await loadFlows();
       await loadZones();
+      await loadInsights();
       await loadAppSettings();
 
       await migrateAppSettings();
@@ -111,6 +121,10 @@
     async function loadAppSettings() {
       let app: AppObj | undefined;
       let result: GridItem[] = [];
+
+      if($dashboards.length > 0) {
+        console.log($dashboards);
+      }
 
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.app')) {
@@ -222,6 +236,25 @@
       }
     }
 
+    async function loadInsights() {
+      try {
+        if($scopes.includes('homey') || $scopes.includes('homey.insights') || $scopes.includes('homey.insights.readonly')) {
+          await $homey.insights.connect();
+          const logs = await $homey.insights.getLogs();
+
+          insights.set(logs);
+
+          /*
+          $homey.insights.on('log.create', (e: Log) => insights.onCreate(e));
+          $homey.insights.on('log.update', (e: Log) => insights.onUpdate(e));
+          $homey.insights.on('log.delete', (e: Log) => insights.onDelete(e));
+          */
+        }
+      } catch(e) {
+        error = 'Flows: ' + e;
+      }
+    }
+
     async function loadZones() {
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.zone') || $scopes.includes('homey.zone.readonly')) {
@@ -291,7 +324,9 @@
         <Subtitle>Editing settings for {findLabel(editItem?.settings?.type)} widget</Subtitle>
       </Header>
       <Content>
-        <EditView item={editItem} on:settings={(e) => saveWidget(e.detail)} />
+        {#if editOpen}
+          <EditView item={editItem} on:settings={(e) => saveWidget(e.detail)} />
+        {/if}
       </Content>
     </Drawer>
 
@@ -302,6 +337,21 @@
         <Row>
           <Section>
             <IconButton class="material-icons" on:click={() => topAppBarCollapsed = !topAppBarCollapsed}>menu</IconButton>
+
+            <!--
+            {#if !topAppBarCollapsed}
+              <IconButton class="material-icons" on:click={() => dashboardMenu.setOpen(true)}>dashboard</IconButton>
+              <Menu bind:this={dashboardMenu}>
+                <List>
+                  {#each allDashboards as dash}
+                    <Item on:SMUI:action={() => (dashboard = dash)}>
+                      <Text>{dash.name}</Text>
+                    </Item>
+                  {/each}
+                </List>
+              </Menu>
+            {/if}
+            -->
           </Section>
 
           {#if !topAppBarCollapsed}

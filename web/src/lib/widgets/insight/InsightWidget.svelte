@@ -1,32 +1,37 @@
 <script lang="ts">
-    import { devices, homey } from '$lib/stores/homey';
+    import { devices, homey, insights } from '$lib/stores/homey';
 
-    import { Line } from 'svelte-chartjs';
+    import { Chart } from 'svelte-chartjs';
     import 'chart.js/auto';
     import 'chartjs-adapter-date-fns';
 
     import type InsightSettings from './InsightSettings';
-    import type { InsightObj } from '$lib/types/Homey';
+    import type { Log, LogEntries } from '$lib/types/Homey';
     import CircularProgress from '@smui/circular-progress';
+    import { onDestroy, } from 'svelte';
 
     export let settings: InsightSettings;
 
-    let renderSettings: InsightSettings;
-    let renderDeviceId: string | undefined;
-    let renderInsightId: string | undefined;
-    let renderInsight: InsightObj | undefined;
-    let renderResolution: string;
+    let insightId: string | undefined;
+    let resolution: string;
+    let aggregation: string;
+    let sampleRate: number;
+
+    let log: Log | undefined;
+    let entries: LogEntries;
 
     $: onSettings(settings);
-
-    $: device = $devices[renderDeviceId ?? ''];
-    $: insight = device?.insights.find(i => i.id === renderInsightId);
-    $: resolution = renderSettings?.resolution ?? 'today';
-
-    $: onLoad(insight, resolution);
     
     let loading: Promise<void>;
-    let data: any = {};
+    let timeout: number | undefined;
+
+    let chart: Chart
+
+    let data: any = {
+            datasets: [
+            ]
+        };
+
     $: options = {
         plugins: {
             legend: {
@@ -45,73 +50,163 @@
         },
         responsive: true,
         maintainAspectRatio: false,
+        animation: false
     };
 
-    function onSettings(s: InsightSettings) {
-        if(renderSettings !== s) {
-            renderSettings = s;
+    onDestroy(() => {
+        if(timeout !== undefined) {
+            clearTimeout(timeout);
+        }
+    })
 
-            if(renderDeviceId !== s.deviceId) {
-                renderDeviceId = s.deviceId;
-            }
+    async function onSettings(s: InsightSettings) {
+        let load: boolean = false;
 
-            if(renderInsightId !== s.insightId) {
-                renderInsightId = s.insightId;
-            }
+        if(insightId !== s.insightId) {
+            insightId = s.insightId;
+            load = true;
+        }
+
+        if(resolution === undefined || resolution !== s.resolution) {
+            resolution = s.resolution ?? 'today';
+            load = true;
+        }
+
+        if(aggregation === undefined || aggregation !== s.aggregation) {
+            aggregation = s.aggregation ?? 'none';
+            load = true;
+        }
+
+        if(sampleRate === undefined || sampleRate !== s.sampleRate) {
+            sampleRate = s.sampleRate ?? 60;
+            load = true;
+        }
+
+        if(load && insightId) {
+            log = $insights[insightId];
+
+            reload();
         }
     }
 
-    function onLoad(i: InsightObj | undefined, r: string) {
-        if(i !== undefined && (renderInsight !== i || renderResolution !== r)) {
-            renderInsight = i;
-            renderResolution = r;
-
-            loading = getEntries(i, r);
+    function reload() {
+        if(timeout !== undefined) {
+            // Cleanup previous timeout.
+            clearTimeout(timeout);
         }
+
+        loading = getEntries();
     }
 
-    async function getEntries(i: InsightObj, r: string) {
-        // Workaround for HP16/HP19
-        const id = i.id.startsWith('homey:') ? i.id : i.uri + ':' + i.id;
+    async function getEntries() {
+        if(log === undefined) {
+            return;
+        }
         
-        const entries = await $homey.insights.getLogEntries({ id, uri: i.uri, resolution: r });
+        entries = await $homey.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
 
-        data = {
-            datasets: [
-                {
-                    label: insight?.title,
-                    data: entries.values.map(entry => ({ x: new Date(entry.t).getTime(), y: entry.v }))
-                }
-            ]
-        };
+        const series = createTimeSeries(entries);
+
+        // Set timeout for refreshing log
+        timeout = setTimeout(() => { loading = getEntries(); }, entries.step - entries.updatesIn);
+
+        if(data.datasets.length === 0) {
+            data.datasets.push({
+                label: log.title,
+                type: 'line',
+                data: series,
+                tension: 0.5
+            });
+        } else {
+            // TODO: support multiple datasets
+            data.datasets[0].data = series;
+        }
+
+        if(chart) {
+            chart.update();
+        }
     };
+
+    function createTimeSeries(entries: LogEntries) {
+        console.log(entries, aggregation, sampleRate);
+
+        // Can never aggregate with less step than sample rate.
+        if(aggregation === undefined || aggregation === 'none' || (entries.step / 1000) >= sampleRate) {
+            return entries.values.map(entry => ({ x: new Date(entry.t).getTime(), y: entry.v }));
+        } else {
+            const buckets = entries.values
+                .reduce((timeBuckets: any, entry) => {
+                    const time = new Date(entry.t);
+                    const value = entry.v;
+
+                    const timeOfDay = time.getHours() * 3600 + time.getMinutes() * 60 + time.getSeconds();
+                    const timestamp = time.getTime() - (timeOfDay % sampleRate) * 1000;
+
+                    const bucket = timeBuckets[timestamp] = timeBuckets[timestamp] ?? [];
+                    bucket.push(value);
+
+                    return timeBuckets;
+                }, {});
+
+            const result = Object.keys(buckets)
+                .map(timestamp => {
+                    const values = buckets[timestamp];
+
+                    switch(aggregation) {
+                        case 'min':
+                            return { x: Number(timestamp), y: Math.min(...values) };
+                        case 'max':
+                            return { x: Number(timestamp), y: Math.max(...values) };
+                        case 'sum':
+                            return { x: Number(timestamp), y: values.reduce((a: number, b: number) => a + b, 0) };
+                        case 'avg':
+                            return { x: Number(timestamp), y: values.reduce((a: number, b: number) => a + b, 0) / values.length };
+                        case 'first':
+                            return { x: Number(timestamp), y: values[0] };
+                        case 'last':
+                            return { x: Number(timestamp), y: values[values.length - 1] };
+                    }
+                });
+
+            console.log(result);
+
+            return result;
+        }
+    }
+
+    function getOwnerUriName(uri: string) {
+        if(uri.startsWith('homey:device:')) {
+            const prefix = 'homey:device:';
+            const id = uri.slice(prefix.length);
+
+            return $devices[id].name;
+        } else if(uri.startsWith('homey:manager:apps')) {
+            return 'Homey Applications';
+        } else if(uri.startsWith('homey:manager:system')) {
+            return 'Homey System';
+        } else if(uri.startsWith('homey:manager:weather')) {
+            return 'Homey Weather';
+        } else if(uri.startsWith('homey:manager:logic')) {
+            return 'Homey Logic';
+        } else {
+            return uri;
+        }
+    }
 </script>
 
-        {#if device == undefined || insight == undefined}
+        {#if log === undefined}
             <span>Error</span>
         {:else}
             <div class="header">
-                <div>{device?.name}</div>
-                <div class="subtitle">{insight?.title}</div>
+                <div>{log.title}</div>
+                <div class="subtitle">{getOwnerUriName(log.ownerUri)}</div>
             </div>
         {/if}
-        {#if device == undefined || insight == undefined}
-            {#if device == undefined}
-                <span>Device not found.</span>
-            {:else}
-                <span>Insight not found.</span>
-            {/if}
+        {#if log === undefined}
+            <span>Log not found.</span>
         {:else}
             <div class="chart">
-                {#await loading}
-                    <div class="loading">
-                        <CircularProgress style="height: 50%; width: 50%;" indeterminate /> 
-                    </div>
-                {:then result}
-                    <Line {data} options={options} />
-                {:catch error} 
-                    {error}
-                {/await}
+                <Chart bind:chart type="line" {data} {options} />
             </div>
         {/if}
 
@@ -131,15 +226,6 @@
     margin: 5px;
     width: calc(100% - 10px);
     height: calc(100% - 10px - 48px);
-}
-
-.loading {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 </style>

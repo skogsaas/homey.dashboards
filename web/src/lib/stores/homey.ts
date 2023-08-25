@@ -1,7 +1,19 @@
 import { derived, writable } from 'svelte/store';
 import { page } from '$app/stores';
 
-import type { AdvancedFlow, AdvancedFlowMap, BasicFlow, BasicFlowMap, CapabilityEvent, DeviceMap, Homey, Session, Zone, ZoneMap } from '$lib/types/Homey';
+import type { 
+    AdvancedFlow, 
+    AdvancedFlowMap, 
+    BasicFlow, 
+    BasicFlowMap, 
+    CapabilityEvent, 
+    DeviceMap, 
+    Homey, 
+    LogMap, 
+    Session, 
+    Zone, 
+    ZoneMap 
+} from '$lib/types/Homey';
 
 function createBaseUrl() {
     return derived([homey, page], ([$homey, $page], set) => {
@@ -71,6 +83,8 @@ export const baseUrl = createBaseUrl();
 export const session = writable(undefined as (Session | undefined));
 export const scopes = derived(session, (s: Session) => s?.scopes ?? [], []);
 export const devices = createDevices();
+export const dashboards = derived(devices, (d: DeviceMap) => (Object.values(d).filter(e => e.driverId === 'homey:app:skogsaas.dashboards:dashboard')) ?? [], []);
 export const basicFlows = createBasicFlows();
 export const advancedFlows = createAdvancedFlows();
 export const zones = createZones();
+export const insights = writable({} as (LogMap));
