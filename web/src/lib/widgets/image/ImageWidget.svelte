@@ -17,6 +17,7 @@
             refreshClear = setInterval(() => { refreshSlug = Date.now(); }, settings.refresh * 1000);
         }
     }
+    $: hideTitle = settings?.hideTitle ?? false;
     $: fontColor = settings?.fontColor ? settings.fontColor : 'black';
     $: fontBlur = settings?.fontBlur ?? false;
 </script>
@@ -29,10 +30,12 @@
             <span>Error: image not found</span>
         {/if}
     {:else}
-        <div class="header overlay" class:font-blur={fontBlur} style="color: {fontColor}">
-            <div>{device?.name}</div>
-            <div class="subtitle">{image?.title}</div>
-        </div>
+        {#if !hideTitle}
+            <div class="header overlay" class:font-blur={fontBlur} style="color: {fontColor}">
+                <div>{device?.name}</div>
+                <div class="subtitle">{image?.title}</div>
+            </div>
+        {/if}
 
         {#await $homey.baseUrl}
             ...

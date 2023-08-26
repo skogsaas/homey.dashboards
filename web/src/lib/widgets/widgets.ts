@@ -18,6 +18,13 @@ import ImageView from "./image/ImageView.svelte";
 
 import InsightWidget from "./insight/InsightWidget.svelte";
 import InsightEditor from "./insight/InsightEditor.svelte";
+import { 
+    create as createInsight,
+    migrate as migrateInsight 
+} from './insight/InsightSettings';
+
+import TextEditor from "./text/TextEditor.svelte";
+import TextWidget from "./text/TextWidget.svelte";
 
 import UnknownWidget from '$lib/widgets/unknown/UnknownWidget.svelte';
 import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
@@ -64,7 +71,7 @@ export const widgets: WidgetInfo[] = [
         label: 'Image',
         widget: ImageWidget, 
         editor: ImageEditor,
-        view: ImageView,
+        view: ImageWidget,
         scopes: [
             { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] }
         ],
@@ -81,9 +88,19 @@ export const widgets: WidgetInfo[] = [
             { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] },
             { oneOf: ['homey', 'homey.insights.readonly'] }
         ],
-        create: () => ({ id: uuid(), type: 'insight', version: 1 }),
+        create: createInsight,
+        migration: migrateInsight
+    },
+    {
+        type: 'text', 
+        label: 'Text',
+        widget: TextWidget, 
+        editor: TextEditor,
+        view: undefined,
+        scopes: [],
+        create: () => ({ id: uuid(), type: 'text', version: 1 }),
         migration: (e: WidgetSettings) => e
-    }
+    },
 ];
 
 export function findLabel(type: string) : string | undefined {

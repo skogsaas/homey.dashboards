@@ -15,6 +15,7 @@
     let deviceId: string | undefined;
     let imageId: string | undefined;
     let refresh: number;
+    let hideTitle: boolean;
     let fontColor: string;
     let fontBlur: boolean;
 
@@ -32,14 +33,15 @@
     $: onDevice(deviceId);
     $: onImage(imageId);
     $: onRefresh(refresh);
+    $: onHideTitle(hideTitle);
     $: onFontColor(fontColor);
     $: onFontBlur(fontBlur);
 
     function onSettings(s: ImageSettings) {
         deviceId = settings.deviceId;
         imageId = settings.imageId;
-
         refresh = settings?.refresh ?? 0;
+        hideTitle = settings?.hideTitle ?? false;
         fontColor = settings?.fontColor ?? 'black';
         fontBlur = settings?.fontBlur ?? false;
     }
@@ -68,6 +70,13 @@
     function onRefresh(value: number) {
         if(value !== settings.refresh) {
             const s: ImageSettings = { ...settings, refresh: value };
+            dispatch('settings', s);
+        }
+    }
+
+    function onHideTitle(value: boolean) {
+        if(value !== settings.hideTitle) {
+            const s: ImageSettings = { ...settings, hideTitle: value };
             dispatch('settings', s);
         }
     }
@@ -116,7 +125,7 @@
     label="Refresh every"
 >
     <Option value="0">Never</Option>
-    <Option value="1">1 second<Icon class="material-icons">warning</Icon></Option>
+    <Option value="1">1 second <Icon class="material-icons" style="margin-left: 5px;">warning</Icon></Option>
     <Option value="5">5 seconds</Option>
     <Option value="15">15 seconds</Option>
     <Option value="30">30 seconds</Option>
@@ -130,9 +139,20 @@
     <Option value="86400">24 hour</Option>
 </Select>
 
+<FormField>
+    <span slot="label">Hide title</span>
+    <Checkbox bind:checked={hideTitle} />
+</FormField>
+
+<FormField>
+    <span slot="label">Blur background</span>
+    <Checkbox bind:checked={fontBlur} disabled={hideTitle} />
+</FormField>
+
 <Select 
     bind:value={fontColor} 
     label="Font color"
+    disabled={hideTitle}
 >
     <Option value="black">Black</Option>
     <Option value="white">White</Option>
@@ -140,8 +160,3 @@
     <Option value="green">Green</Option>
     <Option value="blue">Blue</Option>
 </Select>
-
-<FormField>
-    <span slot="label">Blur background</span>
-    <Checkbox bind:checked={fontBlur} />
-</FormField>
