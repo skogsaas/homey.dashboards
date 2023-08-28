@@ -1,6 +1,10 @@
 export const appId: string = 'skogsaas.dashboards';
 export const driverId: string = 'homey:app:skogsaas.dashboards:dashboard';
 
+export const webhookUrl: string = 'https://webhooks.athom.com/webhook/';
+export const webhookId: string = '64e39774cf7cc10b916174a7';
+
+
 /*
 // Development
 export const clientId: string = '5a8d4ca6eb9f7a2c9d6ccf6d';

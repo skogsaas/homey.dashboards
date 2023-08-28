@@ -1,4 +1,5 @@
 export interface Homey {
+    id: string;
     baseUrl: Promise<string>;
 
     apps: AppManager;
@@ -61,10 +62,10 @@ export interface ZoneManager extends Manager {
 }
 
 export interface Manager extends Emitter {
-    homey: Homey;
     uri: string;
 }
 
+export type HomeyMap = { [key: string]: Homey; }
 export type AppMap = { [key: string]: AppObj; }
 export type DeviceMap = { [key: string]: DeviceObj; }
 export type CapabilityMap = { [key: string]: CapabilityObj; }
@@ -74,6 +75,8 @@ export type ZoneMap = { [key: string]: Zone; }
 export type LogMap = { [key: string]: Log; }
 
 export interface Emitter {
+    homey: Homey;
+    
     connect() : Promise<void>;
     disconnect(): void;
     on(event: string, callback: any) : void;

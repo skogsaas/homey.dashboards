@@ -1,15 +1,29 @@
 import Homey from 'homey';
 
 import * as Sentry from "@sentry/node"
+import { DashboardDriver } from './drivers/dashboard/driver'
 
 export class DashboardApp extends Homey.App {
+  private dashboards!: DashboardDriver;
+
   async onInit() {
     await this.configureSentry();
     await this.updateSettings();
+    await this.subscribeWebhook();
   }
 
   async onUninit() : Promise<void> {
     await Sentry.flush();
+  }
+
+  public async setDashboardSettings(dashboardId: string, settings: any) : Promise<void> {
+    try {
+      const driver = this.getDashboardDriver();
+      await driver.setDashboardSettings(dashboardId, settings);
+    } catch(e) {
+      this.log(e);
+      Sentry.captureException(e);
+    }
   }
 
   private async configureSentry() {
@@ -34,6 +48,37 @@ export class DashboardApp extends Homey.App {
 
     const localAddress = await this.homey.cloud.getLocalAddress();
     this.homey.settings.set("local_address", localAddress);
+  }
+
+  private async subscribeWebhook() {
+    const id = Homey.env.WEBHOOK_ID;
+    const secret = Homey.env.WEBHOOK_SECRET;
+    const data = {};
+
+    const webhook = await this.homey.cloud.createWebhook(id, secret, data);
+
+    webhook.on('message', args => {
+      this.log('Webhook', args);
+
+      const operation = args.query.operation;
+
+      if(operation === 'save_dashboard') {
+        const dashboardId = args.query.dashboardId;
+        const settings = JSON.parse(args.body);
+
+        this.setDashboardSettings(dashboardId, settings);
+      } else if(operation === 'active_dashboard') {
+        // TODO: Implement dashboard is active or inactive
+      }
+    });
+  }
+
+  private getDashboardDriver() : DashboardDriver {
+    if(this.dashboards === undefined) {
+      this.dashboards = (this.homey.drivers.getDriver('dashboard') as DashboardDriver);
+    }
+
+    return this.dashboards;
   }
 }
 

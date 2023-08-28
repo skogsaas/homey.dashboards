@@ -128,8 +128,6 @@
     };
 
     function createTimeSeries(entries: LogEntries) {
-        console.log(entries, aggregation, sampleRate);
-
         // Can never aggregate with less step than sample rate.
         if(aggregation === undefined || aggregation === 'none' || (entries.step / 1000) >= sampleRate) {
             return entries.values.map(entry => ({ x: new Date(entry.t).getTime(), y: entry.v }));
@@ -168,8 +166,6 @@
                     }
                 });
 
-            console.log(result);
-
             return result;
         }
     }
@@ -195,7 +191,9 @@
 </script>
 
         {#if log === undefined}
-            <span>Error</span>
+            {#if insightId !== undefined}
+                <span>Error</span>
+            {/if}
         {:else}
             <div class="header">
                 <div>{log.title}</div>
@@ -203,7 +201,9 @@
             </div>
         {/if}
         {#if log === undefined}
-            <span>Log not found.</span>
+            {#if insightId !== undefined}
+                <span>Log not found.</span>
+            {/if}
         {:else}
             <div class="chart">
                 <Chart bind:chart type="line" {data} {options} />

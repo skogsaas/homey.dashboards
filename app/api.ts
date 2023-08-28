@@ -1,4 +1,5 @@
 import Homey from 'homey/lib/Homey';
+import { DashboardApp } from './app';
 
 interface Args { 
     homey: Homey;
@@ -8,19 +9,19 @@ interface Args {
 }
 
 function getDashboards({ homey, query }: Args) {
-    //verifyScope(homey, query.app_token, 'dashboards');
-
     return homey.settings.get('dashboards');
 }
 
-function putDashboards({ homey, query, body }: Args) {
-    //verifyScope(homey, query.app_token, 'dashboards');
-
-    homey.settings.set('dashboards', body);
+function putDashboards({ homey, params, body }: Args) {
+    (homey.app as DashboardApp).setDashboardSettings(params.dashboardId, body);
 }
 
+function dashboardHeartbeat({ homey, params, body }: Args) {
+    // TODO: 
+}
 
 module.exports = {
     getDashboards,
-    putDashboards
+    putDashboards,
+    dashboardHeartbeat
 };

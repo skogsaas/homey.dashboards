@@ -4,16 +4,37 @@ import { page } from '$app/stores';
 import type { 
     AdvancedFlow, 
     AdvancedFlowMap, 
+    AppObj, 
     BasicFlow, 
     BasicFlowMap, 
     CapabilityEvent, 
     DeviceMap, 
+    DeviceObj, 
     Homey, 
+    HomeyMap, 
     LogMap, 
     Session, 
     Zone, 
     ZoneMap 
 } from '$lib/types/Homey';
+import type { DashboardMap } from '$lib/types/Dashboard';
+import type Dashboard from '$lib/types/Dashboard';
+import { driverId } from '$lib/constants';
+
+function createHomeys() {
+    const { subscribe, set, update } = writable({} as HomeyMap);
+
+    return {
+        subscribe,
+        set,
+        add: (h: Homey) => update((existing: HomeyMap) => {
+            const result = {...existing};
+            result[h.id] = h;
+
+            return result;
+        })
+    };
+}
 
 function createBaseUrl() {
     return derived([homey, page], ([$homey, $page], set) => {
@@ -34,8 +55,18 @@ function createDevices() {
     return {
         subscribe,
         set,
+        onDevice: (patch: any) => update((existing: DeviceMap) => onDevice(existing, patch)),
         onCapability: (deviceId: string, event: CapabilityEvent) => update((existing: DeviceMap) => onCapability(existing, deviceId, event))
     };
+}
+
+function onDevice(existing: DeviceMap, patch: any) : DeviceMap {
+    const deviceId: string = patch.id;
+
+    const copy = { ...existing };
+    copy[deviceId] = { ...existing[deviceId], ...patch };
+
+    return copy;
 }
 
 function onCapability(existing: DeviceMap, deviceId: string, event: CapabilityEvent) : DeviceMap {
@@ -78,13 +109,31 @@ function createZones() {
     };
 }
 
+export const user = writable(undefined as (any | undefined));
+export const homeys = createHomeys();
 export const homey = writable(undefined as (Homey | undefined));
 export const baseUrl = createBaseUrl();
 export const session = writable(undefined as (Session | undefined));
 export const scopes = derived(session, (s: Session) => s?.scopes ?? [], []);
 export const devices = createDevices();
-export const dashboards = derived(devices, (d: DeviceMap) => (Object.values(d).filter(e => e.driverId === 'homey:app:skogsaas.dashboards:dashboard')) ?? [], []);
 export const basicFlows = createBasicFlows();
 export const advancedFlows = createAdvancedFlows();
 export const zones = createZones();
 export const insights = writable({} as (LogMap));
+
+export const dashboards = derived(
+    devices, 
+    (d: DeviceMap) => Object.values(d)
+        .filter(e => e.driverId === driverId)
+        .reduce((existing: DashboardMap, dev: DeviceObj) => {
+            const dashboard: Dashboard = {
+                id: dev.data.id, // The custom device.data.id is used instead of the device.id, as the device id is not accessible for the installable app.
+                source: 'homey',
+                title: dev.name,
+                items: dev.settings.items ?? []
+            }
+            existing[dashboard.id] = dashboard;
+
+            return existing;
+        }, {} as DashboardMap), 
+    {} as DashboardMap);

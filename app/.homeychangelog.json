@@ -1,14 +1,11 @@
 {
-  "0.1.0": {
-    "en": "Initial version"
+  "0.3.0": {
+    "en": "Login with HP23 API-key"
   },
-  "0.1.1": {
-    "en": "Fixed loading dashboards"
+  "0.3.1": {
+    "en": "Login with online Athom signin"
   },
-  "0.1.2": {
-    "en": "No longer releases as .zip, and add Sentry.io logging"
-  },
-  "0.2.0": {
-    "en": "Rewrite and use JWT for secure retrieval of Homey token"
+  "0.6.0": {
+    "en": "Add dashboard device"
   }
 }

@@ -1,6 +1,6 @@
 {
   "id": "skogsaas.dashboards",
-  "version": "0.3.0",
+  "version": "0.6.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -41,13 +41,15 @@
   "api": {
     "getDashboards": {
       "method": "GET",
-      "path": "/dashboards",
-      "public": false
+      "path": "/dashboards"
     },
     "putDashboards": {
       "method": "PUT",
-      "path": "/dashboards",
-      "public": false
+      "path": "/dashboards/:dashboardId"
+    },
+    "dashboardHeartbeat": {
+      "method": "POST",
+      "path": "/dashboards/:dashboardId/active"
     }
   }
 }

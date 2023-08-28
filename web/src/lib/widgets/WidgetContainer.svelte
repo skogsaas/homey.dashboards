@@ -23,11 +23,11 @@ let menuOpen: boolean = false;
   {#if $editing}
     <div class="widget-edit">
       
-      <Fab color="primary" on:click={() => (menuOpen = true)} mini>
+      <Fab style="z-index: 9;" color="primary" on:click={(e) => { menuOpen = true; }} mini>
           <Icon class="material-icons">menu</Icon>
       </Fab>
 
-      <Menu bind:open={menuOpen} on:click>
+      <Menu bind:open={menuOpen}>
         <List>
           <Item on:SMUI:action={() => dispatch('edit')}>
             <Text>Edit</Text>

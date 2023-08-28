@@ -14,7 +14,6 @@ import FlowWidget from "./flow/FlowWidget.svelte";
 
 import ImageWidget from "./image/ImageWidget.svelte";
 import ImageEditor from "./image/ImageEditor.svelte";
-import ImageView from "./image/ImageView.svelte";
 
 import InsightWidget from "./insight/InsightWidget.svelte";
 import InsightEditor from "./insight/InsightEditor.svelte";
@@ -33,6 +32,7 @@ import type { WidgetSettings } from '$lib/types/Widgets';
 export interface WidgetInfo {
     type: string;
     label: string;
+    icon: string;
     widget: ComponentType;
     editor: ComponentType | undefined;
     view: ComponentType | undefined;
@@ -45,6 +45,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'capability', 
         label: 'Capability',
+        icon: 'tune',
         widget: CapabilityWidget, 
         editor: CapabilityEditor,
         view: undefined,
@@ -57,6 +58,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'flow', 
         label: 'Flow',
+        icon: 'alt_route',
         widget: FlowWidget, 
         editor: FlowEditor,
         view: undefined,
@@ -69,6 +71,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'image', 
         label: 'Image',
+        icon: 'image',
         widget: ImageWidget, 
         editor: ImageEditor,
         view: ImageWidget,
@@ -81,6 +84,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'insight', 
         label: 'Insight',
+        icon: 'show_chart',
         widget: InsightWidget, 
         editor: InsightEditor,
         view: undefined,
@@ -94,6 +98,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'text', 
         label: 'Text',
+        icon: 'edit_note',
         widget: TextWidget, 
         editor: TextEditor,
         view: undefined,
