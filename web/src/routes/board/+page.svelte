@@ -1,9 +1,9 @@
 <script lang="ts">
     // Svelte
     import { onMount, type ComponentType, onDestroy } from 'svelte';
-    import type { PageData } from './$types';
     import { goto } from '$app/navigation';
     import { base } from '$app/paths';
+    import { page } from '$app/stores';
 
     // Stores
     import { devices, homey, dashboards as homeyDashboards, scopes } from '$lib/stores/homey';
@@ -59,8 +59,6 @@
         [xlargeBreakpoint, xlargeColumns]
     ];
 
-    export let data: PageData;
-
     let items: GridItem[] = [];
 
     let viewOpen: boolean = false;
@@ -79,7 +77,8 @@
     let heartbeat: number | undefined;
 
     $: dashboards = { ...$homeyDashboards, ...$localDashboards };
-    $: resolvedDashboard = data.dashboard !== undefined ? dashboards[data.dashboard] : undefined;
+    $: dashboardId = $page.url.searchParams.get('id');
+    $: resolvedDashboard = dashboardId !== null ? dashboards[dashboardId] : undefined;
 
     $: onDashboard(resolvedDashboard);
     $: onEditing($editing);

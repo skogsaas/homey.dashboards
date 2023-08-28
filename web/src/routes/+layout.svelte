@@ -229,7 +229,7 @@
               <Menu bind:this={dashboardMenu}>
                 <List>
                   {#each dashboards as dashboard}
-                    <Item on:SMUI:action={() => goto(base + '/' + dashboard.id)}>
+                    <Item on:SMUI:action={() => goto(base + '/board?id=' + dashboard.id)}>
                       <Text>{dashboard.title}</Text>
                     </Item>
                   {/each}

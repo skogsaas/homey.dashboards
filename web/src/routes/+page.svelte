@@ -21,7 +21,6 @@
 
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
-    import { dashboard } from '$lib/stores/dashboard';
     
     let active = import.meta.env.VITE_DEFAULT_LOGIN ?? 'Online';
 
@@ -30,7 +29,6 @@
     let localKeyLoading: Promise<Homey | undefined> | undefined;
 
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
-    $: apps = $homey.apps.getApp
 
     function verifyApiKey() {
         apiKey.set(localKey);
@@ -97,7 +95,7 @@
                 <Content>
                     <List>
                         {#each dashboards as dashboard}
-                            <Item on:click={() => goto(base + '/' + dashboard.id)}>   
+                            <Item on:click={() => goto(base + '/board?id=' + dashboard.id)}>   
                                 <Text>{dashboard.title}</Text>
                             </Item>
                         {/each}
