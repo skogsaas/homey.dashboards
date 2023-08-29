@@ -20,19 +20,19 @@ function createDashboards() {
         }, {} as DashboardMap);
 
     // Migrate old dashboards
-    if(localStorage.dashboard !== undefined) {
+    if(localStorage.dashboards !== undefined) {
         const d: Dashboard = {
             id: uuid(),
             source: 'localstorage',
-            title: 'Dashboard',
-            items: JSON.parse(localStorage.dashboard)
+            title: 'Dashboard (migrated)',
+            items: JSON.parse(localStorage.dashboards)
         };
 
         const key = prefix + d.id;
         localStorage[key] = JSON.stringify(d);
 
         // Delete the old dashboard
-        delete localStorage.dashboard;
+        delete localStorage.dashboards;
 
         initialValue[d.id] = d;
     }
