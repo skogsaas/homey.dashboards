@@ -184,6 +184,8 @@
             return 'Homey Weather';
         } else if(uri.startsWith('homey:manager:logic')) {
             return 'Homey Logic';
+        } else if(uri.startsWith('homey:manager:user')) {
+            return 'Homey Users';
         } else {
             return uri;
         }
