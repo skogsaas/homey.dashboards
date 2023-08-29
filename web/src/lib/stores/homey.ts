@@ -56,7 +56,7 @@ function createDevices() {
         subscribe,
         set,
         onDevice: (patch: any) => update((existing: DeviceMap) => onDevice(existing, patch)),
-        onCapability: (deviceId: string, event: CapabilityEvent) => update((existing: DeviceMap) => onCapability(existing, deviceId, event))
+        //onCapability: (deviceId: string, event: CapabilityEvent) => update((existing: DeviceMap) => onCapability(existing, deviceId, event))
     };
 }
 
@@ -69,14 +69,22 @@ function onDevice(existing: DeviceMap, patch: any) : DeviceMap {
     return copy;
 }
 
+/*
 function onCapability(existing: DeviceMap, deviceId: string, event: CapabilityEvent) : DeviceMap {
     const device = existing[deviceId];
-    const capability = device.capabilitiesObj[event.capabilityId];
-    capability.value = event.value;
-    capability.lastUpdated.setUTCMilliseconds(event.transactionTime);
 
+    if(device !== undefined) {
+        const capability = device.capabilitiesObj[event.capabilityId];
+
+        if(capability !== undefined) {
+            capability.value = event.value;
+            capability.lastUpdated.setUTCMilliseconds(event.transactionTime);
+        }
+    }
+    
     return { ...existing };
 }
+*/
 
 function createBasicFlows() {
     const { subscribe, set, update } = writable({} as BasicFlowMap);

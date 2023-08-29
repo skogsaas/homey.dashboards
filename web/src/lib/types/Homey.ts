@@ -80,6 +80,8 @@ export interface Emitter {
     connect() : Promise<void>;
     disconnect(): void;
     on(event: string, callback: any) : void;
+    off(event: string, callback: any) : void;
+    once(event: string, callback: any) : void;
 }
 
 export interface AppObj extends Emitter {

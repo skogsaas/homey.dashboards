@@ -2,7 +2,7 @@
     import { devices, homey, scopes } from '$lib/stores/homey';
 
     import type CapabilitySettings from './CapabilitySettings';
-    import type { DeviceObj } from '$lib/types/Homey';
+    import type { CapabilityEvent, CapabilityObj, DeviceObj } from '$lib/types/Homey';
     
     import Slider from './components/Slider.svelte';
     import Sensor from './components/Sensor.svelte';
@@ -12,11 +12,39 @@
     export let settings: CapabilitySettings;
 
     let device: DeviceObj;
+    let capabilities: CapabilityObj[] = [];
 
-    $: device = $devices[settings.deviceId ?? ''];
-    $: capabilities = device && settings?.capabilityIds ? settings.capabilityIds.map(cId => device.capabilitiesObj[cId]) : [];
-
+    $: latestDevice = $devices[settings.deviceId ?? ''];
     $: controllable = $scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.control');
+
+    $: onDevice(latestDevice);
+
+    function onDevice(d: DeviceObj) {
+        if(device !== undefined) {
+            d.off('capability', updateCapability);
+        }
+
+        if(d !== undefined) {
+            device = d;
+            
+            capabilities = settings?.capabilityIds !== undefined ? 
+                settings.capabilityIds.map(cId => device.capabilitiesObj[cId]) : 
+                [];
+
+            d.on('capability', updateCapability);
+        }
+    }
+
+    function updateCapability(event: CapabilityEvent) {
+        if(device !== undefined) {
+            const capability = device.capabilitiesObj[event.capabilityId];
+
+            if(capability !== undefined) {
+                // Trigger an update
+                capabilities = [...capabilities];
+            }
+        }
+    }
 
     async function setCapabilityValue(capabilityId: string, value: number|boolean|string) {
         await device.setCapabilityValue({ 

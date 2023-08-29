@@ -11,7 +11,7 @@
     import { apiKey } from '$lib/stores/auth';
     
     // UI components
-    import Button, { Label, Icon } from '@smui/button';
+    import Button, { Icon } from '@smui/button';
     import CircularProgress from '@smui/circular-progress';
     import TopAppBar, {
       Row,
@@ -121,7 +121,11 @@
           
           Object.values(d).forEach(async (device) => {
             await device.connect();
-            device.on('capability', (event: CapabilityEvent) => devices.onCapability(device.id, event));
+            device.on('capability', (event: CapabilityEvent) => {
+              const capability = device.capabilitiesObj[event.capabilityId];
+              capability.value = event.value;
+              capability.lastUpdated.setUTCMilliseconds(event.transactionTime);
+            });
           });
 
           devices.set(d);
