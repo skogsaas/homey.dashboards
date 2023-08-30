@@ -1,6 +1,6 @@
 {
   "name": "skogsaas.dashboards",
-  "version": "0.1.0",
+  "version": "0.6.1",
   "main": "app.ts",
   "scripts": {
     "build": "tsc",
