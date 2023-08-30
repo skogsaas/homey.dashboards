@@ -69,7 +69,6 @@
     let editItem: GridItem;
 
     let addWidgetOpen = false;
-    let deleteDashboardOpen = false;
 
     let dashboard: Dashboard | undefined;
     let savingDashboard: boolean = false;
@@ -401,19 +400,6 @@
                         <Label>Cancel</Label>
                     </Button>
                 </div>
-
-                {#if dashboard?.source === 'localstorage'}
-                    <div>
-                        <div class="toolbar-spacer"></div>
-
-                        <Button color='secondary' on:click={() => deleteDashboardOpen = true}>
-                            <Icon class="material-icons">delete</Icon>
-                            <Label>Delete dashboard</Label>
-                        </Button>
-
-                        <ConfirmDialog bind:open={deleteDashboardOpen} text="Are you sure you want to delete this dashboard?" on:confirm={async () => deleteDashboard()}/>
-                    </div>
-                {/if}
             {/if}
         </div>
 
@@ -473,9 +459,5 @@
     .overflow-wrap {
         display: flex;
         flex-wrap: wrap;
-    }
-
-    .toolbar-spacer {
-        width: 30px;
     }
 </style>

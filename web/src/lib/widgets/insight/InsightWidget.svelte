@@ -32,6 +32,7 @@
             ]
         };
 
+    let options: any;
     $: options = {
         plugins: {
             legend: {
@@ -46,7 +47,7 @@
         scales: { 
             x: { 
                 type: 'timeseries' 
-            } 
+            }
         },
         responsive: true,
         maintainAspectRatio: false,

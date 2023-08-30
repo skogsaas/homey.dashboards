@@ -25,7 +25,7 @@
     on:SMUIDialog:closed={closeHandler}
 >
     <Title>Create local dashboard</Title>
-    <Content style="margin: 5px;">
+    <Content style="margin: 10px;">
         <Textfield bind:value style="width: 100%" label="Dashboard name">
         </Textfield>
     </Content>

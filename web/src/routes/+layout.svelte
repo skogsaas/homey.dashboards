@@ -197,9 +197,7 @@
       editing.toggle();
     }
 
-
-
-    function addDashboard(title: string) {
+    async function addDashboard(title: string) : Promise<void> {
       const d: Dashboard = {
         id: uuid(),
         source: 'localstorage',
@@ -208,6 +206,8 @@
       };
 
       localDashboards.update(d);
+      
+      await goto(base + '/board?id=' + d.id);
     }
 
 </script>
@@ -232,16 +232,16 @@
               <IconButton class="material-icons" on:click={() => dashboardMenu.setOpen(true)}>dashboard</IconButton>
               <Menu bind:this={dashboardMenu}>
                 <List>
-                  {#each dashboards as dashboard}
-                    <Item on:SMUI:action={() => goto(base + '/board?id=' + dashboard.id)}>
-                      <Text>{dashboard.title}</Text>
+                  {#each dashboards as d}
+                    <Item on:SMUI:action={() => goto(base + '/board?id=' + d.id)}>
+                      <Text>{d.title}</Text>
                     </Item>
                   {/each}
                 </List>
               </Menu>
 
               {#if $dashboard !== undefined}
-                <Text>{$dashboard.title}</Text>
+                <Text style="cursor: pointer;" on:click={() => goto(base + '/board?id=' + $dashboard.id)}>{$dashboard.title}</Text>
               {/if}
             {/if}
           </Section>
@@ -257,6 +257,13 @@
                 <Icon class="material-icons">add</Icon>
                 <Text>New</Text>
               </Button>
+
+              {#if $dashboard !== undefined}
+                <Button on:click={() => goto(base + '/board/settings?id=' + $dashboard.id)}>
+                  <Icon class="material-icons">settings</Icon>
+                  <Text>Settings</Text>
+                </Button>
+              {/if}
 
               <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
             {/if}
