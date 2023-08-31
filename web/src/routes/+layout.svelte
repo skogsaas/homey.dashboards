@@ -220,69 +220,68 @@
   <div class="loading">
     <CircularProgress style="height: 128px; width: 128px;" indeterminate />
   </div>
-{:else}
-  {#if $homey !== undefined}
-    
-      <TopAppBar bind:this={topBar} collapsed={topBarCollapsed} dense>
-        <Row>
-          <Section>
-            <IconButton class="material-icons" on:click={() => topBarCollapsed = !topBarCollapsed}>menu</IconButton>
+{:else if $homey !== undefined}
+  <TopAppBar bind:this={topBar} collapsed={topBarCollapsed} dense>
+    <Row>
+      <Section>
+        <IconButton class="material-icons" on:click={() => topBarCollapsed = !topBarCollapsed}>menu</IconButton>
 
-            {#if !topBarCollapsed}              
-              <IconButton class="material-icons" on:click={() => dashboardMenu.setOpen(true)}>dashboard</IconButton>
-              <Menu bind:this={dashboardMenu}>
-                <List>
-                  {#each dashboards as d}
-                    <Item on:SMUI:action={() => goto(base + '/board?id=' + d.id)}>
-                      <Text>{d.title}</Text>
-                    </Item>
-                  {/each}
-                </List>
-              </Menu>
+        {#if !topBarCollapsed}              
+          <IconButton class="material-icons" on:click={() => dashboardMenu.setOpen(true)}>dashboard</IconButton>
+          <Menu bind:this={dashboardMenu}>
+            <List>
+              {#each dashboards as d}
+                <Item on:SMUI:action={() => goto(base + '/board?id=' + d.id)}>
+                  <Text>{d.title}</Text>
+                </Item>
+              {/each}
+            </List>
+          </Menu>
 
-              {#if $dashboard !== undefined}
-                <Text style="cursor: pointer;" on:click={() => goto(base + '/board?id=' + $dashboard.id)}>{$dashboard.title}</Text>
-              {/if}
-            {/if}
-          </Section>
+          {#if $dashboard !== undefined}
+            <Text style="cursor: pointer;" on:click={() => goto(base + '/board?id=' + $dashboard.id)}>{$dashboard.title}</Text>
+          {/if}
+        {/if}
+      </Section>
 
-          <Section align="end">
-            {#if !topBarCollapsed && !$editing}
-              <Button on:click={() => toggleEdit()}>
-                <Icon class="material-icons">edit</Icon>
-                <Text>Edit</Text>
-              </Button>
-              
-              <Button on:click={() => addDashboardOpen = true}>
-                <Icon class="material-icons">add</Icon>
-                <Text>New</Text>
-              </Button>
+      <Section align="end">
+        {#if !topBarCollapsed && !$editing}
+          <Button on:click={() => toggleEdit()}>
+            <Icon class="material-icons">edit</Icon>
+            <Text>Edit</Text>
+          </Button>
+          
+          <Button on:click={() => addDashboardOpen = true}>
+            <Icon class="material-icons">add</Icon>
+            <Text>New</Text>
+          </Button>
 
-              {#if $dashboard !== undefined}
-                <Button on:click={() => goto(base + '/board/settings?id=' + $dashboard.id)}>
-                  <Icon class="material-icons">settings</Icon>
-                  <Text>Settings</Text>
-                </Button>
-              {/if}
+          {#if $dashboard !== undefined}
+            <Button on:click={() => goto(base + '/board/settings?id=' + $dashboard.id)}>
+              <Icon class="material-icons">settings</Icon>
+              <Text>Settings</Text>
+            </Button>
+          {/if}
 
-              <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
-            {/if}
-          </Section>
-        </Row>
-      </TopAppBar>
+          <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
+        {/if}
+      </Section>
+    </Row>
+  </TopAppBar>
 
-      {#if !topBarCollapsed}
-        <AutoAdjust topAppBar={topBar} />
-      {/if}
-
-      {#if error !== undefined}
-        <div class="error">
-          {error}
-        </div>
-      {/if}
-        
-      <slot></slot>
+  {#if !topBarCollapsed}
+    <AutoAdjust topAppBar={topBar} />
   {/if}
+
+  {#if error !== undefined}
+    <div class="error">
+      {error}
+    </div>
+  {/if}
+    
+  <slot></slot>
+{:else}
+  <slot></slot>
 {/if}
 
 <style>

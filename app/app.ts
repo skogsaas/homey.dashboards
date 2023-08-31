@@ -46,6 +46,12 @@ export class DashboardApp extends Homey.App {
     const homeyId = await this.homey.cloud.getHomeyId();
     this.homey.settings.set("homey_id", homeyId);
 
+    const platform = (this.homey as any).platform;
+    this.homey.settings.set("platform", platform);
+
+    const platformVersion = (this.homey as any).platformVersion;
+    this.homey.settings.set("platform_version", platformVersion);
+
     const localAddress = await this.homey.cloud.getLocalAddress();
     this.homey.settings.set("local_address", localAddress);
   }

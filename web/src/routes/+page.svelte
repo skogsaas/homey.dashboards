@@ -124,10 +124,6 @@
                     <Content>
                         <p>Local authentication can only be used on the Homey Pro 2023 model. Older models do not have the API-Key feature.</p>
                         <p>Obtain an API-Key by navigating to <b>Homey --> Settings --> System --> API Keys</b>.</p>
-                        <p>
-                            In order to get the full capabilities of the Dashboard app, please include the <b>homey.apps</b> scope. 
-                            Other scopes can be included based on your planned usage of the dashboard.
-                        </p>
                         
                         <Textfield bind:value={localKey} invalid={localKeyInvalid} label="Homey API-Key">
                             <Icon class="material-icons" slot="leadingIcon">key</Icon>
@@ -148,13 +144,7 @@
                                     <p>... with <b>{session.type} {session.clientName}</b></p>
                                     <p>... scopes <b>{session.scopes}</b></p>
 
-                                    {#if !session.scopes.includes('homey.app') && !session.scopes.includes('homey')}
-                                        <p>
-                                            <span style="color: red;">Error:</span> Missing scope <b>homey.app</b>. 
-                                            This is needed in order to contact the Dashboard app running on the Homey.
-                                            Without this scope, dashboards will be loaded and stored locally in your browser.
-                                        </p>
-                                    {:else}
+                                    {#if session.scopes.includes('homey.app') || session.scopes.includes('homey')}
                                         {#await instance.apps.getApp({ id: 'skogsaas.dashboards' })}
                                             ... looking for the Dashboard app
                                         {:then app}
@@ -165,6 +155,12 @@
                                                 Without this app, dashboards will be loaded and stored locally in your browser.
                                             </p>
                                         {/await}
+                                    {:else}
+                                        <p>
+                                            <span style="color: orange;">Warning:</span> Missing scopes to resolve installed
+                                            apps. If the Dashboard app is not installed, all dashboards will be loaded and stored
+                                            locally in your browser.
+                                        </p>
                                     {/if}
                                 {/await}
 

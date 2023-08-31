@@ -1,6 +1,6 @@
 {
   "id": "skogsaas.dashboards",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [

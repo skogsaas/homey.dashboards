@@ -6,7 +6,7 @@
     import 'chartjs-adapter-date-fns';
 
     import type InsightSettings from './InsightSettings';
-    import type { Log, LogEntries } from '$lib/types/Homey';
+    import type { Log, LogEntries, LogMap } from '$lib/types/Homey';
     import CircularProgress from '@smui/circular-progress';
     import { onDestroy, } from 'svelte';
 
@@ -21,6 +21,7 @@
     let entries: LogEntries;
 
     $: onSettings(settings);
+    $: onInsights($insights);
     
     let loading: Promise<void>;
     let timeout: number | undefined;
@@ -84,6 +85,14 @@
         }
 
         if(load && insightId) {
+            log = $insights[insightId];
+
+            reload();
+        }
+    }
+
+    function onInsights(logs: LogMap) {
+        if(log === undefined && insightId !== undefined) {
             log = $insights[insightId];
 
             reload();
