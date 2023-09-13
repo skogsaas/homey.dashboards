@@ -31,7 +31,7 @@
 
 {#if capability !== null && capability !== undefined}
     <Slider 
-        style="flex-grow: 1; align-self: center;"
+        style="flex-grow: 1; align-self: center; max-width: 100px;"
         bind:value={value}
         min={capability.min} 
         max={capability.max} 
