@@ -4,8 +4,12 @@
     import type FlowSettings from './FlowSettings';
     import type { Flow, InsightObj, LogEntries } from '$lib/types/Homey';
 
-    import Fab, { Label, Icon } from '@smui/fab';
     import { editing } from '$lib/stores/dashboard';
+
+    import Button from "stwui/button";
+    import Icon from "stwui/icon";
+    
+    import { mdiPlay } from '$lib/components/icons';
 
     export let settings: FlowSettings;
 
@@ -25,28 +29,12 @@
 {#if flow === undefined}
     <span>Error</span>
 {:else}
-<div class="flow-container">
-    <div class="flow-button">
-        <Fab color="primary" on:click={() => triggerFlow()}>
-            <Icon class="material-icons">play_arrow</Icon>
-        </Fab>
-    </div>
-
-    <Label>{flow.name}</Label>
+<div class="flex content-center h-full">
+    <Button class="my-auto ml-1" type="primary" shape="circle" size="fab" on:click={() => triggerFlow()}>
+        <Button.Icon slot="icon" data={mdiPlay} />
+    </Button>
+    
+    <div class="my-auto ml-3 mr-1">{flow.name}</div>
 </div>
     
 {/if}
-
-<style>
-    .flow-container {
-        display: flex;
-        align-items: center;
-        height: 100%;
-        width: 100%;
-    }
-
-    .flow-button {
-        margin-left: 5px;
-        margin-right: 5px;
-    }
-</style>

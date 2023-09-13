@@ -1,59 +1,60 @@
 <script lang="ts">
-import { createEventDispatcher } from 'svelte';
+    import { createEventDispatcher } from 'svelte';
 
-import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/dashboard';
+    
+    import Card from 'stwui/card';
+    import Button from 'stwui/button';
+    import Dropdown from 'stwui/dropdown';
 
-import Card from '@smui/card';
-import Fab, { Icon } from '@smui/fab';
-import Menu from '@smui/menu';
-import List, { Item, Text } from '@smui/list';
+    import { mdiCog, mdiDelete, mdiLock, mdiLockOpenVariant, mdiMenu } from '$lib/components/icons';
 
-const dispatch = createEventDispatcher();
+    const dispatch = createEventDispatcher();
 
-export let fixed: boolean;
+    export let fixed: boolean;
 
-let menuOpen: boolean = false;
+    let menuOpen: boolean = false;
 
+    function onEdit() {
+        menuOpen = false;
+        dispatch('edit');
+    }
+
+    function onFixed() {
+        menuOpen = false;
+        dispatch('fixed', !fixed);
+    }
+
+    function onDelete() {
+        menuOpen = false;
+        dispatch('delete');
+    }
 </script>
 
-<Card 
-  style="height: 100%; width: 100%; padding: 0px"
-  on:click
->
-  {#if $editing}
-    <div class="widget-edit">
-      
-      <Fab style="z-index: 9;" color="primary" on:click={(e) => { menuOpen = true; }} mini>
-          <Icon class="material-icons">menu</Icon>
-      </Fab>
+<Card on:click class="h-full w-full overflow-hidden">
+    {#if $editing}
+        <div class="absolute -top-4 -left-4 z-10">
+            <Dropdown bind:visible={menuOpen}>
+                <Button slot="trigger" shape="circle" size="xs" type="primary" on:click={(e) => (menuOpen = true)}>
+                    <Button.Icon data={mdiMenu} />
+                </Button>
 
-      <Menu bind:open={menuOpen}>
-        <List>
-          <Item on:SMUI:action={() => dispatch('edit')}>
-            <Text>Edit</Text>
-          </Item>
-          <Item on:SMUI:action={() => dispatch('fixed', !fixed)}>
-            <Text>{fixed ? 'Unlock' : 'Lock'}</Text>
-          </Item>
-          <Item on:SMUI:action={() => dispatch('delete')}>
-            <Text><span class="delete">Delete</span></Text>
-          </Item>
-        </List>
-      </Menu>
-    </div>
-  {/if}
-  
-  <slot></slot>
+                <Dropdown.Items slot="items">
+                    <Dropdown.Items.Item on:click={onEdit} label="Edit">
+                        <Dropdown.Items.Item.Icon slot="icon" data={mdiCog} />
+                    </Dropdown.Items.Item>
+
+                    <Dropdown.Items.Item on:click={onFixed} label={fixed ? 'Unlock' : 'Lock'}>
+                        <Dropdown.Items.Item.Icon slot="icon" data={fixed ? mdiLock : mdiLockOpenVariant} />
+                    </Dropdown.Items.Item>
+
+                    <Dropdown.Items.Item type="danger" on:click={onDelete} label="Delete">
+                        <Dropdown.Items.Item.Icon slot="icon" data={mdiDelete} color="red" />
+                    </Dropdown.Items.Item>
+                </Dropdown.Items>
+            </Dropdown>
+        </div>
+    {/if}
+    
+    <slot></slot>
 </Card>
-
-<style>
-.widget-edit :global(button) {
-  position: absolute;
-  top: -20px;
-  left: -20px;
-}
-
-.delete {
-  color: red;
-}
-</style>

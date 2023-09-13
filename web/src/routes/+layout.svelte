@@ -5,22 +5,26 @@
     import { base } from '$app/paths';
 
     // Stores
-    import { homey, devices, dashboards as homeyDashboards, baseUrl, basicFlows, advancedFlows, session, scopes, zones, insights, homeys } from '$lib/stores/homey';
+    import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import { dashboard, editing } from '$lib/stores/dashboard';
     import { apiKey } from '$lib/stores/auth';
-    
+
     // UI components
-    import Button, { Icon } from '@smui/button';
-    import CircularProgress from '@smui/circular-progress';
-    import TopAppBar, {
-      Row,
-      Section,
-      AutoAdjust,
-    } from '@smui/top-app-bar';
-    import IconButton from '@smui/icon-button';
-    import Menu from '@smui/menu';
-    import List, { Item, Text } from '@smui/list';
+    import Drawer from "$lib/components/Drawer.svelte";
+    import AddDashboardDialog from '$lib/AddDashboardDialog.svelte';
+
+    // Tailwind
+    import "../app.postcss";
+    import Progress from 'stwui/progress';
+    import Button from 'stwui/button';
+    import Dropdown from 'stwui/dropdown';
+    import List from 'stwui/list';
+    import Divider from 'stwui/divider';
+    import Toggle from 'stwui/toggle';
+    import Media from 'stwui/media';
+
+    import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant } from "$lib/components/icons";
 
     // Types
     import type { AdvancedFlow, BasicFlow, CapabilityEvent, Homey } from '$lib/types/Homey';
@@ -31,20 +35,24 @@
     import { v4 as uuid } from 'uuid';
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
-    import AddDashboardDialog from '$lib/AddDashboardDialog.svelte';
-
-    let topBar: TopAppBar;
-    let topBarCollapsed: boolean = true;
 
     let loading: boolean = true;
     let error: any | undefined = undefined;
 
-    let dashboardMenu: Menu;
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
 
+    let menuOpen: boolean = false;
+    let toolbarOpen: boolean = false;
+    let dashboardMenuOpen: boolean = false;
     let addDashboardOpen: boolean = false;
 
     onMount(async () => {
+      await loadData()
+    });
+
+    async function loadData() {
+      loading = true;
+
       await connectHomey();
 
       if($homey !== undefined) {
@@ -57,7 +65,7 @@
       }
 
       loading = false;
-    });
+    }
 
     async function connectHomey() {
       if($homey === undefined) {
@@ -79,9 +87,11 @@
           const loggedIn = await cloudApi.isLoggedIn();
 
           if (loggedIn) {
-            const user = await cloudApi.getAuthenticatedUser();
-            const firstHomey = await user.getFirstHomey();
+            const usr = await cloudApi.getAuthenticatedUser();
+            const firstHomey = await usr.getFirstHomey();
             const instance = await firstHomey.authenticate();
+
+            user.set(usr);
 
             /*
             // TODO:  Create some kind of HomeyManager that is responsible for connecting to an Homey
@@ -139,9 +149,11 @@
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.flow') || $scopes.includes('homey.flow.readonly') || $scopes.includes('homey.flow.start')) {
           await $homey.flow.connect();
+          const folders = await $homey.flow.getFlowFolders();
           const basic = await $homey.flow.getFlows();
           const advanced = await $homey.flow.getAdvancedFlows();
 
+          flowFolders.set(folders);
           basicFlows.set(basic);
           advancedFlows.set(advanced);
 
@@ -195,6 +207,7 @@
 
     function toggleEdit() {
       editing.toggle();
+      menuOpen = false;
     }
 
     async function addDashboard(title: string) : Promise<void> {
@@ -210,94 +223,189 @@
       await goto(base + '/board?id=' + d.id);
     }
 
+    function openDashboard(dash: Dashboard) : Promise<void> {
+      menuOpen = false;
+      dashboardMenuOpen = false;
+      return goto(base + '/board?id=' + dash.id)
+    }
+
+    function openDashboardSettings(dash: Dashboard) : Promise<void> {
+      menuOpen = false;
+      return goto(base + '/board/settings?id=' + dash.id)
+    }
+
+    function openAddDashboard() {
+      menuOpen = false;
+      addDashboardOpen = true;
+    }
+
+    async function selectHomey(h: OAuthHomey) {
+      const instance = await h.authenticate();
+
+      homey.set(instance);
+      dashboard.set(undefined);
+
+      // Navigate to home-screen after switching
+      await goto(base + '/');
+      menuOpen = false;
+    }
+
 </script>
 
 <svelte:head>
   <title>Dashboard</title>
 </svelte:head>
 
-{#if loading}
-  <div class="loading">
-    <CircularProgress style="height: 128px; width: 128px;" indeterminate />
-  </div>
-{:else if $homey !== undefined}
-  <TopAppBar bind:this={topBar} collapsed={topBarCollapsed} dense>
-    <Row>
-      <Section>
-        <IconButton class="material-icons" on:click={() => topBarCollapsed = !topBarCollapsed}>menu</IconButton>
+<div class="w-full h-full">
+  {#if loading}
+    <div class="w-full">
+        <Progress size="xs" indeterminate value={0} />
+    </div>
+  {:else if $homey !== undefined}
+    {#if menuOpen == false && toolbarOpen == false}
+      <Button on:click={() => menuOpen = true} class="absolute left-0 top-0 z-10 text-primary-content bg-primary h-[42px] w-[42px] rounded-none rounded-br-full">
+        <Button.Icon slot="icon" data={mdiMenu} />
+      </Button>
+    {/if}
 
-        {#if !topBarCollapsed}              
-          <IconButton class="material-icons" on:click={() => dashboardMenu.setOpen(true)}>dashboard</IconButton>
-          <Menu bind:this={dashboardMenu}>
-            <List>
-              {#each dashboards as d}
-                <Item on:SMUI:action={() => goto(base + '/board?id=' + d.id)}>
-                  <Text>{d.title}</Text>
-                </Item>
-              {/each}
-            </List>
-          </Menu>
+    <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
 
-          {#if $dashboard !== undefined}
-            <Text style="cursor: pointer;" on:click={() => goto(base + '/board?id=' + $dashboard.id)}>{$dashboard.title}</Text>
-          {/if}
+    <Drawer bind:open={menuOpen} position="left" size="xs" class="overflow-auto">
+      {#if $user !== undefined}
+        <Media>
+          <Media.Avatar src={$user.avatar.small} />
+          <Media.Content>
+              <Media.Content.Title>{$user.firstname}</Media.Content.Title>
+              <Media.Content.Description>{$user.email}</Media.Content.Description>
+          </Media.Content>
+        </Media>
+
+        {#if $user.homeys.length > 1}
+          <Divider>
+            <Divider.Label slot="label">Homeys</Divider.Label>
+          </Divider>
+          <List>
+            {#each $user.homeys as h}
+              <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => selectHomey(h)}>
+                <List.Item.Leading slot="leading">
+                  <List.Item.Leading.Icon slot="icon" data={mdiDeathStarVariant} />
+                </List.Item.Leading>
+                <List.Item.Content slot="content">
+                  <List.Item.Content.Title slot="title">{h.name}</List.Item.Content.Title>
+                </List.Item.Content>
+              </List.Item>
+            {/each}
+          </List>
         {/if}
-      </Section>
+      {/if}
 
-      <Section align="end">
-        {#if !topBarCollapsed && !$editing}
-          <Button on:click={() => toggleEdit()}>
-            <Icon class="material-icons">edit</Icon>
-            <Text>Edit</Text>
+      <Divider>
+        <Divider.Label slot="label">Dashboards</Divider.Label>
+      </Divider>
+      <List>
+        {#each dashboards as d}
+          <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openDashboard(d)}>
+            <List.Item.Leading slot="leading">
+              <List.Item.Leading.Icon slot="icon" data={mdiViewDashboard} />
+            </List.Item.Leading>
+            <List.Item.Content slot="content">
+              <List.Item.Content.Title slot="title">{d.title}</List.Item.Content.Title>
+            </List.Item.Content>
+          </List.Item>
+        {/each}
+      </List>
+
+      <Divider>
+        <Divider.Label slot="label">Tools</Divider.Label>
+      </Divider>
+
+      <List>
+          {#if $dashboard !== undefined}
+            <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => toggleEdit()}>
+              <List.Item.Leading slot="leading" class="bg-surface">
+                <List.Item.Leading.Icon slot="icon" color="content" data={mdiViewDashboardEdit} />
+              </List.Item.Leading>
+              <List.Item.Content slot="content">
+                <List.Item.Content.Title slot="title">Edit widgets</List.Item.Content.Title>
+              </List.Item.Content>
+            </List.Item>
+
+            <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openDashboardSettings($dashboard)}>
+              <List.Item.Leading slot="leading" class="bg-surface">
+                <List.Item.Leading.Icon slot="icon" color="content" data={mdiCog} />
+              </List.Item.Leading>
+              <List.Item.Content slot="content">
+                <List.Item.Content.Title slot="title">Dashboard settings</List.Item.Content.Title>
+              </List.Item.Content>
+            </List.Item>
+          {/if}
+
+          <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openAddDashboard()}>
+            <List.Item.Leading slot="leading" class="bg-surface">
+              <List.Item.Leading.Icon slot="icon" color="content" data={mdiPlus} />
+            </List.Item.Leading>
+            <List.Item.Content slot="content">
+              <List.Item.Content.Title slot="title">Add local dashboard</List.Item.Content.Title>
+            </List.Item.Content>
+          </List.Item>
+      </List>
+
+      <Divider>
+        <Divider.Label slot="label"></Divider.Label>
+      </Divider>
+
+      <Toggle
+        name="toolbarOpen"
+        bind:on={toolbarOpen}
+      >
+        <Toggle.ContentLeft slot="content-left">
+          <Toggle.ContentLeft.Label slot="label">Toolbar open</Toggle.ContentLeft.Label>
+        </Toggle.ContentLeft>
+      </Toggle>
+    </Drawer>
+
+    {#if toolbarOpen}
+      <header class="w-full sticky z-0 drop-shadow-lg p-4 bg-primary flex flex-row">
+        <Button on:click={() => menuOpen = true}>
+          <Button.Icon slot="icon" data={mdiMenu} />
+        </Button>
+        
+        <Dropdown bind:visible={dashboardMenuOpen}>
+          <Button slot="trigger" on:click={() => dashboardMenuOpen = !dashboardMenuOpen}>
+            <Button.Icon slot="icon" data={mdiViewDashboard} />
           </Button>
-          
-          <Button on:click={() => addDashboardOpen = true}>
-            <Icon class="material-icons">add</Icon>
-            <Text>New</Text>
+          <Dropdown.Items slot="items">
+            {#each dashboards as d}
+              {#if $dashboard === undefined || $dashboard.id !== d.id}
+                <Dropdown.Items.Item on:click={() => openDashboard(d)} label={d.title} />
+              {/if}
+            {/each}
+          </Dropdown.Items>
+        </Dropdown>
+        
+        {#if $dashboard !== undefined}
+          <Button on:click={() => goto(base + '/board?id=' + $dashboard.id)}>{$dashboard.title}</Button>
+        {/if}
+
+        <div class="flex flex-grow justify-end">
+          <Button on:click={() => (addDashboardOpen = true)}>
+            <Button.Icon slot="icon" data={mdiPlus} />
           </Button>
 
           {#if $dashboard !== undefined}
+            <Button on:click={() => toggleEdit()}>
+              <Button.Icon slot="icon" data={mdiViewDashboardEdit} />
+            </Button>
             <Button on:click={() => goto(base + '/board/settings?id=' + $dashboard.id)}>
-              <Icon class="material-icons">settings</Icon>
-              <Text>Settings</Text>
+              <Button.Icon slot="icon" data={mdiCog} />
             </Button>
           {/if}
-
-          <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
-        {/if}
-      </Section>
-    </Row>
-  </TopAppBar>
-
-  {#if !topBarCollapsed}
-    <AutoAdjust topAppBar={topBar} />
-  {/if}
-
-  {#if error !== undefined}
-    <div class="error">
-      {error}
-    </div>
-  {/if}
+        </div>
+      </header>
+    {/if}
     
-  <slot></slot>
-{:else}
-  <slot></slot>
-{/if}
-
-<style>
-
-.loading {
-  position: absolute;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.error {
-  display: flex;
-  justify-content: center;
-}
-
-</style>
+    <slot></slot>
+  {:else}
+    <slot></slot>
+  {/if}
+</div>

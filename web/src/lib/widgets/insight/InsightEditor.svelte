@@ -2,94 +2,92 @@
     import { createEventDispatcher } from 'svelte';
     import { devices, insights } from '$lib/stores/homey';
 
-    import Select, { Option } from "@smui/select";
     import type InsightSettings from "./InsightSettings";
+    import type { Series_v3 } from './InsightSettings';
+
+    import Button from 'stwui/button';
+    import Select from 'stwui/select';
+    import Accordion from 'stwui/accordion'
+
+    import InsightPicker from '$lib/components/InsightPicker.svelte';
+    import InsightEditorSeries from './InsightEditorSeries.svelte';
+    import { mdiDelete } from '$lib/components/icons';
+    
+    const dispatch = createEventDispatcher();
+
+    interface Option {
+        value: string;
+        label: string;
+    }
+
+    const resolutions: Option[] = [
+        {value: 'lastHour', label: 'Last hour'},
+        {value: 'last6Hours', label: 'Last 6 hours'},
+        {value: 'last24Hours', label: 'Last 24 hours'},
+        {value: 'last7Days', label: 'Last 7 days'},
+        {value: 'last14Days', label: 'Last 14 days'},
+        {value: 'last31Days', label: 'Last 31 days'},
+        {value: 'today', label: 'Today'},
+        {value: 'thisWeek', label: 'This week'},
+        {value: 'thisMonth', label: 'This month'},
+        {value: 'thisYear', label: 'This year'},
+        {value: 'yesterday', label: 'Yesterday'},
+        {value: 'lastWeek', label: 'Last week'},
+        {value: 'lastMonth', label: 'Last month'},
+        {value: 'lastYear', label: 'Last year'},
+        {value: 'last2Years', label: 'Last 2 years'}
+    ];
 
     export let settings: InsightSettings;
 
-    const dispatch = createEventDispatcher();
+    let openInsightId: string | undefined;
+    let resolution: Option;
+    let series: Series_v3[] = [];
 
-    let selectedOwnerUri: string | undefined;
-
-    let ownerUri: string | undefined;
-    let insightId: string | undefined;
-    let resolution: string;
-    let aggregation: string;
-    let sampleRate: number;
+    let selectedLogId: string | undefined;
 
     $: onSettings(settings);
-
-    $: ownerLogs = Object.values($insights).reduce((groups: any, log) => {
-        const ownerUri = log.ownerUri;
-        const group = groups[ownerUri] = groups[ownerUri] ?? [];
-        group.push(log);
-
-        return groups;
-    }, {});
-    $: owners = Object.keys(ownerLogs);
-
-    $: onOwner(selectedOwnerUri);
-    $: onInsight(insightId);
     $: onResolution(resolution);
-    $: onAggregation(aggregation);
-    $: onSampleRate(sampleRate);
 
     function onSettings(s: InsightSettings) {
-        insightId = settings?.insightId;
-        resolution = settings?.resolution ?? 'today';
-        aggregation = settings?.aggregation ?? 'none';
-        sampleRate = settings?.sampleRate ?? 60;
-
-        if(insightId !== undefined) {
-            ownerUri = $insights[insightId].ownerUri;
-            selectedOwnerUri = ownerUri;
-        }
+        resolution = resolutions.find(r => r.value === (settings.resolution ?? 'today'))!;
+        series = [...settings?.series ?? []];
     };
 
-    function onOwner(value: string | undefined) {
-        if(value === ownerUri) {
+    function onResolution(option: Option) {
+        if(option.value === settings.resolution) {
             return;
         }
 
-        ownerUri = value;
-
-        // Reset the insight after changing ownerUri
-        insightId = undefined;
+        dispatch('settings', { ...settings, resolution: option.value });
     }
 
-    function onInsight(value: string | undefined) {
-        if(value == undefined || value === settings.insightId) {
-            return;
+    function onLog(logId: string) {
+        const updatedSeries = [...series, { insightId: logId }];
+
+        selectedLogId = undefined;
+
+        dispatch('settings', { ...settings, series: updatedSeries });
+    }
+
+    function onSeries(index: number, s: Series_v3) {
+        const updatedSeries = [...series];
+        updatedSeries[index] = s;
+
+        dispatch('settings', { ...settings, series: updatedSeries });
+    }
+
+    function getLogName(logId: string | undefined) {
+        if(logId !== undefined) {
+            const log = $insights[logId];
+
+            return getOwnerName(log.ownerUri) + ' - ' + log.title;
         }
-
-        dispatch('settings', { ...settings, insightId });
+        
+        return 'Unknown';
     }
 
-    function onResolution(value: string | undefined) {
-        if(value == undefined || value === settings.resolution) {
-            return;
-        }
-
-        dispatch('settings', { ...settings, resolution });
-    }
-
-    function onAggregation(value: string | undefined) {
-        if(value == undefined || value === settings.aggregation) {
-            return;
-        }
-
-        dispatch('settings', { ...settings, aggregation });
-    }
-
-    function onSampleRate(value: number | undefined) {
-        if(value == undefined || value === settings.sampleRate) {
-            return;
-        }
-
-        dispatch('settings', { ...settings, sampleRate });
-    }
-
-    function getOwnerUriName(uri: string) {
+    function getOwnerName(uri: string) {
         if(uri.startsWith('homey:device:')) {
             const prefix = 'homey:device:';
             const id = uri.slice(prefix.length);
@@ -107,76 +105,39 @@
             return uri;
         }
     }
+
+    function removeInsight(index: number) {
+        const updatedSeries = [...series.filter((s, i) => i !== index)];
+
+        dispatch('settings', { ...settings, series: updatedSeries });
+    }
 </script>
 
-<div>
-    <Select bind:value={selectedOwnerUri} label="Source">
-        {#each owners as owner}
-          <Option value={owner}>{getOwnerUriName(owner)}</Option>
+<InsightPicker bind:logId={selectedLogId} on:logId={(e) => onLog(e.detail)} logs={Object.values($insights)} placeholder="Add insight" />
+
+<Select bind:value={resolution} placeholder="Resolution" name="resolution" class="mt-4">
+    <Select.Options slot="options" class="max-h-96 overflow-auto">
+        {#each resolutions as option}
+            <Select.Options.Option {option} />
         {/each}
-    </Select>
-</div>
+    </Select.Options>
+</Select>
 
-<div>
-{#if ownerUri}
-    <Select bind:value={insightId} label="Insight">
-        {#each ownerLogs[ownerUri] as insight}
-            <Option value={insight.id}>{insight.title}</Option>
-        {/each}
-    </Select>
-{/if}
-</div>
+<Accordion class="mt-4">
+    {#each series as s, i}
+        <Accordion.Item open={openInsightId === s.insightId} class="overflow-visible">
+            <Accordion.Item.Title slot="title" on:click={() => openInsightId = s.insightId}>
+                <div>
+                    <Button class="mr-4" on:click={() => removeInsight(i)}>
+                        <Button.Icon slot="icon" data={mdiDelete} />
+                    </Button>
+                    <span>{getLogName(s.insightId)}</span>
+                </div>
+            </Accordion.Item.Title>
+            <Accordion.Item.Content slot="content" class="p-4">
+                <InsightEditorSeries series={s} on:series={(e) => onSeries(i, e.detail)}/>
+            </Accordion.Item.Content>
+        </Accordion.Item>
+    {/each}
+</Accordion>
 
-{#if ownerUri && insightId}
-    <div>
-        <Select bind:value={resolution} label="Resolution">
-            <Option value="lastHour">Last hour</Option>
-            <Option value="last6Hours">Last 6 hours</Option>
-            <Option value="last24Hours">Last 24 hours</Option>
-            <Option value="last7Days">Last 7 days</Option>
-            <Option value="last14Days">Last 14 days</Option>
-            <Option value="last31Days">Last 31 days</Option>
-            <Option value="today">Today</Option>
-            <Option value="thisWeek">This week</Option>
-            <Option value="thisMonth">This month</Option>
-            <Option value="thisYear">This year</Option>
-            <Option value="yesterday">Yesterday</Option>
-            <Option value="lastWeek">Last week</Option>
-            <Option value="lastMonth">Last month</Option>
-            <Option value="lastYear">Last year</Option>
-            <Option value="last2Years">Last 2 years</Option>
-        </Select>
-    </div>
-
-    <div>
-        <Select bind:value={aggregation} label="Aggregation">
-            <Option value="none">No aggregation</Option>
-            <Option value="min">Min</Option>
-            <Option value="max">Max</Option>
-            <Option value="sum">Sum</Option>
-            <Option value="avg">Avg</Option>
-            <Option value="first">First</Option>
-            <Option value="last">Last</Option>
-        </Select>
-
-        {#if aggregation !== 'none'}
-            <Select bind:value={sampleRate} label="Sample rate">
-                <Option value="10">10 seconds</Option>
-                <Option value="20">20 seconds</Option>
-                <Option value="30">30 seconds</Option>
-                <Option value="60">1 min</Option>
-                <Option value="300">5 min</Option>
-                <Option value="600">10 min</Option>
-                <Option value="900">15 min</Option>
-                <Option value="1200">20 min</Option>
-                <Option value="1800">30 min</Option>
-                <Option value="3600">1 hour</Option>
-                <Option value="7200">2 hours</Option>
-                <Option value="10800">3 hours</Option>
-                <Option value="21600">6 hours</Option>
-                <Option value="43200">12 hours</Option>
-                <Option value="86400">24 hours</Option>
-            </Select>
-        {/if}
-    </div>
-{/if}

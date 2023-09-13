@@ -22,7 +22,7 @@
     $: fontBlur = settings?.fontBlur ?? false;
 </script>
 
-<div class="frame">
+<div class="relative w-full h-full">
     {#if device === undefined || image === undefined}
         {#if device === undefined}
             <span>Error: device not found</span>
@@ -31,54 +31,16 @@
         {/if}
     {:else}
         {#if !hideTitle}
-            <div class="header overlay" class:font-blur={fontBlur} style="color: {fontColor}">
+            <div class="flex pl-2 pb-2 absolute left-0 bottom-0 w-full rounded-bl-md rounded-br-md" class:backdrop-blur={fontBlur} style="color: {fontColor}">
                 <div>{device?.name}</div>
-                <div class="subtitle">{image?.title}</div>
+                <div class="ml-4 font-extralight">{image?.title}</div>
             </div>
         {/if}
 
         {#await $homey.baseUrl}
             ...
         {:then url}
-            <img class="image-full" src={url + image.imageObj.url + '?v=' + refreshSlug} alt={image.title + ' refreshed: ' + refreshSlug} />
+            <img class="w-full h-full rounded-md" src={url + image.imageObj.url + '?v=' + refreshSlug} alt={image.title + ' refreshed: ' + refreshSlug} />
         {/await}
     {/if}
 </div>
-
-<style>
-.frame {
-    position: relative;
-    height: 100%;
-    width: 100%;
-}
-
-.header {
-    padding-left: 5px;
-    font-size: small;
-    height: 48px;
-    width: calc(100% - 5px);
-    color: white;
-}
-
-.overlay {
-    position: absolute;
-    left: 0px;
-    bottom: 0px;
-}
-
-.font-blur {
-    backdrop-filter: blur(6px);
-    border-bottom-right-radius: 10px;
-    border-bottom-left-radius: 10px;
-}
-
-.subtitle {
-    font-weight: lighter;
-}
-
-.image-full {
-    width: 100%;
-    height: 100%;
-    border-radius: 10px;
-}
-</style>

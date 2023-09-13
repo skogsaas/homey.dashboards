@@ -1,6 +1,8 @@
 <script lang="ts">
+    import { mdiAlarm, mdiAlert, mdiCheck } from '$lib/components/icons';
     import type { CapabilityObj } from '$lib/types/Homey';
-    import { Icon } from '@smui/common';
+
+    import Icon from 'stwui/icon';
 
     export let capability: CapabilityObj;
     export let controllable: boolean;
@@ -11,9 +13,9 @@
 {#if capability !== undefined}
     {#if capability.id.startsWith('alarm_')}
         {#if value}
-            <Icon class="material-icons" style="color: red;">error</Icon>
+            <Icon style="color: red;" data={mdiAlert} />
         {:else}
-            <Icon class="material-icons">check</Icon> 
+            <Icon data={mdiCheck} />
         {/if}
     {:else}
         {#if capability.type === 'boolean'}

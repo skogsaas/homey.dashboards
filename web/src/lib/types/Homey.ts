@@ -31,6 +31,7 @@ export interface DeviceManager extends Manager {
 }
 
 export interface FlowManager extends Manager {
+    getFlowFolders() : Promise<>
     getFlows() : Promise<BasicFlowMap>;
     getAdvancedFlows(): Promise<AdvancedFlowMap>;
 
@@ -69,6 +70,7 @@ export type HomeyMap = { [key: string]: Homey; }
 export type AppMap = { [key: string]: AppObj; }
 export type DeviceMap = { [key: string]: DeviceObj; }
 export type CapabilityMap = { [key: string]: CapabilityObj; }
+export type FlowFolderMap = { [key: string]: FlowFolder; }
 export type BasicFlowMap = { [key: string]: BasicFlow; }
 export type AdvancedFlowMap = { [key: string]: AdvancedFlow; }
 export type ZoneMap = { [key: string]: Zone; }
@@ -211,6 +213,7 @@ export interface Log extends Emitter {
     uri: string;
     ownerId: string;
     ownerUri: string;
+    //ownerName: string;
     title: string;
     titleTrue: string | null;
     titleFalse: string | null;
@@ -245,6 +248,13 @@ export interface Flow extends Emitter {
     folder: string;
 }
 
+export interface FlowFolder extends Emitter {
+    id: string;
+    name: string;
+    parent: string;
+    uri: string;
+}
+
 export interface BasicFlow extends Flow {
     trigger: any;
     conditions: any[];
@@ -276,4 +286,85 @@ export interface Zone extends Emitter {
     active: boolean;
     activeLastUpdated: string;
     activeOrigins: string[];
+}
+
+export interface OAuthUser {
+    id: string;
+    firstname: string;
+    lastname: string;
+    fullname: string;
+    language: string;
+    email: string;
+    devices: OAuthDevice[];
+    homeys: OAuthHomey[];
+    avatar: OAuthUserAvatar;
+    otpEnabled: boolean;
+    subscriptions: any;
+}
+
+export interface OAuthDevice {
+    id: string;
+    appVersion: string;
+    created: string;
+    devMode: boolean;
+    name: string;
+    osVersion: string;
+    platform: string;
+    publicKey: string;
+    token: string;
+    updateD: string;
+}
+
+export interface OAuthHomey {
+    id: string;
+    apiVersion: number;
+    apps: OAuthApp[];
+    bridges: any[];
+    geolocation: OAuthGeolocation;
+    ipExternal: string;
+    ipExternalCountry: string;
+    ipInternal: string;
+    language: string;
+    licenses: any[];
+    localUrl: string;
+    localUrlSecure: string;
+    manufacturedAt: string;
+    model: string;
+    modelName: string;
+    name: string;
+    platform: string;
+    platformVersion: number;
+    region: string;
+    remoteUrl: string;
+    remoteUrlForwarded: boolean | null;
+    role: 'owner'|'manager'|'guest';
+    softwareVersion: string;
+    state: string;
+    stateSince: string;
+    users: OAuthHomeyUser[];
+
+    authenticate() : Promise<Homey>;
+}
+
+export interface OAuthApp {
+    id: string;
+    version: string;
+    channel: 'test'|'live';
+}
+
+export interface OAuthGeolocation {
+    accuracy: number;
+    latitude: number;
+    longitude: number;
+}
+
+export interface OAuthHomeyUser {
+    id: string;
+    role: string;
+}
+
+export interface OAuthUserAvatar {
+    small: string;
+    medium: string;
+    large: string;
 }

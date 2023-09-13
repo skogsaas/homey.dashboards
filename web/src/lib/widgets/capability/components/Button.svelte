@@ -2,7 +2,7 @@
     import { editing } from '$lib/stores/dashboard';
     import type { CapabilityObj } from '$lib/types/Homey';
 
-    import Button, { Label } from '@smui/button';
+    import Button from 'stwui/button';
     import { createEventDispatcher } from 'svelte';
 
     const dispatcher = createEventDispatcher();
@@ -19,7 +19,5 @@
 </script>
 
 {#if capability}
-    <Button on:click={() => setValue(true)} {disabled}>
-        <Label>{capability.title}</Label>
-    </Button>
+    <Button type="primary" on:click={() => setValue(true)} {disabled}>{capability.title}</Button>
 {/if}

@@ -54,31 +54,31 @@
         });
     }
 
-    function getComponent(capabilityId: string) {
-        if(device !== undefined) {
-            for(var component of device.ui.components) {
-                if(component.capabilities.includes(capabilityId)) {
-                    switch(component.id) {
-                        case 'slider':
-                            return Slider;
+    function getComponent(capability: CapabilityObj) {
+        if(capability === undefined) 
+        {
+            return Sensor;
+        }
 
-                        case 'toggle':
-                            return Toggle;
+        if(capability.setable) {
+            switch(capability.type) {
+                case 'boolean':
+                    return capability.getable ? Toggle : Button;
+                case 'number':
+                    return Slider;
+                case 'string': // TODO: Implement some kind of input for this
+                default:
+                    return Sensor;
+            }
+        }
 
-                        case 'button':
-                            return Button;
-
-                        case 'battery':
-                        case 'color':
-                        case 'media':
-                        case 'picker':
-                        case 'ternary':
-                        case 'thermostat':
-                        case 'sensor':
-                        default:
-                            return Sensor;
-                    }
-                }
+        if(capability.getable) {
+            switch(capability.type) {
+                case 'boolean':
+                case 'number':
+                case 'string':
+                default:
+                    return Sensor;
             }
         }
 
@@ -113,7 +113,7 @@
                 {#if capability !== undefined}
                     <div class="capability">
                         <span class="capability-title">{capability.title}</span>
-                        <svelte:component this={getComponent(capability.id)} {capability} {controllable} on:value={e => setCapabilityValue(capability.id, e.detail)}></svelte:component>
+                        <svelte:component this={getComponent(capability)} {capability} {controllable} on:value={e => setCapabilityValue(capability.id, e.detail)}></svelte:component>
                     </div>
                 {/if}
             {/each}

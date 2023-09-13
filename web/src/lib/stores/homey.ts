@@ -10,9 +10,11 @@ import type {
     CapabilityEvent, 
     DeviceMap, 
     DeviceObj, 
+    FlowFolderMap, 
     Homey, 
     HomeyMap, 
     LogMap, 
+    OAuthUser, 
     Session, 
     Zone, 
     ZoneMap 
@@ -117,13 +119,14 @@ function createZones() {
     };
 }
 
-export const user = writable(undefined as (any | undefined));
+export const user = writable(undefined as (OAuthUser | undefined));
 export const homeys = createHomeys();
 export const homey = writable(undefined as (Homey | undefined));
 export const baseUrl = createBaseUrl();
 export const session = writable(undefined as (Session | undefined));
 export const scopes = derived(session, (s: Session) => s?.scopes ?? [], []);
 export const devices = createDevices();
+export const flowFolders = writable({} as FlowFolderMap);
 export const basicFlows = createBasicFlows();
 export const advancedFlows = createAdvancedFlows();
 export const zones = createZones();

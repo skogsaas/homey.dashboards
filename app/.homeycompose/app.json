@@ -1,6 +1,6 @@
 {
   "id": "skogsaas.dashboards",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -13,11 +13,10 @@
     "en": "Create customizable dashboards to control devices, trigger flows and view cameras or insights."
   },
   "category": [
-    "tools", 
+    "tools",
     "internet"
   ],
-  "permissions": [
-  ],
+  "permissions": [],
   "images": {
     "small": "/assets/images/small.png",
     "large": "/assets/images/large.png",

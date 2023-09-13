@@ -11,27 +11,21 @@
     import { editing, grid, dashboard as currentDashboard } from '$lib/stores/dashboard';
     
     // UI components
-    import Drawer, {
-      AppContent,
-      Content,
-      Header,
-      Title,
-      Subtitle,
-      Scrim,
-    } from '@smui/drawer';
-    import Dialog from '@smui/dialog';
-    import Button, { Icon, Label } from '@smui/button';
-    import IconButton from '@smui/icon-button';
-    import CircularProgress from '@smui/circular-progress';
-
     import ConfirmDialog from '$lib/ConfirmDialog.svelte';
     import AddWidgetDialog from '$lib/AddWidgetDialog.svelte';
     import EditWidgetView from '$lib/EditWidgetView.svelte';
 
+    // Tailwind
+    import Drawer from "stwui/drawer";
+    import Portal from "stwui/portal";
+    import Modal from "stwui/modal";
+    import Button from "stwui/button";
+    import Icon from "stwui/icon";
+
     // Types
     import type { GridItem } from '$lib/types/Grid';
     import type { WidgetSettings } from '$lib/types/Widgets';
-    import { widgets, findCreate, findLabel, findMigration, findView, findWidget } from '$lib/widgets/widgets';
+    import { widgets, findCreate, findLabel, findMigration, findView, findWidget } from '$lib/widgets';
     import type Dashboard from '$lib/types/Dashboard';
     
     import Grid from "$lib/components/grid/index.svelte";
@@ -39,6 +33,7 @@
     import WidgetContainer from '$lib/widgets/WidgetContainer.svelte';
 
     import { webhookId, webhookUrl } from '$lib/constants';
+    import { mdiClose } from '$lib/components/icons';
     
     const smallBreakpoint = 640;
     const mediumBreakpoint = 768;
@@ -223,7 +218,7 @@
         items = result;
     }
 
-    async function saveDashboard() {
+    async function saveChanges() {
         if(dashboard === undefined) {
             editing.set(false);
             return;
@@ -277,7 +272,7 @@
         editing.set(false);
     }
 
-    function cancelDashboard() {
+    function cancelChanges() {
         if(dashboard === undefined) {
             return;
         }
@@ -354,110 +349,67 @@
 </script>
 
 {#if $homey !== undefined}
-    <Drawer variant="modal" bind:open={editOpen}>
-        <Header>
-            <Title>Settings</Title>
-            <Subtitle>Editing settings for {findLabel(editItem?.settings?.type)} widget</Subtitle>
-        </Header>
-        <Content>
-            {#if editOpen}
-                <EditWidgetView item={editItem} on:settings={(e) => saveWidget(e.detail)} />
-            {/if}
-        </Content>
-    </Drawer>
+    <EditWidgetView item={editItem} bind:open={editOpen} on:settings={(e) => saveWidget(e.detail)} />
 
-    <Scrim />
-    <AppContent>
-        <div class="align-center overflow-wrap">
-            {#if $editing}
-                <div>
-                    {#each widgets as widget}
-                        <Button 
-                            on:click={() => addWidget(widget.type)}
-                            variant="text"
-                            color="secondary"
-                            title={widget.label}
-                        >
-                            <Icon class="material-icons">{widget.icon}</Icon>
-                        </Button>    
-                    {/each}
-                </div>
-
-                <div>
-                    <Button color='secondary' on:click={() => (addWidgetOpen = true)}>
-                        <Icon class="material-icons">open_in_new</Icon>
-                        <Label>Add</Label>
-                    </Button>
-                    <Button color='secondary' on:click={() => saveDashboard()}>
-                        {#if savingDashboard}
-                            <CircularProgress style="height: 28px; width: 28px;" indeterminate />
-                        {/if}
-                        <Icon class="material-icons">save</Icon>
-                        <Label>Save</Label>
-                    </Button>
-                    <Button color='secondary' on:click={() => cancelDashboard()}>
-                        <Icon class="material-icons">cancel</Icon>
-                        <Label>Cancel</Label>
-                    </Button>
-                </div>
-            {/if}
-        </div>
-
-        <Grid 
-            fastStart
-            cols={breakpointColumns} 
-            gap={$grid.gaps} 
-            rowHeight={50} 
-            bind:items={items}
-            on:mount={(e) => grid.updateSize(e.detail)}
-            on:resize={(e) => grid.updateSize(e.detail)}
-            let:item 
-            let:dataItem
-        >
-            <WidgetContainer 
-                fixed={item.fixed ?? false}
-                on:fixed={(e) => setItemFixed(dataItem.id, e.detail)}
-                on:edit={() => editWidget(dataItem)}
-                on:delete={() => removeItem(dataItem.id)}
-                on:click={() => openView(dataItem)}
-            >
-                <svelte:component 
-                    this={findWidget(dataItem.settings.type)}
-                    settings={dataItem.settings}
-                />
-            </WidgetContainer>
-        </Grid>
-        
-        <Dialog
-            fullscreen
-            sheet
-            noContentPadding
-            bind:open={viewOpen}
-        >
-            <div style="position: relative;">
-                <IconButton style="position: absolute; top: 0px; right: 0px;" action="close" class="material-icons">close</IconButton>
-                {#if viewItem !== undefined && viewComponent !== undefined}
-                    <svelte:component 
-                        this={viewComponent}
-                        settings={viewItem.settings}
-                    />
-                {/if}
+    <div class="flex justify-center">
+        {#if $editing}
+            <div>
+                {#each widgets as widget}
+                    <Button on:click={() => addWidget(widget.type)} ariaLabel={widget.label}>
+                        <Icon data={widget.icon} />
+                    </Button>    
+                {/each}
             </div>
-        </Dialog>
 
-        <AddWidgetDialog bind:open={addWidgetOpen} on:selected={e => addWidget(e.detail)} />
-    </AppContent>
+            <div class="ml-4">
+                <Button on:click={() => (addWidgetOpen = true)}>Add</Button>
+                <Button on:click={() => saveChanges()}>Save</Button>
+                <Button on:click={() => cancelChanges()}>Cancel</Button>
+            </div>
+        {/if}
+    </div>
+        
+    <Grid 
+        fastStart
+        cols={breakpointColumns} 
+        gap={$grid.gaps} 
+        rowHeight={50} 
+        bind:items={items}
+        on:mount={(e) => grid.updateSize(e.detail)}
+        on:resize={(e) => grid.updateSize(e.detail)}
+        let:item 
+        let:dataItem
+    >
+        <WidgetContainer 
+            fixed={item.fixed ?? false}
+            on:fixed={(e) => setItemFixed(dataItem.id, e.detail)}
+            on:edit={() => editWidget(dataItem)}
+            on:delete={() => removeItem(dataItem.id)}
+            on:click={() => openView(dataItem)}
+        >
+            <svelte:component 
+                this={findWidget(dataItem.settings.type)}
+                settings={dataItem.settings}
+            />
+        </WidgetContainer>
+    </Grid>
+    
+    <Portal>
+        {#if viewOpen}
+            <Modal handleClose={() => viewOpen = false}>
+                <Modal.Content slot="content">
+                    <Modal.Content.Body slot="body">
+                        {#if viewItem !== undefined && viewComponent !== undefined}
+                            <svelte:component 
+                                this={viewComponent}
+                                settings={viewItem.settings}
+                            />
+                        {/if}
+                    </Modal.Content.Body>
+                </Modal.Content>
+            </Modal>
+        {/if}
+    </Portal>
+
+    <AddWidgetDialog bind:open={addWidgetOpen} on:selected={e => addWidget(e.detail)} />
 {/if}
-
-<style>
-    .align-center {
-        display: flex;
-        width: 100%;
-        justify-content: center;
-    }
-
-    .overflow-wrap {
-        display: flex;
-        flex-wrap: wrap;
-    }
-</style>

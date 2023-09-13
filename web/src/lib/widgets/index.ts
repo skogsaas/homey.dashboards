@@ -29,6 +29,9 @@ import UnknownWidget from '$lib/widgets/unknown/UnknownWidget.svelte';
 import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
 import type { WidgetSettings } from '$lib/types/Widgets';
 
+// Icons
+import { mdiChartLine, mdiImage, mdiPlay, mdiTextBoxEdit, mdiTune } from "$lib/components/icons";
+
 export interface WidgetInfo {
     type: string;
     label: string;
@@ -45,7 +48,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'capability', 
         label: 'Capability',
-        icon: 'tune',
+        icon: mdiTune,
         widget: CapabilityWidget, 
         editor: CapabilityEditor,
         view: undefined,
@@ -58,7 +61,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'flow', 
         label: 'Flow',
-        icon: 'alt_route',
+        icon: mdiPlay,
         widget: FlowWidget, 
         editor: FlowEditor,
         view: undefined,
@@ -71,7 +74,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'image', 
         label: 'Image',
-        icon: 'image',
+        icon: mdiImage,
         widget: ImageWidget, 
         editor: ImageEditor,
         view: ImageWidget,
@@ -84,7 +87,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'insight', 
         label: 'Insight',
-        icon: 'show_chart',
+        icon: mdiChartLine,
         widget: InsightWidget, 
         editor: InsightEditor,
         view: undefined,
@@ -98,7 +101,7 @@ export const widgets: WidgetInfo[] = [
     {
         type: 'text', 
         label: 'Text',
-        icon: 'edit_note',
+        icon: mdiTextBoxEdit,
         widget: TextWidget, 
         editor: TextEditor,
         view: undefined,

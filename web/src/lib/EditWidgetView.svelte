@@ -1,13 +1,16 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    import { findEditor, findWidget } from './widgets/widgets';
+    import { findEditor, findWidget } from './widgets';
     import type { WidgetSettings } from './types/Widgets';
     import type { GridItem } from './types/Grid';
 
-    import Card from '@smui/card';
-    import Button from '@smui/button';
+    import Button from "stwui/button";
+    import Divider from "stwui/divider";
 
+    import Drawer from './components/Drawer.svelte';
+
+    export let open: boolean = false;
     export let item: GridItem | undefined;
 
     const dispatch = createEventDispatcher();
@@ -39,39 +42,36 @@
     }
 </script>
 
-{#if item !== undefined && localSettings !== undefined}
-    <div class="preview">
-        <Card variant="outlined">
-            <svelte:component 
-                this={findWidget(item.settings.type)}
-                settings={localSettings}
-            />       
-        </Card>
-    </div>
+{#if open}
+    <Drawer bind:open position="right" size="md">
+        {#if item !== undefined && localSettings !== undefined}
+            <div>
+                <Button type="primary" on:click={save}>Save</Button>
+                <Button on:click={cancel}>Cancel</Button>
+            </div>
 
+            <Divider>
+                <Divider.Label slot="label">Preview</Divider.Label>
+            </Divider>
 
-    <div class="editor">
-        <svelte:component 
-            this={findEditor(item.settings.type)}
-            settings={localSettings}
-            on:settings={(e) => localSettings = e.detail}
-        />
-    </div>
+            <div class="w-full">
+                <svelte:component 
+                    this={findWidget(item.settings.type)}
+                    settings={localSettings}
+                />
+            </div>
 
-    <div>
-        <Button on:click={cancel}>Cancel</Button>
-        <Button on:click={save}>Save</Button>
-    </div>    
+            <Divider>
+                <Divider.Label slot="label">Settings</Divider.Label>
+            </Divider>
+
+            <div class="mt-5">
+                <svelte:component 
+                    this={findEditor(item.settings.type)}
+                    settings={localSettings}
+                    on:settings={(e) => localSettings = e.detail}
+                />
+            </div>
+        {/if}
+    </Drawer>
 {/if}
-
-<style>
-    .editor {
-        margin: 5px;
-        margin-right: 15px;
-    }
-
-    .preview {
-        width: calc(100% - 10px);
-        margin: 5px;
-    }
-</style>

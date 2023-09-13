@@ -2,7 +2,7 @@
     import { editing } from '$lib/stores/dashboard';
     import type { CapabilityObj } from '$lib/types/Homey';
 
-    import Switch from '@smui/switch';
+    import Toggle from 'stwui/toggle';
     import { createEventDispatcher } from 'svelte';
 
     const dispatcher = createEventDispatcher();
@@ -10,19 +10,29 @@
     export let capability: CapabilityObj;
     export let controllable: boolean;
     
-    $: value = capability?.value;
+    let value: boolean;
     $: disabled = !controllable || $editing;
 
-    function setValue(value: boolean) {
-        dispatcher('value', value);
+    $: onCapability(capability);
+    $: onValue(value);
+
+    function onCapability(c: CapabilityObj) {
+        value = c.value;
+    }
+
+    function onValue(v: boolean) {
+        if(v !== capability?.value) {
+            if(!disabled) {
+                dispatcher('value', v);
+            }
+        }
     }
 </script>
 
 {#if capability !== null && capability !== undefined}
-    <Switch
-        checked={value} 
-        on:SMUISwitch:change={e => setValue(e.detail.selected)} 
-        disabled={disabled} 
+    <Toggle
+        name="toggle"
+        bind:on={value}
     />
 {:else}
     Null
