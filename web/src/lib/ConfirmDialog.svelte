@@ -1,36 +1,44 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    import Dialog, { Title, Content, Actions } from '@smui/dialog';
-    import Button, { Label } from '@smui/button';
+    import Portal from 'stwui/portal';
+    import Modal from 'stwui/modal';
+    import Button from 'stwui/button';
 
     export let open: boolean;
+    export let title: string = 'Confirm'
     export let text: string;
     export let cancelText: string = 'Cancel';
     export let confirmText: string = 'Confirm';
 
     const dispatch = createEventDispatcher();
 
-    function closeHandler(e: CustomEvent<{ action: string }>) {
-        dispatch(e.detail.action, true);
+    function onConfirm() {
+        dispatch('confirm', true);
+
+        open = false;
+        dispatch('open', open);
+    }
+
+    function onCancel() {
+        dispatch('cancel', true);
+
+        open = false;
+        dispatch('open', open);
     }
 </script>
 
-<Dialog 
-    selection
-    bind:open
-    on:SMUIDialog:closed={closeHandler}
->
-    <Title>Create local dashboard</Title>
-    <Content style="margin: 5px;">
-        {text}
-    </Content>
-    <Actions>
-        <Button action="cancel">
-            <Label>{cancelText}</Label>
-        </Button>
-        <Button action="confirm">
-            <Label>{confirmText}</Label>
-        </Button>
-    </Actions>
-</Dialog>
+<Portal>
+    {#if open}
+        <Modal handleClose={onCancel}>
+            <Modal.Content slot="content">
+                <Modal.Content.Header slot="header">{title}</Modal.Content.Header>
+                <Modal.Content.Body slot="body">{text}</Modal.Content.Body>
+                <Modal.Content.Footer slot="footer">
+                    <Button on:click={onCancel}>{cancelText}</Button>
+                    <Button on:click={onConfirm}>{confirmText}</Button>
+                </Modal.Content.Footer>
+            </Modal.Content>
+        </Modal>
+    {/if}
+</Portal>

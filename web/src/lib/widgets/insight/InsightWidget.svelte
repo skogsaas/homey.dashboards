@@ -6,19 +6,19 @@
     import 'chartjs-adapter-date-fns';
 
     import type InsightSettings from './InsightSettings';
+    import type { Series_v3 } from './InsightSettings';
+
     import type { Log, LogEntries, LogMap } from '$lib/types/Homey';
-    import CircularProgress from '@smui/circular-progress';
+    
     import { onDestroy, } from 'svelte';
+    import { dateFnsLocale } from '$lib/stores/i18n';
+    
+    const colors = ['#36a2eb', '#ff6384', '#4bc0c0', '#ff9f40', '#9966ff'];
 
     export let settings: InsightSettings;
 
-    let insightId: string | undefined;
     let resolution: string;
-    let aggregation: string;
-    let sampleRate: number;
-
-    let log: Log | undefined;
-    let entries: LogEntries;
+    let series: Series_v3[];
 
     $: onSettings(settings);
     $: onInsights($insights);
@@ -33,11 +33,14 @@
             ]
         };
 
-    let options: any;
-    $: options = {
+    let options: any = {
         plugins: {
             legend: {
-                display: false
+                display: true,
+                labels: {
+                    boxWidth: 10,
+                    boxHeight: 2
+                }
             }
         },
         elements: {
@@ -47,7 +50,12 @@
         },
         scales: { 
             x: { 
-                type: 'timeseries' 
+                type: 'timeseries',
+                adapters: {
+                    date: {
+                        locale: $dateFnsLocale
+                    }
+                }
             }
         },
         responsive: true,
@@ -64,39 +72,25 @@
     async function onSettings(s: InsightSettings) {
         let load: boolean = false;
 
-        if(insightId !== s.insightId) {
-            insightId = s.insightId;
-            load = true;
-        }
-
         if(resolution === undefined || resolution !== s.resolution) {
             resolution = s.resolution ?? 'today';
             load = true;
         }
 
-        if(aggregation === undefined || aggregation !== s.aggregation) {
-            aggregation = s.aggregation ?? 'none';
-            load = true;
+        if(series === undefined || series.length != s.series.length || JSON.stringify(series) !== JSON.stringify(s.series)) {
+            if(s?.series !== undefined) {
+                series = [...s.series];
+                load = true;
+            }
         }
 
-        if(sampleRate === undefined || sampleRate !== s.sampleRate) {
-            sampleRate = s.sampleRate ?? 60;
-            load = true;
-        }
-
-        if(load && insightId) {
-            log = $insights[insightId];
-
+        if(load) {
             reload();
         }
     }
 
     function onInsights(logs: LogMap) {
-        if(log === undefined && insightId !== undefined) {
-            log = $insights[insightId];
-
-            reload();
-        }
+        reload();
     }
 
     function reload() {
@@ -108,36 +102,86 @@
         loading = getEntries();
     }
 
-    async function getEntries() {
-        if(log === undefined) {
+    async function getEntries() {  
+        if(series === undefined || series.length === 0) {
             return;
         }
         
-        entries = await $homey.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
+        // Create axes
+        const units = series
+            .map(s => $insights[s.insightId!])
+            .filter(l => l !== undefined)
+            .map(l => l.units)
+            .filter((value, index, array) => array.indexOf(value) === index);
 
-        const series = createTimeSeries(entries);
+        for(var unit of units) {
+            const axis = 'y' + unit;
+
+            if(!Object.hasOwn(options.scales, axis)) {
+                options.scales[axis] = { 
+                    title: {
+                        text: unit,
+                        display: true
+                    },
+                    type: 'linear', 
+                    display: 'auto'
+                };
+            }
+        }
+
+        // Create time series
+        let timeoutMs = 999999999;
+
+        for(var i = 0; i < series.length; i++) {
+            const t = await getTimeSeries(series[i], i);
+
+            if(t > 0 && t < timeoutMs) {
+                timeoutMs = t;
+            }
+        }
+
+        if(data.datasets.length > series.length) {
+            data.datasets.splice(series.length);
+        }
 
         // Set timeout for refreshing log
-        timeout = setTimeout(() => { loading = getEntries(); }, entries.step - entries.updatesIn);
-
-        if(data.datasets.length === 0) {
-            data.datasets.push({
-                label: log.title,
-                type: 'line',
-                data: series,
-                tension: 0.5
-            });
-        } else {
-            // TODO: support multiple datasets
-            data.datasets[0].data = series;
-        }
+        timeout = setTimeout(() => { loading = getEntries(); }, timeoutMs);
 
         if(chart) {
             chart.update();
         }
     };
 
-    function createTimeSeries(entries: LogEntries) {
+    async function getTimeSeries(series: Series_v3, index: number) : Promise<number> {
+        if(series.insightId === undefined) {
+            return -1;
+        }
+
+        const log = $insights[series.insightId];
+
+        if(log === undefined) {
+            return -1;
+        }
+
+        const aggregation = series.aggregation ?? 'none';
+        const sampleRate = series.sampleRate ?? 60;
+
+        const entries = await $homey.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
+        const timeSeries = resample(entries, aggregation, sampleRate);
+
+        data.datasets[index] = {
+            label: getOwnerName(log.ownerUri) + ' - ' + log.title,
+            type: 'line',
+            borderColor: colors[index],
+            data: timeSeries,
+            tension: 0.5,
+            yAxisID: 'y' + log.units
+        }
+
+        return entries.step - entries.updatesIn;
+    }
+
+    function resample(entries: LogEntries, aggregation: string, sampleRate: number) {
         // Can never aggregate with less step than sample rate.
         if(aggregation === undefined || aggregation === 'none' || (entries.step / 1000) >= sampleRate) {
             return entries.values.map(entry => ({ x: new Date(entry.t).getTime(), y: entry.v }));
@@ -180,64 +224,30 @@
         }
     }
 
-    function getOwnerUriName(uri: string) {
+    function getOwnerName(uri: string) {
         if(uri.startsWith('homey:device:')) {
             const prefix = 'homey:device:';
             const id = uri.slice(prefix.length);
 
             return $devices[id].name;
         } else if(uri.startsWith('homey:manager:apps')) {
-            return 'Homey Applications';
+            return 'Homey Apps';
         } else if(uri.startsWith('homey:manager:system')) {
             return 'Homey System';
         } else if(uri.startsWith('homey:manager:weather')) {
             return 'Homey Weather';
         } else if(uri.startsWith('homey:manager:logic')) {
             return 'Homey Logic';
-        } else if(uri.startsWith('homey:manager:user')) {
-            return 'Homey Users';
         } else {
             return uri;
         }
     }
 </script>
 
-        {#if log === undefined}
-            {#if insightId !== undefined}
-                <span>Error</span>
-            {/if}
+        {#if series === undefined || series.length === 0}
+            <span>No series selected</span>
         {:else}
-            <div class="header">
-                <div>{log.title}</div>
-                <div class="subtitle">{getOwnerUriName(log.ownerUri)}</div>
-            </div>
-        {/if}
-        {#if log === undefined}
-            {#if insightId !== undefined}
-                <span>Log not found.</span>
-            {/if}
-        {:else}
-            <div class="chart">
+            <div class="w-full h-full">
                 <Chart bind:chart type="line" {data} {options} />
             </div>
         {/if}
-
-<style>
-
-.header {
-    margin-left: 5px;
-    font-size: small;
-    height: 48px;
-}
-
-.subtitle {
-    font-weight: lighter;
-}
-
-.chart {
-    margin: 5px;
-    width: calc(100% - 10px);
-    height: calc(100% - 10px - 48px);
-}
-
-</style>

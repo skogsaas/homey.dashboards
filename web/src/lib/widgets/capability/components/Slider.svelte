@@ -2,7 +2,7 @@
     import { editing } from '$lib/stores/dashboard';
     import type { CapabilityObj } from '$lib/types/Homey';
 
-    import Slider from '@smui/slider';
+    import Slider from '$lib/components/Slider.svelte';
     import { createEventDispatcher } from 'svelte';
 
     const dispatcher = createEventDispatcher();
@@ -10,23 +10,32 @@
     export let capability: CapabilityObj;
     export let controllable: boolean;
 
-    $: value = capability?.value;
+    let value: number;
     $: disabled = !controllable || $editing;
 
-    function setValue(value: boolean) {
-        dispatcher('value', value);
+    $: onCapability(capability);
+    $: onValue(value);
+
+    function onCapability(c: CapabilityObj) {
+        value = c.value;
+    }
+
+    function onValue(v: number) {
+        if(v !== capability?.value) {
+            if(!disabled) {
+                dispatcher('value', v);
+            }
+        }
     }
 </script>
 
 {#if capability !== null && capability !== undefined}
     <Slider 
-        style="flex-grow: 1; align-self: center;" 
-        value={value} 
-        on:SMUISlider:change={(e) => setValue(e.detail.value)} 
+        style="flex-grow: 1; align-self: center;"
+        bind:value={value}
         min={capability.min} 
         max={capability.max} 
         step={Math.pow(10, -1 * capability.decimals)} 
-        discrete 
         disabled={disabled} 
     />
 {:else}

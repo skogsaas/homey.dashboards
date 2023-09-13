@@ -1,73 +1,57 @@
 {
-	"name": "skogsaas.dashboards.svelte",
-	"version": "0.6.4",
-	"private": true,
-	"scripts": {
-		"dev": "vite dev",
-		"build-app": "cross-env PUB_TARGET=app vite build --minify false --mode app",
-		"build-pages": "vite build --minify false --mode pages",
-		"preview": "vite preview",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "eslint .",
-		"prepare": "npm run smui-theme-light && npm run smui-theme-dark",
-		"smui-theme-light": "smui-theme compile static/smui.css -i src/theme",
-		"smui-theme-dark": "smui-theme compile static/smui-dark.css -i src/theme/dark"
-	},
-	"devDependencies": {
-		"@material/elevation": "^14.0.0",
-		"@material/typography": "^14.0.0",
-		"@smui-extra/badge": "^7.0.0-beta.14",
-		"@smui/card": "^7.0.0-beta.14",
-		"@smui/checkbox": "^7.0.0-beta.14",
-		"@smui/circular-progress": "^7.0.0-beta.14",
-		"@smui/dialog": "^7.0.0-beta.14",
-		"@smui/drawer": "^7.0.0-beta.14",
-		"@smui/fab": "^7.0.0-beta.14",
-		"@smui/form-field": "^7.0.0-beta.14",
-		"@smui/icon-button": "^7.0.0-beta.14",
-		"@smui/list": "^7.0.0-beta.14",
-		"@smui/menu": "^7.0.0-beta.14",
-		"@smui/paper": "^7.0.0-beta.14",
-		"@smui/radio": "^7.0.0-beta.14",
-		"@smui/select": "^7.0.0-beta.14",
-		"@smui/slider": "^7.0.0-beta.14",
-		"@smui/switch": "^7.0.0-beta.14",
-		"@smui/tab-bar": "^7.0.0-beta.14",
-		"@smui/textfield": "^7.0.0-beta.14",
-		"@smui/top-app-bar": "^7.0.0-beta.14",
-		"@sveltejs/adapter-auto": "^2.0.0",
-		"@sveltejs/adapter-static": "^2.0.2",
-		"@sveltejs/kit": "^1.20.4",
-		"@types/chart.js": "^2.9.37",
-		"@types/uuid": "^9.0.2",
-		"@typescript-eslint/eslint-plugin": "^5.45.0",
-		"@typescript-eslint/parser": "^5.45.0",
-		"cross-env": "^7.0.3",
-		"eslint": "^8.28.0",
-		"eslint-plugin-svelte": "^2.30.0",
-		"homey-api": "^3.0.10",
-		"smui-theme": "^7.0.0-beta.14",
-		"svelte": "^4.0.0",
-		"svelte-check": "^3.4.3",
-		"svelte-grid": "^5.1.1",
-		"tslib": "^2.4.1",
-		"typescript": "^5.0.0",
-		"uuid": "^9.0.0",
-		"vite": "^4.3.6"
-	},
-	"dependencies": {
-		"chart.js": "^4.3.0",
-		"chartjs-adapter-date-fns": "^3.0.0",
-		"date-fns": "^2.30.0",
-		"handlebars": "^4.7.8",
-		"jwt-decode": "^3.1.2",
-		"svelte-chartjs": "^3.1.2"
-	},
-	"overrides": {
-		"svelte-chartjs": {
-			"svelte": ">=4.x"
-		}
-	},
-	"type": "module"
+  "name": "skogsaas.dashboards.svelte",
+  "version": "0.6.4",
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build-app": "cross-env PUB_TARGET=app vite build --minify false --mode app",
+    "build-pages": "vite build --minify false --mode pages",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "lint": "eslint .",
+    "build-icons": "node build-icons.js"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^2.0.0",
+    "@sveltejs/adapter-static": "^2.0.2",
+    "@sveltejs/kit": "^1.20.4",
+    "@tailwindcss/forms": "^0.5.6",
+    "@types/chart.js": "^2.9.37",
+    "@types/uuid": "^9.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "autoprefixer": "^10.4.14",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.28.0",
+    "eslint-plugin-svelte": "^2.30.0",
+    "homey-api": "^3.0.12",
+    "postcss": "^8.4.24",
+    "postcss-load-config": "^4.0.1",
+    "stwui": "^0.17.3-next",
+    "svelte": "^4.0.0",
+    "svelte-check": "^3.4.3",
+    "svelte-grid": "^5.1.1",
+    "tailwindcss": "^3.3.2",
+    "tslib": "^2.4.1",
+    "typescript": "^5.0.0",
+    "uuid": "^9.0.0",
+    "vite": "^4.3.6"
+  },
+  "dependencies": {
+    "@mdi/svg": "^7.2.96",
+    "@mdi/util": "^0.3.2",
+    "chart.js": "^4.3.0",
+    "chartjs-adapter-date-fns": "^3.0.0",
+    "date-fns": "^2.30.0",
+    "handlebars": "^4.7.8",
+    "jwt-decode": "^3.1.2",
+    "svelte-chartjs": "^3.1.2"
+  },
+  "overrides": {
+    "svelte-chartjs": {
+      "svelte": ">=4.x"
+    }
+  },
+  "type": "module"
 }

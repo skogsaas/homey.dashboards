@@ -10,15 +10,19 @@
     import { dashboard as currentDashboard } from '$lib/stores/dashboard';
     
     // UI components
-    import Button, { Icon, Label } from '@smui/button';
-    import CircularProgress from '@smui/circular-progress';
-
     import ConfirmDialog from '$lib/ConfirmDialog.svelte';
+    
+    // Tailwind
+    import Input from 'stwui/input';
+    import Button from 'stwui/button';
+    import Progress from 'stwui/progress';
+
+    import tooltip from 'stwui/actions/tooltip'
+
     // Types
     import type Dashboard from '$lib/types/Dashboard';
     
     import { webhookId, webhookUrl } from '$lib/constants';
-    import Textfield from '@smui/textfield';
 
     let dashboard: Dashboard | undefined;
     let savingDashboard: boolean = false;
@@ -104,54 +108,25 @@
 
 </script>
 
-<div class="align-center">
-    <div class="content">
-        {#if dashboard !== undefined}
-            <h1 style="text-align: center">Settings</h1>
-            {#if dashboard.source === 'localstorage'}
-                <Textfield bind:value={title} style="width: 100%" label="Dashboard name"></Textfield>
+<div class="flex flex-col justify-center mx-auto max-w-md">
+    {#if dashboard !== undefined}
+        <h1 class="text-center pt-8 pb-8">Settings</h1>
 
-                <div class="action-buttons">
-                    <Button color='secondary' on:click={() => deleteDashboardOpen = true}>
-                        <Icon class="material-icons">delete</Icon>
-                        <Label>Delete</Label>
-                    </Button>
+        {#if dashboard.source === 'localstorage'}
+            <Input name="name" bind:value={title} placeholder="Dashboard name" />
 
-                    <ConfirmDialog bind:open={deleteDashboardOpen} text="Are you sure you want to delete this dashboard?" on:confirm={async () => deleteDashboard()}/>
+            <div class="flex justify-between mt-4">
+                <Button type="danger" on:click={() => deleteDashboardOpen = true}>Delete</Button>
+                <Button on:click={() => saveDashboard()} disabled={!changes}>Save</Button>
 
-                    <Button disabled={!changes} on:click={() => saveDashboard()}>
-                        <Label>
-                            Save
-                            {#if savingDashboard}
-                                <CircularProgress style="height: 28px; width: 28px;" indeterminate />
-                            {/if}
-                        </Label>
-                    </Button>
-                </div>
-            {:else}
-                <p>Only local dashboards has settings for now. If you want to edit the name of the Homey device dashboard, use the Homey app.</p>
-            {/if}
+                {#if savingDashboard}
+                    <Progress size="xs" indeterminate value={0} />
+                {/if}
+            </div>
         {:else}
-            <h1>Unable to find dashboard: {dashboardId}</h1>
+            <p>Only local dashboards has settings for now. If you want to edit the name of this dashboard, rename the dashboard in the Homey app.</p>
         {/if}
-    </div>
+    {:else}
+        <h1 class="text-center pt-8 pb-8">Unable to find dashboard: {dashboardId}</h1>
+    {/if}
 </div>
-
-<style>
-    .align-center {
-        display: flex;
-        width: 100%;
-        justify-content: center;
-    }
-
-    .content {
-        max-width: 600px;
-    }
-
-    .action-buttons {
-        display: flex;
-        width: 100%;
-        margin-top: 20px;
-        justify-content: space-between;
-    }
-</style>

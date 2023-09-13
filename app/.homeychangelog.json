@@ -10,5 +10,8 @@
   },
   "0.6.4": {
     "en": "Hide options for non HP23 users"
+  },
+  "0.7.0": {
+    "en": "Refactored UI, add support for multiple Homeys, and support multiple insights in same graph."
   }
 }

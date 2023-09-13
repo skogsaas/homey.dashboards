@@ -2,24 +2,53 @@
     import { createEventDispatcher } from 'svelte';
     import { devices } from '$lib/stores/homey';
 
-    import Select, { Option } from "@smui/select";
-    import FormField from '@smui/form-field';
-    import Checkbox from '@smui/checkbox';
     import type ImageSettings from "./ImageSettings";
-    import { Icon } from '@smui/icon-button';
+
+    import Select from 'stwui/select';
+    import Toggle from 'stwui/toggle';
+
+    import DevicePicker from '$lib/components/DevicePicker.svelte';
+    import type { ImageObj } from '$lib/types/Homey';
 
     export let settings: ImageSettings;
 
     const dispatch = createEventDispatcher();
 
-    let deviceId: string | undefined;
-    let imageId: string | undefined;
-    let refresh: number;
-    let hideTitle: boolean;
-    let fontColor: string;
-    let fontBlur: boolean;
+    interface Option {
+        value: string;
+        label: string;
+    }
 
-    $: onSettings(settings);
+    const refreshOptions = [
+        { value: '0', label: 'Never' },
+        { value: '1', label: '1 second' },
+        { value: '5', label: '5 seconds' },
+        { value: '15', label: '15 seconds' },
+        { value: '30', label: '30 seconds' },
+        { value: '60', label: '1 minute' },
+        { value: '300', label: '5 minutes' },
+        { value: '600', label: '10 minutes' },
+        { value: '1800', label: '30 minutes' },
+        { value: '3600', label: '1 hour' },
+        { value: '21600', label: '6 hour' },
+        { value: '43200', label: '12 hour' },
+        { value: '86400', label: '24 hour' },
+    ];
+
+    const colorOptions = [
+        { value: 'black', label: 'Black' },
+        { value: 'white', label: 'White' },
+        { value: 'red', label: 'Red' },
+        { value: 'green', label: 'Green' },
+        { value: 'blue', label: 'Blue' },
+    ];
+
+    let deviceId: string | undefined;
+    let imageId: Option | undefined;
+    let refresh: Option;
+    let hideTitle: boolean;
+    let fontColor: Option;
+    let fontBlur: boolean;
 
     $: imageDevices = (Object.values($devices) ?? [])
         .filter(d => d.images.length > 0)
@@ -28,7 +57,10 @@
             if(a.name < b.name) return -1;
             return 1;
         });
-    $: images = deviceId ? $devices[deviceId].images : [];
+
+    let images: Option[] = [];
+
+    $: onSettings(settings);
 
     $: onDevice(deviceId);
     $: onImage(imageId);
@@ -38,16 +70,31 @@
     $: onFontBlur(fontBlur);
 
     function onSettings(s: ImageSettings) {
-        deviceId = settings.deviceId;
-        imageId = settings.imageId;
-        refresh = settings?.refresh ?? 0;
+        deviceId = settings?.deviceId;
+
+        if(deviceId) {
+            const image = ($devices[deviceId].images ?? []).find(i => i.id === settings?.imageId);
+
+            if(image !== undefined) {
+                imageId = { value: image.id, label: image.title };
+            }
+        }
+        
+        refresh = refreshOptions.find(r => Number(r.value) === (settings?.refresh ?? 0)) ?? refreshOptions[0];
         hideTitle = settings?.hideTitle ?? false;
-        fontColor = settings?.fontColor ?? 'black';
+        fontColor = colorOptions.find(c => c.value === (settings?.fontColor ?? 'black')) ?? colorOptions[0];
         fontBlur = settings?.fontBlur ?? false;
     }
 
     function onDevice(value: string | undefined) {
-        if(value === undefined || value === settings.deviceId) {
+        if(value === undefined) {
+            return;
+        }
+
+        images = $devices[value].images
+            .map(i => ({ value: i.id, label: i.title }));
+
+        if(value === settings.deviceId) {
             return;
         }
 
@@ -58,18 +105,18 @@
         dispatch('settings', s);
     }
 
-    function onImage(value: string | undefined) {
-        if(value === undefined || value === settings.imageId) {
+    function onImage(option: Option | undefined) {
+        if(option === undefined || option.value === settings.imageId) {
             return;
         }
 
-        const s: ImageSettings = { ...settings, imageId };
+        const s: ImageSettings = { ...settings, imageId: option.value };
         dispatch('settings', s);
     }
 
-    function onRefresh(value: number) {
-        if(value !== settings.refresh) {
-            const s: ImageSettings = { ...settings, refresh: value };
+    function onRefresh(option: Option) {
+        if(Number(option.value) !== settings.refresh) {
+            const s: ImageSettings = { ...settings, refresh: Number(option.value) };
             dispatch('settings', s);
         }
     }
@@ -81,9 +128,9 @@
         }
     }
 
-    function onFontColor(value: string) {
-        if(value !== settings.fontColor) {
-            const s: ImageSettings = { ...settings, fontColor: value };
+    function onFontColor(option: Option) {
+        if(option.value !== settings.fontColor) {
+            const s: ImageSettings = { ...settings, fontColor: option.value };
             dispatch('settings', s);
         }
     }
@@ -96,67 +143,65 @@
     }
 </script>
 
-<div>
-    <Select 
-        bind:value={deviceId} 
-        label="Device"
-    >
-        {#each imageDevices as imageDevice}
-          <Option value={imageDevice.id}>{imageDevice.name}</Option>
-        {/each}
-    </Select>
-</div>
+<DevicePicker bind:deviceId={deviceId} devices={imageDevices} />
 
 <div>
 {#if deviceId}
     <Select 
         bind:value={imageId} 
-        label="Image"
+        placeholder="Image"
+        name="imageId"
     >
-        {#each images as img}
-            <Option value={img.id}>{img.title}</Option>
-        {/each}
+        <Select.Options slot="options">
+            {#each images as option}
+                <Select.Options.Option {option} />
+            {/each}
+        </Select.Options>
+        
     </Select>
 {/if}
 </div>
 
 <Select 
     bind:value={refresh} 
-    label="Refresh every"
+    placeholder="Refresh every"
+    name="refresh"
 >
-    <Option value="0">Never</Option>
-    <Option value="1">1 second <Icon class="material-icons" style="margin-left: 5px;">warning</Icon></Option>
-    <Option value="5">5 seconds</Option>
-    <Option value="15">15 seconds</Option>
-    <Option value="30">30 seconds</Option>
-    <Option value="60">1 minute</Option>
-    <Option value="300">5 minutes</Option>
-    <Option value="600">10 minutes</Option>
-    <Option value="1800">30 minutes</Option>
-    <Option value="3600">1 hour</Option>
-    <Option value="21600">6 hour</Option>
-    <Option value="43200">12 hour</Option>
-    <Option value="86400">24 hour</Option>
+    <Select.Options slot="options">
+        {#each refreshOptions as option}
+            <Select.Options.Option {option} />
+        {/each}
+    </Select.Options>
 </Select>
 
-<FormField>
-    <span slot="label">Hide title</span>
-    <Checkbox bind:checked={hideTitle} />
-</FormField>
-
-<FormField>
-    <span slot="label">Blur background</span>
-    <Checkbox bind:checked={fontBlur} disabled={hideTitle} />
-</FormField>
-
-<Select 
-    bind:value={fontColor} 
-    label="Font color"
-    disabled={hideTitle}
+<Toggle
+    name="hideTitle"
+    bind:on={hideTitle}
 >
-    <Option value="black">Black</Option>
-    <Option value="white">White</Option>
-    <Option value="red">Red</Option>
-    <Option value="green">Green</Option>
-    <Option value="blue">Blue</Option>
-</Select>
+    <Toggle.ContentRight slot="content-right">
+        <Toggle.ContentRight.Label slot="label">Hide title</Toggle.ContentRight.Label>
+    </Toggle.ContentRight>
+</Toggle>
+
+{#if !hideTitle}
+    <Toggle
+        name="fontBlur"
+        bind:on={fontBlur}
+    >
+        <Toggle.ContentRight slot="content-right">
+            <Toggle.ContentRight.Label slot="label">Blur background</Toggle.ContentRight.Label>
+        </Toggle.ContentRight>
+    </Toggle>
+
+    <Select 
+        bind:value={fontColor} 
+        placeholder="Font color"
+        name="fontColor"
+    >
+        <Select.Options slot="options">
+            {#each colorOptions as option}
+                <Select.Options.Option {option} />
+            {/each}
+        </Select.Options>
+    </Select>
+{/if}

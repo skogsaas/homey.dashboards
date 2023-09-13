@@ -1,10 +1,11 @@
 <script lang="ts">
     import { onMount, createEventDispatcher } from 'svelte';
-    import { advancedFlows, basicFlows, devices } from '$lib/stores/homey';
+    import { advancedFlows, basicFlows } from '$lib/stores/homey';
 
-    import Select, { Option } from "@smui/select";
     import type FlowSettings from "./FlowSettings";
-    import type { AdvancedFlow, Flow } from '../../types/Homey';
+    import type { Flow } from '../../types/Homey';
+
+    import FlowPicker from '$lib/components/FlowPicker.svelte';
 
     export let settings: FlowSettings;
 
@@ -38,10 +39,4 @@
     }
 </script>
 
-<div>
-    <Select bind:value={flowId} label="Flow">
-        {#each flows as f}
-          <Option value={f.id}>{f.name}</Option>
-        {/each}
-    </Select>
-</div>
+<FlowPicker bind:flowId={flowId} flows={flows} />

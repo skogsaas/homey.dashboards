@@ -1,54 +1,44 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    import Dialog, { Title, Content, Actions } from '@smui/dialog';
-    import List, { Item, Graphic, Text } from '@smui/list';
-    import Button, { Label } from '@smui/button';
-    import Radio from '@smui/radio';
-
-    import { hasRequiredScopes, widgets } from './widgets/widgets';
+    import { hasRequiredScopes, widgets } from './widgets';
     import { scopes } from './stores/homey';
+
+    import Portal from "stwui/portal";
+    import Modal from "stwui/modal";
+    import List from "stwui/list";
 
     export let open: boolean;
 
-    let selection: string | undefined;
     const dispatch = createEventDispatcher();
 
-    function closeHandler(e: CustomEvent<{ action: string }>) {
-        if (e.detail.action === 'accept') {
-            dispatch('selected', selection);
-        }
+    function onSelect(selected: string) {
+        dispatch('selected', selected);
 
-        selection = undefined;
+        open = false;
+        dispatch('open', open);
+    }
+
+    function onCancel() {
+        open = false;
+        dispatch('open', open);
     }
 </script>
 
-<Dialog 
-    selection
-    bind:open
-    on:SMUIDialog:closed={closeHandler}
->
-    <Title>Select widget</Title>
-    <Content>
-        <List>
-            {#each widgets as widget}
-                {#if hasRequiredScopes(widget.type, $scopes)}
-                    <Item>
-                        <Graphic>
-                            <Radio bind:group={selection} value={widget.type} />
-                        </Graphic>
-                        <Text>{widget.label}</Text>
-                    </Item>
-                {/if}
-            {/each}
-        </List>
-    </Content>
-    <Actions>
-        <Button>
-            <Label>Cancel</Label>
-        </Button>
-        <Button action="accept" disabled={selection === undefined}>
-            <Label>Add {selection ?? ''}</Label>
-        </Button>
-    </Actions>
-</Dialog>
+<Portal>
+    {#if open}
+        <Modal handleClose={onCancel}>
+            <Modal.Content slot="content">
+                <Modal.Content.Body slot="body">
+                    <List>
+                        {#each widgets as widget}
+                            {#if hasRequiredScopes(widget.type, $scopes)}
+                                <List.Item class="cursor-pointer" on:click={() => onSelect(widget.type)}>{widget.label}</List.Item>
+                            {/if}
+                        {/each}
+                    </List>
+                </Modal.Content.Body>
+            </Modal.Content>
+        </Modal>
+    {/if}
+</Portal>
