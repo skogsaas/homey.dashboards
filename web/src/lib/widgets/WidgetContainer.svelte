@@ -31,7 +31,7 @@
     }
 </script>
 
-<Card on:click class="h-full w-full overflow-hidden">
+<Card on:click class="h-full w-full overflow-hidden flex flex-col justify-start">
     {#if $editing}
         <div class="absolute -top-4 -left-4 z-10">
             <Dropdown bind:visible={menuOpen}>

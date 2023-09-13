@@ -86,7 +86,7 @@
     }
 </script>
 
-<div class="widget-header">
+<div class="flex items-center h-12">
     {#if device == undefined}
         {#if settings?.deviceId !== undefined}
             <span>Error</span>
@@ -102,45 +102,24 @@
     {/if}
 </div>
 
-<div class="flex flex-grow">
+<div class="flex flex-col flex-grow w-full justify-evenly">
     {#if device === undefined}
         {#if settings.deviceId !== undefined}
-            <span class="w-full overflow-hidden overflow-ellipsis">Device not found.</span>
+            <span class="w-full h-8 overflow-hidden overflow-ellipsis">Device not found.</span>
         {/if}
     {:else}
-        <div class="flex flex-col w-full">
-            {#each capabilities as capability}
-                {#if capability !== undefined}
-                    <div class="flex items-center justify-between w-full pl-1 pr-1">
-                        <div class="font-extralight overflow-clip overflow-ellipsis whitespace-nowrap">{capability.title}</div>
-                        <svelte:component 
-                            this={getComponent(capability)} 
-                            {capability} 
-                            {controllable} 
-                            on:value={e => setCapabilityValue(capability.id, e.detail)}
-                        />
-                    </div>
-                {/if}
-            {/each}
-        </div>
+        {#each capabilities as capability}
+            {#if capability !== undefined}
+                <div class="flex items-center justify-between w-full pl-1 pr-1 leading-none">
+                    <div class="font-extralight overflow-clip overflow-ellipsis whitespace-nowrap">{capability.title}</div>
+                    <svelte:component 
+                        this={getComponent(capability)} 
+                        {capability} 
+                        {controllable} 
+                        on:value={e => setCapabilityValue(capability.id, e.detail)}
+                    />
+                </div>
+            {/if}
+        {/each}
     {/if}
 </div>
-
-<style>
-
-.widget-header {
-    display: flex;
-    flex-grow: 0;
-    align-items: center;
-
-    overflow: hidden;
-    
-    height: 48px;
-}
-
-.device-icon {
-    width: 32px;
-    height: 32px;
-    margin: 4px;
-}
-</style>
