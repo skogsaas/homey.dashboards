@@ -95,25 +95,30 @@
         {#await $homey.baseUrl}
             ...
         {:then url}
-            <img class="device-icon widget-icon-theme" src={url + device?.iconObj.url} alt={device?.icon} />
+            <img class="w-8 h-8 m-1" src={url + device?.iconObj.url} alt={device?.icon} />
         {/await}
 
-        <span class="device-title">{device?.name}</span>
+        <span class="w-full overflow-hidden overflow-ellipsis">{device?.name}</span>
     {/if}
 </div>
 
-<div class="widget-body">
+<div class="flex flex-grow">
     {#if device === undefined}
         {#if settings.deviceId !== undefined}
-            <span class="device-title">Device not found.</span>
+            <span class="w-full overflow-hidden overflow-ellipsis">Device not found.</span>
         {/if}
     {:else}
-        <div class="capabilities">
+        <div class="flex flex-col w-full">
             {#each capabilities as capability}
                 {#if capability !== undefined}
-                    <div class="capability">
-                        <span class="capability-title">{capability.title}</span>
-                        <svelte:component this={getComponent(capability)} {capability} {controllable} on:value={e => setCapabilityValue(capability.id, e.detail)}></svelte:component>
+                    <div class="flex items-center justify-between w-full pl-1 pr-1">
+                        <div class="font-extralight overflow-clip overflow-ellipsis whitespace-nowrap">{capability.title}</div>
+                        <svelte:component 
+                            this={getComponent(capability)} 
+                            {capability} 
+                            {controllable} 
+                            on:value={e => setCapabilityValue(capability.id, e.detail)}
+                        />
                     </div>
                 {/if}
             {/each}
@@ -133,50 +138,9 @@
     height: 48px;
 }
 
-.widget-body {
-    display: flex;
-    flex-grow: 1;
-    align-items: flex-start;
-}
-
 .device-icon {
     width: 32px;
     height: 32px;
     margin: 4px;
-}
-
-.device-title {
-    text-overflow: ellipsis;
-    overflow: hidden;
-    max-width: calc(100% - 40px);
-}
-
-.capabilities {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.capability {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: calc(100% - 10px);
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
-.capability-title {
-    font-size: 14px;
-    font-weight: lighter;
-    text-overflow: ellipsis;
-    max-width: calc(100% - 32 - 8);
-}
-
-.value {
-    flex-grow: 1;
-    align-self: center;
-    text-align: center;
-    margin: 0;
 }
 </style>

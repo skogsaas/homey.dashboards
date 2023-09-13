@@ -21,7 +21,7 @@
         {#if capability.type === 'boolean'}
             <span>{value ? 'Yes' : 'No'}</span>
         {:else}
-            <span>{value} {capability?.units ?? ''}</span>
+            <span class="whitespace-nowrap">{value} {capability?.units ?? ''}</span>
         {/if}
     {/if}
 {/if}
