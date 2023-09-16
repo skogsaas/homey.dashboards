@@ -13,5 +13,11 @@
   },
   "0.7.0": {
     "en": "Refactored UI, add support for multiple Homeys, and support multiple insights in same graph."
+  },
+  "0.8.0": {
+    "en": "Use 24h format for Charts, add view for all implemented capabilities, emphasize device/capability/insight/flow picker buttons, round insight values to log decimals."
+  },
+  "0.8.1": {
+    "en": "Fixed thermostat mode issue, capability last updated, and insight null values."
   }
 }

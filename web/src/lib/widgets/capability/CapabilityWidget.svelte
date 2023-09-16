@@ -4,12 +4,20 @@
     import type CapabilitySettings from './CapabilitySettings';
     import type { CapabilityEvent, CapabilityObj, DeviceObj } from '$lib/types/Homey';
     
+    import Portal from 'stwui/portal';
+    import Modal from 'stwui/modal';
+
     import Slider from './components/Slider.svelte';
     import Sensor from './components/Sensor.svelte';
     import Toggle from './components/Toggle.svelte';
     import Button from './components/Button.svelte';
+    import Thermostat from './components/Thermostat.svelte';
 
     export let settings: CapabilitySettings;
+
+    let viewOpen: boolean = false;
+    let viewCapability: CapabilityObj | undefined;
+    let viewClasses: string = '';
 
     let device: DeviceObj;
     let capabilities: CapabilityObj[] = [];
@@ -54,6 +62,7 @@
         });
     }
 
+    /*
     function getComponent(capability: CapabilityObj) {
         if(capability === undefined) 
         {
@@ -84,6 +93,46 @@
 
         return Sensor;
     }
+    */
+
+    function getComponent(capability: CapabilityObj) {
+        if(device !== undefined) {
+            for(var component of device.ui.components) {
+                if(component.capabilities.includes(capability.id)) {
+                    switch(component.id) {
+                        case 'slider':
+                            return Slider;
+
+                        case 'toggle':
+                            return Toggle;
+
+                        case 'button':
+                            return Button;
+
+                        case 'thermostat':
+                            return Thermostat;
+
+                        case 'battery':
+                        case 'color':
+                        case 'media':
+                        case 'picker':
+                        case 'ternary':
+                        case 'sensor':
+                        default:
+                            return Sensor;
+                    }
+                }
+            }
+        }
+
+        return Sensor;
+    }
+
+    function openView(capability: CapabilityObj) {
+        viewClasses = '';
+        viewCapability = capability;
+        viewOpen = true;
+    }
 </script>
 
 <div class="flex items-center h-12">
@@ -102,7 +151,7 @@
     {/if}
 </div>
 
-<div class="flex flex-col flex-grow w-full justify-evenly">
+<div class="flex flex-col flex-grow w-full">
     {#if device === undefined}
         {#if settings.deviceId !== undefined}
             <span class="w-full h-8 overflow-hidden overflow-ellipsis">Device not found.</span>
@@ -110,12 +159,24 @@
     {:else}
         {#each capabilities as capability}
             {#if capability !== undefined}
-                <div class="flex items-center justify-between w-full pl-1 pr-1 leading-none">
-                    <div class="font-extralight overflow-clip overflow-ellipsis whitespace-nowrap">{capability.title}</div>
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                <!-- svelte-ignore a11y-no-static-element-interactions -->
+                <div
+                    class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer"
+                >
+                    <div 
+                        on:click={() => openView(capability)} 
+                        class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap"
+                    >
+                        {capability.title}
+                    </div>
+                    
                     <svelte:component 
                         this={getComponent(capability)} 
+                        {device}
                         {capability} 
-                        {controllable} 
+                        {controllable}
+                        mode="item"
                         on:value={e => setCapabilityValue(capability.id, e.detail)}
                     />
                 </div>
@@ -123,3 +184,27 @@
         {/each}
     {/if}
 </div>
+
+<Portal>
+    {#if viewOpen && viewCapability !== undefined}
+        <Modal handleClose={() => viewOpen = false}>
+            <Modal.Content slot="content" class={viewClasses}>
+                <Modal.Content.Header slot="header" class="w-full text-center border-none">{device.name}</Modal.Content.Header>
+                <Modal.Content.Body slot="body">
+                    <svelte:component 
+                        this={getComponent(viewCapability)} 
+                        {controllable}
+                        {device}
+                        capability={viewCapability} 
+                        mode="view"
+                        on:style={e => viewClasses = e.detail}
+                        on:value={e => setCapabilityValue(viewCapability.id, e.detail)}
+                    />
+                </Modal.Content.Body>
+                <Modal.Content.Footer slot="footer" class="w-full text-center border-none">
+                    
+                </Modal.Content.Footer>
+            </Modal.Content>
+        </Modal>
+    {/if}
+</Portal>

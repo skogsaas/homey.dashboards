@@ -1,4 +1,6 @@
 <script lang="ts">
+    import './sentry';
+
     // Svelte
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
@@ -134,7 +136,7 @@
             device.on('capability', (event: CapabilityEvent) => {
               const capability = device.capabilitiesObj[event.capabilityId];
               capability.value = event.value;
-              capability.lastUpdated.setUTCMilliseconds(event.transactionTime);
+              capability.lastUpdated = event.transactionTime; 
             });
           });
 

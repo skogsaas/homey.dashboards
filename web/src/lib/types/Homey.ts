@@ -154,7 +154,9 @@ export interface CapabilityObj {
     value: any;
     min: number;
     max: number;
-    lastUpdated: Date;
+    step: number;
+    lastUpdated: number;
+    values: ({ id: string; title: string; })[];
 }
 
 export interface EnergyObj {

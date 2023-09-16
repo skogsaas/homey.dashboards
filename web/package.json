@@ -1,6 +1,6 @@
 {
   "name": "skogsaas.dashboards.svelte",
-  "version": "0.6.4",
+  "version": "0.8.1",
   "private": true,
   "scripts": {
     "dev": "vite dev",
@@ -28,7 +28,7 @@
     "homey-api": "^3.0.12",
     "postcss": "^8.4.24",
     "postcss-load-config": "^4.0.1",
-    "stwui": "^0.17.3-next",
+    "stwui": "^0.17.4-next",
     "svelte": "^4.0.0",
     "svelte-check": "^3.4.3",
     "svelte-grid": "^5.1.1",
@@ -41,6 +41,7 @@
   "dependencies": {
     "@mdi/svg": "^7.2.96",
     "@mdi/util": "^0.3.2",
+    "@sentry/svelte": "^7.69.0",
     "chart.js": "^4.3.0",
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^2.30.0",

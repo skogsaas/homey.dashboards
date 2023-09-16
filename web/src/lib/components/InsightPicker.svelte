@@ -79,7 +79,7 @@
     }
 </script>
 
-<Button on:click={() => open = true} class="w-full justify-start">
+<Button on:click={() => open = true} class="w-full justify-start border border-border">
     {#if selected !== undefined}
         {getOwnerName(selected.ownerUri)} - {selected.title}
     {:else if logId !== undefined}

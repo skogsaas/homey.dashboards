@@ -51,6 +51,20 @@
         scales: { 
             x: { 
                 type: 'timeseries',
+                time: {
+                    displayFormats: {
+                        datetime: 'd MMM yyyy, HH:mm:ss',
+                        millisecond: 'HH:mm:ss.SSS',
+                        second: 'HH:mm:ss',
+                        minute: 'HH:mm',
+                        hour: 'HH:mm',
+                        day: 'd MMM',
+                        week: 'w, R',
+                        month: 'MMM yyyy',
+                        quarter: 'qqq - yyyy',
+                        year: 'yyyy'
+                    }
+                },
                 adapters: {
                     date: {
                         locale: $dateFnsLocale
@@ -167,7 +181,7 @@
         const sampleRate = series.sampleRate ?? 60;
 
         const entries = await $homey.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
-        const timeSeries = resample(entries, aggregation, sampleRate);
+        const timeSeries = resample(entries, aggregation, sampleRate, log.decimals);
 
         data.datasets[index] = {
             label: getOwnerName(log.ownerUri) + ' - ' + log.title,
@@ -181,12 +195,15 @@
         return entries.step - entries.updatesIn;
     }
 
-    function resample(entries: LogEntries, aggregation: string, sampleRate: number) {
+    function resample(entries: LogEntries, aggregation: string, sampleRate: number, decimals: number | null) {
         // Can never aggregate with less step than sample rate.
         if(aggregation === undefined || aggregation === 'none' || (entries.step / 1000) >= sampleRate) {
-            return entries.values.map(entry => ({ x: new Date(entry.t).getTime(), y: entry.v }));
+            return entries.values
+                .filter(entry => entry.v !== null && entry.v !== undefined)
+                .map(entry => ({ x: new Date(entry.t).getTime(), y: round(entry.v, decimals) }));
         } else {
             const buckets = entries.values
+                .filter(entry => entry.v !== null && entry.v !== undefined)
                 .reduce((timeBuckets: any, entry) => {
                     const time = new Date(entry.t);
                     const value = entry.v;
@@ -206,17 +223,17 @@
 
                     switch(aggregation) {
                         case 'min':
-                            return { x: Number(timestamp), y: Math.min(...values) };
+                            return { x: Number(timestamp), y: round(Math.min(...values), decimals) };
                         case 'max':
-                            return { x: Number(timestamp), y: Math.max(...values) };
+                            return { x: Number(timestamp), y: round(Math.max(...values), decimals) };
                         case 'sum':
-                            return { x: Number(timestamp), y: values.reduce((a: number, b: number) => a + b, 0) };
+                            return { x: Number(timestamp), y: round(values.reduce((a: number, b: number) => a + b, 0), decimals) };
                         case 'avg':
-                            return { x: Number(timestamp), y: values.reduce((a: number, b: number) => a + b, 0) / values.length };
+                            return { x: Number(timestamp), y: round(values.reduce((a: number, b: number) => a + b, 0) / values.length, decimals) };
                         case 'first':
-                            return { x: Number(timestamp), y: values[0] };
+                            return { x: Number(timestamp), y: round(values[0], decimals) };
                         case 'last':
-                            return { x: Number(timestamp), y: values[values.length - 1] };
+                            return { x: Number(timestamp), y: round(values[values.length - 1], decimals) };
                     }
                 });
 
@@ -241,6 +258,14 @@
         } else {
             return uri;
         }
+    }
+
+    function round(value: number, decimals: number | null) {
+        if(!decimals) {
+            return value;
+        }
+
+        return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
     }
 </script>
 

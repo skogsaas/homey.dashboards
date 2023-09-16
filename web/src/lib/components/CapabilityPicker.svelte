@@ -50,7 +50,7 @@
     }
 </script>
 
-<Button on:click={() => open = true} class="w-full justify-start">
+<Button on:click={() => open = true} class="w-full justify-start border border-border">
     {#if selected !== undefined}
         {#await $homey.baseUrl then url}
             <img src={url + selected.iconObj.url} alt={selected.title} class="h-6 w-6 mr-2" />

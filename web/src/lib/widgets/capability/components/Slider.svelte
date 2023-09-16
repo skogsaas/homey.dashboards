@@ -1,14 +1,17 @@
 <script lang="ts">
     import { editing } from '$lib/stores/dashboard';
-    import type { CapabilityObj } from '$lib/types/Homey';
+    import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
-    import Slider from '$lib/components/Slider.svelte';
     import { createEventDispatcher } from 'svelte';
+
+    import Slider from 'stwui/slider';
 
     const dispatcher = createEventDispatcher();
 
+    export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
+    export let mode: 'item'|'view';
 
     let value: number;
     $: disabled = !controllable || $editing;
@@ -29,15 +32,30 @@
     }
 </script>
 
-{#if capability !== null && capability !== undefined}
-    <Slider 
-        style="flex-grow: 1; align-self: center; max-width: 100px;"
-        bind:value={value}
-        min={capability.min} 
-        max={capability.max} 
-        step={Math.pow(10, -1 * capability.decimals)} 
-        disabled={disabled} 
-    />
-{:else}
-    Null
+{#if capability !== undefined}
+    {#if mode === 'item'}
+        <span class="whitespace-nowrap cursor-pointer">{capability.value ?? '...'} {capability.units ?? ''}</span>
+    {:else}
+        <div class="flex flex-col w-full">
+            <div class="mx-auto">
+                <div class="flex flex-col items-center">
+                    <h1>{value ?? ''} {capability?.units ?? ''}</h1>
+                    <span>{capability.title}</span>
+                </div>
+            </div>
+
+            <div class="flex flex-row mt-4">
+                <span class="whitespace-nowrap mr-4">{capability.min} {capability.units ?? ''}</span>
+                <Slider 
+                    class="w-full"
+                    bind:value={value}
+                    min={capability.min} 
+                    max={capability.max} 
+                    step={capability.step ?? Math.pow(0.1, capability.decimals)}
+                    disabled={disabled} 
+                />
+                <span class="whitespace-nowrap ml-4">{capability.max} {capability.units ?? ''}</span>
+            </div>
+        </div>
+    {/if}
 {/if}
