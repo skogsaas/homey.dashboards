@@ -1,4 +1,4 @@
-import { version } from "$app/environment";
+import { dev, version } from "$app/environment";
 import * as Sentry from "@sentry/svelte";
 
 Sentry.init({
@@ -26,6 +26,7 @@ Sentry.init({
   ],
 
   release: version,
+  environment: dev ? 'development' : 'production',
 
   tracesSampleRate: 1.0,
   tracePropagationTargets: ["localhost"],
