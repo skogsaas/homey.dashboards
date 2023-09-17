@@ -18,6 +18,7 @@ const config = {
   kit: {
     adapter: adapter({
       fallback: "index.html",
+      precompress: true,
     }),
     paths: {
       base: target === "app" ? "/app/skogsaas.dashboards/assets/dashboard" : "",

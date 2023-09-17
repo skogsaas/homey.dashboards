@@ -31,7 +31,7 @@
         {/if}
     {:else}
         {#if !hideTitle}
-            <div class="flex pl-2 pb-2 absolute left-0 bottom-0 w-full rounded-bl-md rounded-br-md" class:backdrop-blur={fontBlur} style="color: {fontColor}">
+            <div class="flex pl-2 pb-2 absolute left-0 bottom-0 w-full" class:backdrop-blur={fontBlur} style="color: {fontColor}">
                 <div>{device?.name}</div>
                 <div class="ml-4 font-extralight">{image?.title}</div>
             </div>
@@ -40,7 +40,7 @@
         {#await $homey.baseUrl}
             ...
         {:then url}
-            <img class="w-full h-full rounded-md" src={url + image.imageObj.url + '?v=' + refreshSlug} alt={image.title + ' refreshed: ' + refreshSlug} />
+            <img class="w-full h-full" src={url + image.imageObj.url + '?v=' + refreshSlug} alt={image.title + ' refreshed: ' + refreshSlug} />
         {/await}
     {/if}
 </div>

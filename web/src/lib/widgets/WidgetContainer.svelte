@@ -5,13 +5,14 @@
     
     import Card from 'stwui/card';
     import Button from 'stwui/button';
-    import Dropdown from 'stwui/dropdown';
 
-    import { mdiCog, mdiDelete, mdiLock, mdiLockOpenVariant, mdiMenu } from '$lib/components/icons';
+    import {  mdiArrowTopLeftBottomRight, mdiCog, mdiCursorMove, mdiDelete, mdiLock, mdiLockOpenVariant } from '$lib/components/icons';
 
     const dispatch = createEventDispatcher();
 
     export let fixed: boolean;
+    export let move: any;
+    export let resize: any;
 
     let menuOpen: boolean = false;
 
@@ -31,29 +32,33 @@
     }
 </script>
 
-<Card on:click class="h-full w-full overflow-hidden flex flex-col justify-start">
+<Card on:click class="h-full w-full overflow-hidden">
     {#if $editing}
-        <div class="absolute -top-4 -left-4 z-10">
-            <Dropdown bind:visible={menuOpen}>
-                <Button slot="trigger" shape="circle" size="xs" type="primary" on:click={(e) => (menuOpen = true)}>
-                    <Button.Icon data={mdiMenu} />
+        <div class="absolute z-10 -top-4 left-0 flex w-full">
+            <Button on:click={onEdit} shape="circle" size="xs" type="default">
+                <Button.Icon slot="icon" data={mdiCog} />
+            </Button>
+
+            <Button on:click={onFixed} shape="circle" size="xs" type="default">
+                <Button.Icon slot="icon" data={fixed ? mdiLock : mdiLockOpenVariant} />
+            </Button>
+
+            {#if !fixed}
+                <Button on:pointerdown={move} shape="circle" size="xs" type="default">
+                    <Button.Icon slot="icon" data={mdiCursorMove} />
                 </Button>
+            {/if}
 
-                <Dropdown.Items slot="items">
-                    <Dropdown.Items.Item on:click={onEdit} label="Edit">
-                        <Dropdown.Items.Item.Icon slot="icon" data={mdiCog} />
-                    </Dropdown.Items.Item>
-
-                    <Dropdown.Items.Item on:click={onFixed} label={fixed ? 'Unlock' : 'Lock'}>
-                        <Dropdown.Items.Item.Icon slot="icon" data={fixed ? mdiLock : mdiLockOpenVariant} />
-                    </Dropdown.Items.Item>
-
-                    <Dropdown.Items.Item type="danger" on:click={onDelete} label="Delete">
-                        <Dropdown.Items.Item.Icon slot="icon" data={mdiDelete} color="red" />
-                    </Dropdown.Items.Item>
-                </Dropdown.Items>
-            </Dropdown>
+            <Button on:click={onDelete} shape="circle" size="xs" type="default" class="ml-auto">
+                <Button.Icon slot="icon" data={mdiDelete} color="red" />
+            </Button>
         </div>
+
+        {#if !fixed}
+            <Button on:pointerdown={resize} shape="circle" size="xs" type="default" class="absolute z-10 -right-3 -bottom-3">
+                <Button.Icon slot="icon" data={mdiArrowTopLeftBottomRight} />
+            </Button>
+        {/if}
     {/if}
     
     <slot></slot>

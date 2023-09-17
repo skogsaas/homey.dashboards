@@ -12,6 +12,7 @@
     import Toggle from './components/Toggle.svelte';
     import Button from './components/Button.svelte';
     import Thermostat from './components/Thermostat.svelte';
+    import { editing } from '$lib/stores/dashboard';
 
     export let settings: CapabilitySettings;
 
@@ -129,9 +130,11 @@
     }
 
     function openView(capability: CapabilityObj) {
-        viewClasses = '';
-        viewCapability = capability;
-        viewOpen = true;
+        if(!$editing) {
+            viewClasses = '';
+            viewCapability = capability;
+            viewOpen = true;
+        }
     }
 </script>
 
@@ -151,7 +154,7 @@
     {/if}
 </div>
 
-<div class="flex flex-col flex-grow w-full">
+<div class="flex flex-col w-full overflow-hidden">
     {#if device === undefined}
         {#if settings.deviceId !== undefined}
             <span class="w-full h-8 overflow-hidden overflow-ellipsis">Device not found.</span>

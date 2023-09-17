@@ -23,6 +23,8 @@ export interface GridBreakpointItem {
     resizable: boolean;
     draggable: boolean;
     fixed: boolean;
+    customDragger: boolean;
+    customResizer: boolean;
 }
 
 export interface GridResizeEvent {

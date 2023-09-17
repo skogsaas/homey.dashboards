@@ -100,8 +100,10 @@
 
         result.forEach((item: GridItem) => { 
             columns.forEach(column => {
-                item[column].draggable = edit;
-                item[column].resizable = edit;
+                item[column].draggable = edit && !item[column].fixed;
+                item[column].resizable = edit && !item[column].fixed;
+                item[column].customDragger = true;
+                item[column].customResizer = true;
             });
         });
 
@@ -379,6 +381,8 @@
         on:resize={(e) => grid.updateSize(e.detail)}
         let:item 
         let:dataItem
+        let:movePointerDown
+        let:resizePointerDown
     >
         <WidgetContainer 
             fixed={item.fixed ?? false}
@@ -386,6 +390,8 @@
             on:edit={() => editWidget(dataItem)}
             on:delete={() => removeItem(dataItem.id)}
             on:click={() => openView(dataItem)}
+            move={movePointerDown}
+            resize={resizePointerDown}
         >
             <svelte:component 
                 this={findWidget(dataItem.settings.type)}

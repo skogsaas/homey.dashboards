@@ -49,6 +49,8 @@
     let addDashboardOpen: boolean = false;
 
     onMount(async () => {
+      // TODO
+      //document.body.setAttribute('data-theme', 'dark');
       await loadData()
     });
 

@@ -29,11 +29,19 @@
     let localKey: string = '';
     let localKeyError: string | undefined;
     let localKeyLoading: Promise<Homey | undefined> | undefined;
+    let localHosting: boolean = true;
+    let localHomeyId: string = '';
 
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
 
     onMount(async () => {
         const apiKey = $page.url.searchParams.get('api-key');
+        
+        console.log($page.url.origin);
+
+        if($page.url.origin.includes('.homey.homeylocal.com') || $page.url.origin.includes('.connect.athom.com')){
+            localHosting = true;
+        }
 
         if(apiKey) {
             localKey = apiKey;
@@ -42,7 +50,6 @@
     })
 
     function verifyApiKey() {
-        apiKey.set(localKey);
         localKeyLoading = connectApiKey();
     }
 
@@ -50,8 +57,10 @@
         localKeyError = undefined;
 
         try {
+            const url = localHosting ? $baseUrl : 'https://' + localHomeyId + '.connect.athom.com';
+
             const instance: Homey = await HomeyAPI.createLocalAPI({
-                address: $baseUrl,
+                address: url,
                 token: localKey,
             });
 
@@ -63,8 +72,11 @@
     }
 
     async function setHomey(instance: Homey) {
-        // TODO:
-        //homeys.add(instance);
+        if(!localHosting) {
+            localStorage.homeyId = localHomeyId;
+        }
+
+        apiKey.set(localKey);
         homey.set(instance);
 
         await goto(base + '/');
@@ -138,14 +150,20 @@
                  <div class="pt-8">
                     {#if active === '#local'}
                         <p>Local authentication can only be used on the Homey Pro 2023 model. Older models do not have the API-Key feature.</p>
-                        <p>Obtain an API-Key by navigating to <b>Homey -> Settings -> System -> API Keys</b>.</p>
 
-                        <Input class="pt-8" name="local-key" bind:value={localKey} error={localKeyError} label="Homey API-Key">
+                        {#if !localHosting}
+                            <p class="pt-8">Obtain the Homey-ID by navigating to <b>Homey -> Settings -> General</b> and scroll down to the Cloud section.</p>
+                            <Input name="local-homey-id" bind:value={localHomeyId} error={localHomeyId.length > 0 && localHomeyId.length !== 24 ? 'Must be 24 characters' : ''} label="Homey ID">
+                                <Input.Label slot="label">Homey ID</Input.Label>
+                            </Input>
+                        {/if}
+
+                        <p class="pt-8">Obtain an API-Key by navigating to <b>Homey -> Settings -> API Keys</b>.</p>
+                        <Input name="local-key" bind:value={localKey} error={localKeyError} label="Homey API-Key">
                             <Input.Label slot="label">Homey API-key</Input.Label>
                         </Input>
-                        {#if localKeyLoading === undefined}
-                            <Button type="primary" disabled={localKey === ''} on:click={verifyApiKey}>Verify</Button>
-                        {/if}
+
+                            <Button type="primary" disabled={localKey === '' || (!localHosting && localHomeyId.length != 24)} on:click={verifyApiKey}>Verify</Button>
                         
                         {#await localKeyLoading}
                             <Progress size="xs" indeterminate value={0} />

@@ -42,7 +42,10 @@ function createBaseUrl() {
     return derived([homey, page], ([$homey, $page], set) => {
         if($homey !== undefined) {
             $homey.baseUrl.then(u => set(u))
-        } 
+        }
+        else if(localStorage.homeyId !== undefined) {
+            set(localStorage.homeyId);
+        }
         else if(import.meta.env.VITE_HOMEY_URL) { // Inject development variables
             set(import.meta.env.VITE_HOMEY_URL);
         } else {

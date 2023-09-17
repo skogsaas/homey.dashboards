@@ -12,19 +12,5 @@ function createApiKey() {
     };
 }
 
-/*
-function createOauth() {
-    const { subscribe, set } = writable(JSON.parse(localStorage.oauth));
-    
-    return {
-        subscribe,
-        set: (oauth: string|undefined) => {
-            localStorage.oauth = JSON.stringify(oauth);
-            set(oauth); 
-        }
-    };
-}
-*/
-
 export const apiKey = createApiKey();
 //export const oauth = createOauth();

@@ -19,5 +19,8 @@
   },
   "0.8.1": {
     "en": "Fixed thermostat mode issue, capability last updated, and insight null values."
+  },
+  "0.9.0": {
+    "en": "Refactored editing UI to fix scrolling on mobile devices."
   }
 }

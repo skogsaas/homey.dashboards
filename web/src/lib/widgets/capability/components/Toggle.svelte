@@ -27,6 +27,8 @@
         if(v !== capability?.value) {
             if(!disabled) {
                 dispatcher('value', v);
+            } else {
+                value = !v;
             }
         }
     }
