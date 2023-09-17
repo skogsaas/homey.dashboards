@@ -14,20 +14,17 @@
     export let move: any;
     export let resize: any;
 
-    let menuOpen: boolean = false;
+    let moving: boolean = false;
 
     function onEdit() {
-        menuOpen = false;
         dispatch('edit');
     }
 
     function onFixed() {
-        menuOpen = false;
         dispatch('fixed', !fixed);
     }
 
     function onDelete() {
-        menuOpen = false;
         dispatch('delete');
     }
 </script>
@@ -44,7 +41,7 @@
             </Button>
 
             {#if !fixed}
-                <Button on:pointerdown={move} shape="circle" size="xs" type="default">
+                <Button on:pointerdown={move} class="touch-none" shape="circle" size="xs" type="default">
                     <Button.Icon slot="icon" data={mdiCursorMove} />
                 </Button>
             {/if}
@@ -55,7 +52,7 @@
         </div>
 
         {#if !fixed}
-            <Button on:pointerdown={resize} shape="circle" size="xs" type="default" class="absolute z-10 -right-3 -bottom-3">
+            <Button on:pointerdown={resize} shape="circle" size="xs" type="default" class="absolute z-10 -right-3 -bottom-3 touch-none">
                 <Button.Icon slot="icon" data={mdiArrowTopLeftBottomRight} />
             </Button>
         {/if}

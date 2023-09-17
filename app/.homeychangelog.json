@@ -22,5 +22,8 @@
   },
   "0.9.0": {
     "en": "Refactored editing UI to fix scrolling on mobile devices."
+  },
+  "0.9.1": {
+    "en": "Fix dragging widgets on mobile devices"
   }
 }
