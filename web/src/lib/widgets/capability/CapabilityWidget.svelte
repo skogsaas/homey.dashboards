@@ -29,8 +29,9 @@
     $: onDevice(latestDevice);
 
     function onDevice(d: DeviceObj) {
-        if(device !== undefined) {
-            d.off('capability', updateCapability);
+        // If the device changes, try to unsubscribe from events
+        if(device !== undefined && device.off !== undefined) {
+            device.off('capability', updateCapability);
         }
 
         if(d !== undefined) {

@@ -25,5 +25,8 @@
   },
   "0.9.1": {
     "en": "Fix dragging widgets on mobile devices"
+  },
+  "0.10.0": {
+    "en": "Added dashboard link widget"
   }
 }

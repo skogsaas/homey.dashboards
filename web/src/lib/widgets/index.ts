@@ -50,7 +50,7 @@ export interface WidgetInfo {
 export const widgets: WidgetInfo[] = [
     {
         type: 'capability', 
-        label: 'Capability',
+        label: 'Device Capabilities',
         icon: mdiTune,
         widget: CapabilityWidget, 
         editor: CapabilityEditor,
