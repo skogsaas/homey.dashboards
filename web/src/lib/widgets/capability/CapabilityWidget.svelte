@@ -13,6 +13,7 @@
     import Button from './components/Button.svelte';
     import Thermostat from './components/Thermostat.svelte';
     import { editing } from '$lib/stores/dashboard';
+    import Picker from './components/Picker.svelte';
 
     export let settings: CapabilitySettings;
 
@@ -41,7 +42,9 @@
                 settings.capabilityIds.map(cId => device.capabilitiesObj[cId]) : 
                 [];
 
-            d.on('capability', updateCapability);
+            if(device.on !== undefined) {
+                device.on('capability', updateCapability);
+            }
         }
     }
 
@@ -114,10 +117,12 @@
                         case 'thermostat':
                             return Thermostat;
 
+                        case 'picker':
+                            return Picker;
+
                         case 'battery':
                         case 'color':
-                        case 'media':
-                        case 'picker':
+                        case 'media':                        
                         case 'ternary':
                         case 'sensor':
                         default:
