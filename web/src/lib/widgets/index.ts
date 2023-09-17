@@ -9,6 +9,9 @@ import {
     migrate as migrateCapability 
 } from './capability/CapabilitySettings';
 
+import DashboardLinkEditor from './dashboard-link/DashboardLinkEditor.svelte';
+import DashboardLinkWidget from './dashboard-link/DashboardLinkWidget.svelte';
+
 import FlowEditor from "./flow/FlowEditor.svelte";
 import FlowWidget from "./flow/FlowWidget.svelte";
 
@@ -30,7 +33,7 @@ import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
 import type { WidgetSettings } from '$lib/types/Widgets';
 
 // Icons
-import { mdiChartLine, mdiImage, mdiPlay, mdiTextBoxEdit, mdiTune } from "$lib/components/icons";
+import { mdiChartLine, mdiImage, mdiPlay, mdiTextBoxEdit, mdiTune, mdiViewDashboard } from "$lib/components/icons";
 
 export interface WidgetInfo {
     type: string;
@@ -57,6 +60,17 @@ export const widgets: WidgetInfo[] = [
         ],
         create: createCapability,
         migration: migrateCapability
+    },
+    {
+        type: 'dashboard-link', 
+        label: 'Dashboard',
+        icon: mdiViewDashboard,
+        widget: DashboardLinkWidget, 
+        editor: DashboardLinkEditor,
+        view: undefined,
+        scopes: [],
+        create: () => ({ id: uuid(), type: 'dashboard-link', version: 1 }),
+        migration: (e: WidgetSettings) => e
     },
     {
         type: 'flow', 
