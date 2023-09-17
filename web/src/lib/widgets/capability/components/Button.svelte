@@ -16,7 +16,6 @@
     $: disabled = !controllable || $editing;
 
     function setValue(value: boolean) {
-        throw Error("My error");
         dispatcher('value', value);
     }
 </script>
