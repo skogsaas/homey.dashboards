@@ -44,6 +44,7 @@
     let error: any | undefined = undefined;
 
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
+    $: fullscreenSupported = document.fullscreenEnabled;
 
     let menuOpen: boolean = false;
     let toolbarOpen: boolean = false;
@@ -362,10 +363,16 @@
         name="toolbarOpen"
         bind:on={toolbarOpen}
       >
-        <Toggle.ContentLeft slot="content-left">
+        <Toggle.ContentLeft slot="content-left" class="ml-3">
           <Toggle.ContentLeft.Label slot="label">Toolbar open</Toggle.ContentLeft.Label>
         </Toggle.ContentLeft>
       </Toggle>
+
+      {#if fullscreenSupported}
+        <Button on:click={() => document.documentElement.requestFullscreen()} class="mt-4">
+          Enter fullscreen
+        </Button>
+      {/if}
     </Drawer>
 
     {#if toolbarOpen}
