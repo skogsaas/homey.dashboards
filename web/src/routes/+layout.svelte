@@ -15,6 +15,7 @@
     // UI components
     import Drawer from "$lib/components/Drawer.svelte";
     import AddDashboardDialog from '$lib/AddDashboardDialog.svelte';
+    import IconButton from '$lib/components/IconButton.svelte';
 
     // Tailwind
     import "../app.postcss";
@@ -25,6 +26,7 @@
     import Divider from 'stwui/divider';
     import Toggle from 'stwui/toggle';
     import Media from 'stwui/media';
+    import Icon from 'stwui/icon';
 
     import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant } from "$lib/components/icons";
 
@@ -267,9 +269,7 @@
     </div>
   {:else if $homey !== undefined}
     {#if menuOpen == false && toolbarOpen == false}
-      <Button on:click={() => menuOpen = true} class="absolute left-0 top-0 z-10 text-primary-content bg-primary h-[42px] w-[42px] rounded-none rounded-br-full">
-        <Button.Icon slot="icon" data={mdiMenu} />
-      </Button>
+      <IconButton data={mdiMenu} on:click={() => menuOpen = true} class="absolute left-0 top-0 z-10 text-primary-content bg-primary rounded-none rounded-br-full" size="42px" />
     {/if}
 
     <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
@@ -371,7 +371,7 @@
     {#if toolbarOpen}
       <header class="w-full sticky z-0 drop-shadow-lg p-4 bg-primary flex flex-row">
         <Button on:click={() => menuOpen = true}>
-          <Button.Icon slot="icon" data={mdiMenu} />
+          <Icon slot="icon" data={mdiMenu} />
         </Button>
         
         <Dropdown bind:visible={dashboardMenuOpen}>

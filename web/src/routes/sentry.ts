@@ -32,6 +32,6 @@ if(!dev) {
     tracesSampleRate: 1.0,
     tracePropagationTargets: ["localhost"],
     replaysSessionSampleRate: 0.0,
-    replaysOnErrorSampleRate: 1.0,
+    replaysOnErrorSampleRate: 0.0,
   });
 }
