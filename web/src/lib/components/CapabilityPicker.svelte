@@ -29,7 +29,7 @@
             return 1;
         });
 
-    $: selected = capabilityId !== undefined ? capabilities.find(d => d.id === capabilityId) : undefined;
+    $: selected = capabilityId !== undefined ? capabilities.find(d => d.id === capabilityId) ?? undefined : undefined;
     $: filterCapabilities(search, sorted);
 
     function filterCapabilities(value: string, s: CapabilityObj[]) {
@@ -51,10 +51,12 @@
 </script>
 
 <Button on:click={() => open = true} class="w-full justify-start border border-border">
-    {#if selected !== undefined}
-        {#await $homey.baseUrl then url}
-            <img src={url + selected.iconObj.url} alt={selected.title} class="h-6 w-6 mr-2" />
-        {/await}
+    {#if selected}
+        {#if selected.iconObj?.url}
+            {#await $homey.baseUrl then url}
+                <img src={url + selected.iconObj?.url} alt={selected.title} class="h-6 w-6 mr-2" />
+            {/await}
+        {/if}
         {selected.title}
     {:else if capabilityId !== undefined}
         Capability not found
@@ -78,7 +80,7 @@
                                     <List.Item.Content slot="content">
                                         <List.Item.Content.Title slot="title" class="flex">
                                             {#await $homey.baseUrl then url}
-                                                {#if capability.iconObj?.url}
+                                                {#if capability?.iconObj?.url}
                                                     <img src={url + capability.iconObj.url} alt={capability.title} class="h-6 w-6 mr-2" />
                                                 {/if}
                                             {/await}

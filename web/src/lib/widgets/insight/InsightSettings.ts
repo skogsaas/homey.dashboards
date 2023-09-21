@@ -1,7 +1,20 @@
 import type { WidgetSettings } from "../../types/Widgets";
 import { v4 as uuid } from 'uuid';
 
-export default interface InsightSettings_v3 extends WidgetSettings {
+export default interface InsightSettings_v4 extends WidgetSettings {
+    resolution: string | undefined;
+    series: Series_v4[];
+}
+
+export interface Series_v4 extends Series_v3 {
+    title: string | undefined;
+    type: string | undefined;
+    fill: boolean | undefined;
+    borderColor: string | undefined;
+    backgroundColor: string | undefined;
+}
+
+export interface InsightSettings_v3 extends WidgetSettings {
     resolution: string | undefined;
     series: Series_v3[];
 }
@@ -29,17 +42,27 @@ export function create() : WidgetSettings {
     return { 
         id: uuid(), 
         type: 'insight', 
-        version: 3
+        version: 4
      };
 }
 
 export function migrate(settings: any) : any {
     switch(settings.version) {
-        case 3: return settings;
+        case 4: return settings;
+        case 3: return migrate_v3_v4(settings as InsightSettings_v3);
         case 2: return migrate_v2_v3(settings as InsightSettings_v2);
         case 1:
         default: return migrate(migrate_v1_v2(settings as InsightSettings_v1));
     }
+}
+
+function migrate_v3_v4(v3: InsightSettings_v3) : InsightSettings_v4 {
+    const settings: InsightSettings_v4 = {
+        ...v3,
+        series: v3.series.map(s => ({ ...s, type: 'line' }))
+    }
+
+    return settings;
 }
 
 function migrate_v2_v3(v2: InsightSettings_v2) : InsightSettings_v3 {

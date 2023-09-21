@@ -3,7 +3,7 @@
     import { devices, insights } from '$lib/stores/homey';
 
     import type InsightSettings from "./InsightSettings";
-    import type { Series_v3 } from './InsightSettings';
+    import type { Series_v4 } from './InsightSettings';
 
     import Button from 'stwui/button';
     import Select from 'stwui/select';
@@ -42,7 +42,7 @@
 
     let openInsightId: string | undefined;
     let resolution: Option;
-    let series: Series_v3[] = [];
+    let series: Series_v4[] = [];
 
     let selectedLogId: string | undefined;
 
@@ -70,7 +70,7 @@
         dispatch('settings', { ...settings, series: updatedSeries });
     }
 
-    function onSeries(index: number, s: Series_v3) {
+    function onSeries(index: number, s: Series_v4) {
         const updatedSeries = [...series];
         updatedSeries[index] = s;
 
@@ -135,7 +135,7 @@
                 </div>
             </Accordion.Item.Title>
             <Accordion.Item.Content slot="content" class="p-4">
-                <InsightEditorSeries series={s} on:series={(e) => onSeries(i, e.detail)}/>
+                <InsightEditorSeries series={s} index={i} on:series={(e) => onSeries(i, e.detail)}/>
             </Accordion.Item.Content>
         </Accordion.Item>
     {/each}

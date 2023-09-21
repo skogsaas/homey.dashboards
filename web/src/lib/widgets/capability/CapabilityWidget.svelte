@@ -1,8 +1,11 @@
 <script lang="ts">
     import { devices, homey, scopes } from '$lib/stores/homey';
+    import { editing } from '$lib/stores/dashboard';
 
     import type CapabilitySettings from './CapabilitySettings';
-    import type { CapabilityEvent, CapabilityObj, DeviceObj } from '$lib/types/Homey';
+    import type { Capability_v3 } from './CapabilitySettings';
+
+    import type { CapabilityEvent, CapabilityMap, CapabilityObj, DeviceObj } from '$lib/types/Homey';
     
     import Portal from 'stwui/portal';
     import Modal from 'stwui/modal';
@@ -12,8 +15,8 @@
     import Toggle from './components/Toggle.svelte';
     import Button from './components/Button.svelte';
     import Thermostat from './components/Thermostat.svelte';
-    import { editing } from '$lib/stores/dashboard';
     import Picker from './components/Picker.svelte';
+    
 
     export let settings: CapabilitySettings;
 
@@ -21,13 +24,23 @@
     let viewCapability: CapabilityObj | undefined;
     let viewClasses: string = '';
 
-    let device: DeviceObj;
-    let capabilities: CapabilityObj[] = [];
+    let deviceId: string = '';
+    let capabilities: Capability_v3[] = [];
 
-    $: latestDevice = $devices[settings.deviceId ?? ''];
+    let device: DeviceObj;
+    let capabilityMap: CapabilityMap = {};
+
+    $: onSettings(settings);
+
+    $: latestDevice = $devices[deviceId];
     $: controllable = $scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.control');
 
     $: onDevice(latestDevice);
+
+    function onSettings(s: CapabilitySettings) {
+        deviceId = s.deviceId ?? '';
+        capabilities = s.capabilities ?? []; 
+    }
 
     function onDevice(d: DeviceObj) {
         // If the device changes, try to unsubscribe from events
@@ -37,10 +50,8 @@
 
         if(d !== undefined) {
             device = d;
-            
-            capabilities = settings?.capabilityIds !== undefined ? 
-                settings.capabilityIds.map(cId => device.capabilitiesObj[cId]) : 
-                [];
+
+            capabilityMap = {...device.capabilitiesObj};
 
             if(device.on !== undefined) {
                 device.on('capability', updateCapability);
@@ -54,7 +65,7 @@
 
             if(capability !== undefined) {
                 // Trigger an update
-                capabilities = [...capabilities];
+                capabilityMap = {...device.capabilitiesObj};
             }
         }
     }
@@ -153,7 +164,7 @@
         {#await $homey.baseUrl}
             ...
         {:then url}
-            <img class="w-8 h-8 m-1" src={url + device?.iconObj.url} alt={device?.icon} />
+            <img class="w-8 h-8 m-1 text-default" src={url + device?.iconObj.url} alt={device?.icon} />
         {/await}
 
         <span class="w-full overflow-hidden overflow-ellipsis">{device?.name}</span>
@@ -167,26 +178,26 @@
         {/if}
     {:else}
         {#each capabilities as capability}
-            {#if capability !== undefined}
+            {#if capabilityMap[capability.capabilityId] !== undefined}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
                 <div
                     class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer"
                 >
                     <div 
-                        on:click={() => openView(capability)} 
+                        on:click={() => openView(capabilityMap[capability.capabilityId])} 
                         class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap"
                     >
-                        {capability.title}
+                        {capability.title ?? capabilityMap[capability.capabilityId].title}
                     </div>
                     
                     <svelte:component 
-                        this={getComponent(capability)} 
+                        this={getComponent(capabilityMap[capability.capabilityId])} 
                         {device}
-                        {capability} 
+                        capability={capabilityMap[capability.capabilityId]} 
                         {controllable}
                         mode="item"
-                        on:value={e => setCapabilityValue(capability.id, e.detail)}
+                        on:value={e => setCapabilityValue(capability.capabilityId, e.detail)}
                     />
                 </div>
             {/if}

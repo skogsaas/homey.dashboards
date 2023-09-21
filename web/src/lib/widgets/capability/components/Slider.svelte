@@ -37,7 +37,7 @@
         }
 
         if(capability.units === '%' || !capability.units) {
-            return (100.0 / (capability.max - capability.min) * v).toFixed(0) + '%';
+            return (100.0 / (capability.max - capability.min) * v).toFixed(0);
         }
 
         return v.toFixed(capability.decimals);
@@ -46,7 +46,7 @@
 
 {#if capability !== undefined}
     {#if mode === 'item'}
-        <span class="whitespace-nowrap cursor-pointer">{formatValue(capability.value) ?? '...'} {capability.units ?? ''}</span>
+        <span class="whitespace-nowrap cursor-pointer">{formatValue(capability.value) ?? '...'} {capability.units ?? '%'}</span>
     {:else}
         <div class="flex flex-col w-full">
             <div class="mx-auto">

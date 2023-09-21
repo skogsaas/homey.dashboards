@@ -30,13 +30,13 @@
     {#if open}
         <Modal handleClose={onCancel}>
             <Modal.Content slot="content">
-                <Modal.Content.Header slot="header">New local dashboard</Modal.Content.Header>
+                <Modal.Content.Header slot="header"><h2>New local dashboard</h2></Modal.Content.Header>
                 <Modal.Content.Body slot="body">
                     <Input name="name" bind:value={value} placeholder="Dashboard name" />
 
                     <p class="mt-4">
                         NOTE:
-                        Local dashboards are stored in the exact browser they are created in. This means that the dashboard will not
+                        Local dashboards you create in this browser, are stored in this browser. This means that the dashboard will not
                         be available on any other devices. If you want the dashboard to be available on other devices, use the native Homey App
                         and add a new device of type <i>Dashboard</i>. This requires you to install the Homey Dashboards app.
                     </p>

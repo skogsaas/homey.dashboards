@@ -84,7 +84,7 @@
             <div class="flex flex-row mx-auto">
                 {#if measureTemperature !== undefined}
                     <div class="flex flex-col items-center">
-                        <h1>{measureTemperature.value ?? ''} {measureTemperature?.units ?? ''}</h1>
+                        <h1>{measureTemperature.value ?? '...'} {measureTemperature?.units ?? ''}</h1>
                         <span>Current temperature</span>
                     </div>
                 {/if}
@@ -95,7 +95,7 @@
 
                 {#if targetTemperature !== undefined}
                     <div class="flex flex-col items-center">
-                        <h1>{targetValue ?? ''} {targetTemperature?.units ?? ''}</h1>
+                        <h1>{targetValue ?? '...'} {targetTemperature?.units ?? ''}</h1>
                         <span>Target temperature</span>
                     </div>
                 {/if}

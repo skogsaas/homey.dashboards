@@ -32,7 +32,7 @@
     {#if open}
         <Modal handleClose={onCancel}>
             <Modal.Content slot="content">
-                <Modal.Content.Header slot="header">{title}</Modal.Content.Header>
+                <Modal.Content.Header slot="header"><h2>{title}</h2></Modal.Content.Header>
                 <Modal.Content.Body slot="body">{text}</Modal.Content.Body>
                 <Modal.Content.Footer slot="footer">
                     <Button on:click={onCancel}>{cancelText}</Button>

@@ -25,6 +25,9 @@ import {
     migrate as migrateInsight 
 } from './insight/InsightSettings';
 
+import SliderEditor from './slider/SliderEditor.svelte';
+import SliderWidget from './slider/SliderWidget.svelte';
+
 import TextEditor from "./text/TextEditor.svelte";
 import TextWidget from "./text/TextWidget.svelte";
 
@@ -33,7 +36,7 @@ import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
 import type { WidgetSettings } from '$lib/types/Widgets';
 
 // Icons
-import { mdiChartLine, mdiImage, mdiPlay, mdiTextBoxEdit, mdiTune, mdiViewDashboard } from "$lib/components/icons";
+import { mdiArrowLeftRight, mdiChartLine, mdiImage, mdiPlay, mdiTextBoxEdit, mdiTune, mdiViewDashboard } from "$lib/components/icons";
 
 export interface WidgetInfo {
     type: string;
@@ -121,6 +124,19 @@ export const widgets: WidgetInfo[] = [
         view: undefined,
         scopes: [],
         create: () => ({ id: uuid(), type: 'text', version: 1 }),
+        migration: (e: WidgetSettings) => e
+    },
+    {
+        type: 'slider', 
+        label: 'Slider',
+        icon: mdiArrowLeftRight,
+        widget: SliderWidget, 
+        editor: SliderEditor,
+        view: undefined,
+        scopes: [
+            { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] }
+        ],
+        create: () => ({ id: uuid(), type: 'slider', version: 1 }),
         migration: (e: WidgetSettings) => e
     },
 ];

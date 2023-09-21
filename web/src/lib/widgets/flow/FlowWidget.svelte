@@ -1,15 +1,13 @@
 <script lang="ts">
-    import { advancedFlows, basicFlows, devices, homey } from '$lib/stores/homey';
+    import { advancedFlows, basicFlows, homey } from '$lib/stores/homey';
 
     import type FlowSettings from './FlowSettings';
-    import type { Flow, InsightObj, LogEntries } from '$lib/types/Homey';
+    import type { Flow } from '$lib/types/Homey';
 
     import { editing } from '$lib/stores/dashboard';
-
-    import Button from "stwui/button";
-    import Icon from "stwui/icon";
     
     import { mdiPlay } from '$lib/components/icons';
+    import IconButton from '$lib/components/IconButton.svelte';
 
     export let settings: FlowSettings;
 
@@ -30,9 +28,7 @@
     <span>Error</span>
 {:else}
 <div class="flex content-center h-full">
-    <Button class="my-auto ml-1" type="primary" shape="circle" size="fab" on:click={() => triggerFlow()}>
-        <Button.Icon slot="icon" data={mdiPlay} />
-    </Button>
+    <IconButton data={mdiPlay} class="my-auto ml-1 bg-primary text-primary-content" on:click={() => triggerFlow()} size="60px" />
     
     <div class="my-auto ml-3 mr-1">{flow.name}</div>
 </div>

@@ -9,36 +9,31 @@
     // Tailwind
     import Divider from "stwui/divider";
     import List from "stwui/list";
-    import Button from 'stwui/button';
 
     import type CapabilitySettings from "./CapabilitySettings";
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
     import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
-    import { mdiArrowDown, mdiArrowUp, mdiDelete } from '$lib/components/icons';
+    import type { Capability_v3 } from './CapabilitySettings';
+    import CapabilityEditorLine from './CapabilityEditorLine.svelte';
 
     const dispatch = createEventDispatcher();
     
     export let settings: CapabilitySettings;
 
     let deviceId: string | undefined;
-    let capabilityIds: string[];
+    let capabilities: Capability_v3[] = [];
 
     let device: DeviceObj | undefined;
-    let capabilities: CapabilityObj[];
 
     let selectedCapability: string | undefined;
 
     $: onSettings(settings);
 
     $: device = deviceId ? $devices[deviceId] : undefined;
-    $: capabilities = device?.capabilitiesObj ? capabilityIds
-        .map(cId => device?.capabilitiesObj[cId])
-        .filter(c => c !== undefined) as CapabilityObj[] :
-        [];
-
+    
     $: flatDevices = Object.values($devices);
     $: flatCapabilities = (device?.capabilitiesObj ? Object.values(device.capabilitiesObj) : [])
-            .filter(c => !capabilityIds.includes(c.id))
+            .filter(c => !capabilities.map(c => c.capabilityId).includes(c.id))
             .sort((a, b) => {
                 if(a.title === b.title) return 0;
                 if(a.title < b.title) return -1;
@@ -50,7 +45,7 @@
 
     function onSettings(s: CapabilitySettings) {
         deviceId = s?.deviceId;
-        capabilityIds = [ ...(s?.capabilityIds ?? []) ];
+        capabilities = [ ...(s?.capabilities ?? []) ];
     }
 
     function onDevice(id: string | undefined) {
@@ -65,49 +60,58 @@
             return;
         }
 
-        capabilityIds.push(id!);
-        dispatch('settings', { ...settings, capabilityIds });
+        capabilities.push({ capabilityId: id!, title: undefined });
+        dispatch('settings', { ...settings, capabilities });
 
         selectedCapability = undefined;
     }
 
     function moveUp(capabilityId: string) {
-        const index = capabilityIds.indexOf(capabilityId);
+        const index = capabilities.findIndex(c => c.capabilityId === capabilityId);
 
         if(index < 1) {
             return;
         }
 
-        const idPrevious = capabilityIds[index - 1];
+        const previous = capabilities[index - 1];
+        const current = capabilities[index];
 
-        const copy = [...capabilityIds];
-        copy[index - 1] = capabilityId;
-        copy[index] = idPrevious;
+        const copy = [...capabilities];
+        copy[index - 1] = current;
+        copy[index] = previous;
 
-        capabilityIds = copy;
-        dispatch('settings', { ...settings, capabilityIds });
+        capabilities = copy;
+        dispatch('settings', { ...settings, capabilities });
     }
 
     function moveDown(capabilityId: string) {
-        const index = capabilityIds.indexOf(capabilityId);
+        const index = capabilities.findIndex(c => c.capabilityId === capabilityId);
 
-        if(index == (capabilityIds.length - 1)) {
+        if(index == (capabilities.length - 1)) {
             return;
         }
 
-        const idNext = capabilityIds[index + 1];
+        const next = capabilities[index + 1];
+        const current = capabilities[index];
 
-        const copy = [...capabilityIds];
-        copy[index + 1] = capabilityId;
-        copy[index] = idNext;
+        const copy = [...capabilities];
+        copy[index + 1] = current;
+        copy[index] = next;
 
-        capabilityIds = copy;
-        dispatch('settings', { ...settings, capabilityIds });
+        capabilities = copy;
+        dispatch('settings', { ...settings, capabilities });
     }
 
     function remove(capabilityId: string) {
-        capabilityIds = capabilityIds.filter(cId => cId !== capabilityId);
-        dispatch('settings', { ...settings, capabilityIds });
+        capabilities = capabilities.filter(c => c.capabilityId !== capabilityId);
+        dispatch('settings', { ...settings, capabilities });
+    }
+
+    function updateCapability(index: number, capability: Capability_v3) {
+        const copy = [...capabilities];
+        copy[index] = capability;
+
+        dispatch('settings', { ...settings, capabilities: copy });
     }
 </script>
 
@@ -124,35 +128,20 @@
         <Divider.Label slot="label">Capabilities</Divider.Label>
     </Divider>
 
-    <div>
+    <div>        
         <List>
             {#each capabilities as capability, i}
                 <List.Item class="pt-1 pb-1">
-                    {#await $homey.baseUrl then url}
-                        {#if capability.iconObj?.url}
-                            <img src={url + capability.iconObj.url} alt={capability.title} class="h-6 w-6 mr-2" />
-                        {/if}
-                    {/await}
-                    <div class="my-auto">{capability.title}</div>
-                    <div style="flex-grow: 1"></div>
-
-                    {#if i > 0}
-                        <Button shape="circle" on:click={() => moveUp(capability.id)}>
-                            <Button.Icon data={mdiArrowUp} />
-                        </Button>
-                    {/if}
-
-                    {#if i < (capabilities.length - 1)}
-                        <Button shape="circle" on:click={() => moveDown(capability.id)}>
-                            <Button.Icon data={mdiArrowDown} />
-                        </Button>
-                    {:else}
-                        <Button shape="circle"></Button>
-                    {/if}
-
-                    <Button shape="circle" on:click={() => remove(capability.id)}>
-                        <Button.Icon data={mdiDelete} />
-                    </Button>
+                    <CapabilityEditorLine 
+                        settings={capability} 
+                        capability={device.capabilitiesObj[capability.capabilityId]}
+                        index={i}
+                        capabilities={capabilities.length}
+                        on:settings={e => updateCapability(i, e.detail)}
+                        on:moveUp={e => moveUp(capability.capabilityId)}
+                        on:moveDown={e => moveDown(capability.capabilityId)}
+                        on:remove={e => remove(capability.capabilityId)}
+                    />
                 </List.Item>
             {/each}
         </List>

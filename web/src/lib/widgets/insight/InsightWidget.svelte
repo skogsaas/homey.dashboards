@@ -6,19 +6,18 @@
     import 'chartjs-adapter-date-fns';
 
     import type InsightSettings from './InsightSettings';
-    import type { Series_v3 } from './InsightSettings';
+    import type { Series_v4 } from './InsightSettings';
+    import { colors } from './colors';
 
     import type { Log, LogEntries, LogMap } from '$lib/types/Homey';
     
     import { onDestroy, } from 'svelte';
     import { dateFnsLocale } from '$lib/stores/i18n';
     
-    const colors = ['#36a2eb', '#ff6384', '#4bc0c0', '#ff9f40', '#9966ff'];
-
     export let settings: InsightSettings;
 
     let resolution: string;
-    let series: Series_v3[];
+    let series: Series_v4[];
 
     $: onSettings(settings);
     $: onInsights($insights);
@@ -146,12 +145,17 @@
         // Create time series
         let timeoutMs = 999999999;
 
-        for(var i = 0; i < series.length; i++) {
-            const t = await getTimeSeries(series[i], i);
+        try {
+            for(var i = 0; i < series.length; i++) {
+                const t = await getTimeSeries(series[i], i);
 
-            if(t > 0 && t < timeoutMs) {
-                timeoutMs = t;
+                if(t > 0 && t < timeoutMs) {
+                    timeoutMs = t;
+                }
             }
+        }
+        catch(e) {
+            // Ignore for now.
         }
 
         if(data.datasets.length > series.length) {
@@ -166,7 +170,7 @@
         }
     };
 
-    async function getTimeSeries(series: Series_v3, index: number) : Promise<number> {
+    async function getTimeSeries(series: Series_v4, index: number) : Promise<number> {
         if(series.insightId === undefined) {
             return -1;
         }
@@ -184,9 +188,11 @@
         const timeSeries = resample(entries, aggregation, sampleRate, log.decimals);
 
         data.datasets[index] = {
-            label: getOwnerName(log.ownerUri) + ' - ' + log.title,
-            type: 'line',
-            borderColor: colors[index],
+            label: series.title ?? (getOwnerName(log.ownerUri) + ' - ' + log.title),
+            type: series.type ?? 'line',
+            borderColor: series.borderColor ?? colors[index],
+            backgroundColor: series.backgroundColor ?? colors[index],
+            fill: series.fill,
             data: timeSeries,
             tension: 0.5,
             yAxisID: 'y' + log.units

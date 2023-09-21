@@ -16,7 +16,7 @@
     export let controllable: boolean;
     export let mode: 'item'|'view';
 
-    let value: string;
+    let value: string | undefined;
     $: disabled = !controllable || $editing;
 
     $: onValue(value);
@@ -25,8 +25,8 @@
         value = capability.value;
     })
 
-    async function onValue(v: string) {
-        if(capability.setable &&  v !== capability?.value) {
+    async function onValue(v: string | undefined) {
+        if(capability.setable &&  v !== capability?.value && v !== undefined) {
             if(!disabled) {
                 await device.setCapabilityValue({ 
                     deviceId: device.id,

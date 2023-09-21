@@ -101,7 +101,7 @@
         }
 
         localDashboards.delete(dashboard);
-        currentDashboard.set(undefined);
+        currentDashboard.set(undefined!);
 
         await goto(base + '/');
     }
@@ -130,3 +130,11 @@
         <h1 class="text-center pt-8 pb-8">Unable to find dashboard: {dashboardId}</h1>
     {/if}
 </div>
+
+<ConfirmDialog 
+    bind:open={deleteDashboardOpen} 
+    text="Are you sure you want to delete this dashboard?" 
+    title="Confirm delete"
+    confirmText="Delete"
+    cancelText="Cancel"
+    on:confirm={() => deleteDashboard()} />
