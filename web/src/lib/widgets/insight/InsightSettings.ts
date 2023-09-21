@@ -58,7 +58,9 @@ export function migrate(settings: any) : any {
 
 function migrate_v3_v4(v3: InsightSettings_v3) : InsightSettings_v4 {
     const settings: InsightSettings_v4 = {
-        ...v3,
+        id: v3.id,
+        type: v3.type,
+        version: 4,
         series: v3.series.map(s => ({ ...s, type: 'line' }))
     }
 
