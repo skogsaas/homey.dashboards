@@ -29,7 +29,7 @@
     let localKey: string = '';
     let localKeyError: string | undefined;
     let localKeyLoading: Promise<Homey | undefined> | undefined;
-    let localHosting: boolean = true;
+    let localHosting: boolean = false;
     let localHomeyId: string = '';
 
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
@@ -163,7 +163,7 @@
                             <Input.Label slot="label">Homey API-key</Input.Label>
                         </Input>
 
-                            <Button type="primary" disabled={localKey === '' || (!localHosting && localHomeyId.length != 24)} on:click={verifyApiKey}>Verify</Button>
+                        <Button type="primary" disabled={localKey === '' || (!localHosting && localHomeyId.length != 24)} on:click={verifyApiKey}>Verify</Button>
                         
                         {#await localKeyLoading}
                             <Progress size="xs" indeterminate value={0} />
