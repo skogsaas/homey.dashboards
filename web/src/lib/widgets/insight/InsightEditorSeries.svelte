@@ -78,8 +78,8 @@
         insightId = series.insightId;
         title = series.title;
         type = types.find(t => t.value === (series.type ?? 'line'))!;
-        borderColor = stringToRgba(series.borderColor ?? colors[index]);
-        backgroundColor = stringToRgba(series.backgroundColor ?? colors[index]);
+        borderColor = stringToRgba(series.borderColor ?? colors[index % colors.length]);
+        backgroundColor = stringToRgba(series.backgroundColor ?? colors[index % colors.length]);
         fill = series.fill ?? false;
         aggregation = aggregations.find(a => a.value === (series?.aggregation ?? 'none'))!;
         sampleRate = sampleRates.find(r => r.value === ('' + (series?.sampleRate ?? 60)))!;

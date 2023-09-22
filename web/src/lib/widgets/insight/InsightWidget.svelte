@@ -190,8 +190,8 @@
         data.datasets[index] = {
             label: series.title ?? (getOwnerName(log.ownerUri) + ' - ' + log.title),
             type: series.type ?? 'line',
-            borderColor: series.borderColor ?? colors[index],
-            backgroundColor: series.backgroundColor ?? colors[index],
+            borderColor: series.borderColor ?? colors[index % colors.length],
+            backgroundColor: series.backgroundColor ?? colors[index % colors.length],
             fill: series.fill,
             data: timeSeries,
             tension: 0.5,

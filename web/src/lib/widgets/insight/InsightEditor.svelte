@@ -126,7 +126,7 @@
 <Accordion class="mt-4">
     {#each series as s, i}
         <Accordion.Item open={openInsightId === s.insightId} class="overflow-visible">
-            <Accordion.Item.Title slot="title" on:click={() => openInsightId = s.insightId}>
+            <Accordion.Item.Title slot="title" on:click={() => openInsightId !== s.insightId ? (openInsightId = s.insightId) : (openInsightId = undefined)}>
                 <div>
                     <Button class="mr-4" on:click={() => removeInsight(i)}>
                         <Button.Icon slot="icon" data={mdiDelete} />

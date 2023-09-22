@@ -8,6 +8,7 @@
 
     const dispatcher = createEventDispatcher();
 
+    export let settings: Capability_v3;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
@@ -47,7 +48,7 @@
                 bind:on={value}
             />
 
-            <span>{capability.title}</span>
+            <span>{settings.title ?? capability.title}</span>
             <span class="font-extralight">{formatDistance(new Date(capability.lastUpdated), new Date(), { addSuffix: true })}</span>
         </div>
     {/if}

@@ -8,6 +8,7 @@
 
     const dispatcher = createEventDispatcher();
 
+    export let settings: Capability_v3;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
@@ -52,7 +53,7 @@
             <div class="mx-auto">
                 <div class="flex flex-col items-center">
                     <h1>{formatValue(value) ?? '...'} {capability?.units ?? ''}</h1>
-                    <span>{capability.title}</span>
+                    <span>{settings.title ?? capability.title}</span>
                 </div>
             </div>
 

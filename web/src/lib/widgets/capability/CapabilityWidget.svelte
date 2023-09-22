@@ -21,6 +21,7 @@
     export let settings: CapabilitySettings;
 
     let viewOpen: boolean = false;
+    let viewSettings: Capability_v3 | undefined;
     let viewCapability: CapabilityObj | undefined;
     let viewClasses: string = '';
 
@@ -78,39 +79,6 @@
         });
     }
 
-    /*
-    function getComponent(capability: CapabilityObj) {
-        if(capability === undefined) 
-        {
-            return Sensor;
-        }
-
-        if(capability.setable) {
-            switch(capability.type) {
-                case 'boolean':
-                    return capability.getable ? Toggle : Button;
-                case 'number':
-                    return Slider;
-                case 'string': // TODO: Implement some kind of input for this
-                default:
-                    return Sensor;
-            }
-        }
-
-        if(capability.getable) {
-            switch(capability.type) {
-                case 'boolean':
-                case 'number':
-                case 'string':
-                default:
-                    return Sensor;
-            }
-        }
-
-        return Sensor;
-    }
-    */
-
     function getComponent(capability: CapabilityObj) {
         if(device !== undefined) {
             for(var component of device.ui.components) {
@@ -146,8 +114,9 @@
         return Sensor;
     }
 
-    function openView(capability: CapabilityObj) {
+    function openView(s: Capability_v3, capability: CapabilityObj) {
         if(!$editing) {
+            viewSettings = s;
             viewClasses = '';
             viewCapability = capability;
             viewOpen = true;
@@ -185,7 +154,7 @@
                     class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer"
                 >
                     <div 
-                        on:click={() => openView(capabilityMap[capability.capabilityId])} 
+                        on:click={() => openView(capability, capabilityMap[capability.capabilityId])} 
                         class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap"
                     >
                         {capability.title ?? capabilityMap[capability.capabilityId].title}
@@ -193,6 +162,7 @@
                     
                     <svelte:component 
                         this={getComponent(capabilityMap[capability.capabilityId])} 
+                        settings={capability}
                         {device}
                         capability={capabilityMap[capability.capabilityId]} 
                         {controllable}
@@ -213,6 +183,7 @@
                 <Modal.Content.Body slot="body">
                     <svelte:component 
                         this={getComponent(viewCapability)} 
+                        settings={viewSettings}
                         {controllable}
                         {device}
                         capability={viewCapability} 

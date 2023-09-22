@@ -11,6 +11,7 @@
     
     const dispatcher = createEventDispatcher();
 
+    export let settings: Capability_v3;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
