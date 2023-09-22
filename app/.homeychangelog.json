@@ -31,5 +31,8 @@
   },
   "0.10.2": {
     "en": "Fix exception when selecting device"
+  },
+  "0.11.2": {
+    "en": "Added Slider widget, custom insight colors and override titles."
   }
 }
