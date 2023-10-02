@@ -22,7 +22,7 @@
 {#if dashboardId === undefined}
     <span>Dashboard not configured</span>
 {:else}
-    <div class="w-full h-full flex justify-center items-center" on:click|stopPropagation>
+    <div class="w-full h-full flex justify-center items-center" on:click={e => { if(!$editing) { e.stopPropagation(); } }}>
         {#if settings.iconId !== undefined}
             <Icon data={getIcon(settings.iconId)} class="mr-1" />
         {/if}
