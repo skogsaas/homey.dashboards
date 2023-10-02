@@ -46,12 +46,18 @@
 
 {#if capability !== undefined}
     {#if mode === 'card'}
-        <Toggle
-            name="toggle"
-            bind:on={value}
-        />
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div on:click={e => { if(!$editing) { e.stopPropagation(); } }}>
+            <Toggle
+                name="toggle"
+                bind:on={value}
+            />
+        </div>
     {:else}
-        <div class="flex items-center w-full">
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div class="flex items-center w-full" on:click={e => { if(!$editing) { e.stopPropagation(); } }}>
             <h3>{settings.title ?? capability.title}</h3>
             <span class="font-extralight ml-2 text-xs mr-auto">{formatDistance(new Date(capability.lastUpdated), new Date(), { addSuffix: true })}</span>
 

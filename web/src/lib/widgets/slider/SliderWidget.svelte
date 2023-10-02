@@ -79,19 +79,23 @@
             </div>
         </div>
 
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div class="flex flex-row mt-2">
             {#if !settings.hideMinMax}
                 <span class="whitespace-nowrap mr-4">{formatValue(capability.min)} {capability.units ?? '%'}</span>
             {/if}
 
-            <Slider 
-                class="w-full"
-                bind:value={value}
-                min={capability.min} 
-                max={capability.max} 
-                step={getStep(capability)}
-                disabled={disabled} 
-            />
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div class="w-full h-full" on:click|stopPropagation>
+                <Slider 
+                    class="w-full"
+                    bind:value={value}
+                    min={capability.min} 
+                    max={capability.max} 
+                    step={getStep(capability)}
+                    disabled={disabled} 
+                />
+            </div>
             
             {#if !settings.hideMinMax}
                 <span class="whitespace-nowrap ml-4">{formatValue(capability.max)} {capability.units ?? '%'}</span>

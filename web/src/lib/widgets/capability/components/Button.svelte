@@ -28,25 +28,15 @@
 </script>
 
 {#if capability}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-    {#if !$editing}
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <div on:click|stopPropagation>
-            {#if mode === 'card'}
-                <Button type="primary" on:click={() => setValue(true)} {disabled}>{settings.title ?? capability.title}</Button>
-            {:else}
-                <div class="flex justify-center">
-                    <Button size="xl" type="primary" on:click={() => setValue(true)} {disabled}>{settings.title ?? capability.title}</Button>
-                </div>
-            {/if}
-        </div>
-    {:else}
+    <div on:click={e => { if(!$editing) { e.stopPropagation(); } }}>
         {#if mode === 'card'}
-            <Button type="primary" {disabled}>{settings.title ?? capability.title}</Button>
+            <Button type="primary" on:click={() => setValue(true)} {disabled}>{settings.title ?? capability.title}</Button>
         {:else}
             <div class="flex justify-center">
-                <Button size="xl" type="primary" {disabled}>{settings.title ?? capability.title}</Button>
+                <Button size="xl" type="primary" on:click={() => setValue(true)} {disabled}>{settings.title ?? capability.title}</Button>
             </div>
         {/if}
-    {/if}
+    </div>
 {/if}
