@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
+    import { onMount, createEventDispatcher } from 'svelte';
 
-    import { devices } from '$lib/stores/homey';
+    import { devices, homey } from '$lib/stores/homey';
 
     // UI elements
     import DevicePicker from '$lib/components/DevicePicker.svelte';
@@ -10,16 +10,14 @@
     import Input from "stwui/input";
 
     import type { DeviceObj } from '$lib/types/Homey';
-    import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
-    import type { CapabilitySettings_v4, Capability_v3 } from './CapabilitySettings';
+    import type { DeviceSettings_v1 } from './DeviceSettings';
     import IconPicker from '$lib/components/IconPicker.svelte';
 
     const dispatch = createEventDispatcher();
     
-    export let settings: CapabilitySettings_v4;
+    export let settings: DeviceSettings_v1;
 
     let deviceId: string | undefined;
-    let capabilityId: string | undefined;
     let title: string | undefined;
     let iconId: string | undefined;
 
@@ -28,24 +26,14 @@
     $: onSettings(settings);
 
     $: device = deviceId ? $devices[deviceId] : undefined;
-    $: capability = capabilityId && device ? device.capabilitiesObj[capabilityId] : undefined;
-    
     $: flatDevices = Object.values($devices);
-    $: flatCapabilities = (device?.capabilitiesObj ? Object.values(device.capabilitiesObj) : [])
-            .sort((a, b) => {
-                if(a.title === b.title) return 0;
-                if(a.title < b.title) return -1;
-                return 1;
-            });
 
     $: onDevice(deviceId);
-    $: onCapability(capabilityId);
     $: onTitle(title);
     $: onIcon(iconId);
 
-    function onSettings(s: CapabilitySettings_v4) {
+    function onSettings(s: DeviceSettings_v1) {
         deviceId = s?.deviceId;
-        capabilityId = s?.capabilityId
         title = s?.title;
         iconId = s?.iconId;
     }
@@ -53,12 +41,6 @@
     function onDevice(id: string | undefined) {
         if(id !== settings.deviceId) {
             dispatch('settings', { ...settings, deviceId: id, capabilityId: undefined });
-        }
-    }
-
-    function onCapability(id: string | undefined) {
-        if(id !== settings.capabilityId) {
-            dispatch('settings', { ...settings, capabilityId: id });
         }
     }
 
@@ -71,7 +53,7 @@
     }
 
     function onIcon(id: string | undefined) {
-        if(id !== settings.capabilityId) {
+        if(id !== settings.iconId) {
             dispatch('settings', { ...settings, iconId: id });
         }
     }
@@ -83,14 +65,10 @@
 
 {#if device}
     <div class="mt-2">
-        <CapabilityPicker bind:capabilityId={capabilityId} capabilities={flatCapabilities} />
+        <Input name="title" bind:value={title} placeholder={device.name} />
+    </div>
+
+    <div class="mt-2">
+        <IconPicker bind:iconId={iconId} />
     </div>
 {/if}
-
-{#if capability}
-    <Input name="title" bind:value={title} placeholder={capability.title} class="mt-2" />
-{/if}
-
-<div class="mt-2">
-    <IconPicker bind:iconId={iconId} />
-</div>

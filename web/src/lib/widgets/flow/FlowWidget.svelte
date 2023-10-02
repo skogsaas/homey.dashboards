@@ -6,10 +6,11 @@
 
     import { editing } from '$lib/stores/dashboard';
     
-    import { mdiPlay } from '$lib/components/icons';
     import IconButton from '$lib/components/IconButton.svelte';
+    import { getIcon } from '$lib/components/icons/utils';
 
     export let settings: FlowSettings;
+    export let mode: 'card'|'view';
 
     $: flow = settings?.flowId !== undefined ? $basicFlows[settings.flowId] as Flow ?? $advancedFlows[settings.flowId] as Flow : undefined;   
 
@@ -25,12 +26,15 @@
 </script>
 
 {#if flow === undefined}
-    <span>Error</span>
+    {#if settings.flowId === undefined}
+        <span>Flow not configured</span>
+    {:else}
+        <span>Flow not found</span>
+    {/if}
 {:else}
-<div class="flex content-center h-full">
-    <IconButton data={mdiPlay} class="my-auto ml-1 bg-primary text-primary-content" on:click={() => triggerFlow()} size="60px" />
-    
-    <div class="my-auto ml-3 mr-1">{flow.name}</div>
-</div>
-    
+    <div class="flex content-center h-full">
+        <IconButton data={getIcon(settings.iconId ?? 'play')} class="my-auto ml-1 bg-primary text-primary-content" on:click={() => triggerFlow()} size="60px" />
+        
+        <div class="my-auto ml-3 mr-1">{flow.name}</div>
+    </div>
 {/if}

@@ -16,6 +16,7 @@
     import Input from 'stwui/input';
     import Button from 'stwui/button';
     import Progress from 'stwui/progress';
+    import TextArea from "stwui/text-area";
 
     import tooltip from 'stwui/actions/tooltip'
 
@@ -124,8 +125,17 @@
                 {/if}
             </div>
         {:else}
-            <p>Only local dashboards has settings for now. If you want to edit the name of this dashboard, rename the dashboard in the Homey app.</p>
+            <p>If you want to edit the name of this dashboard, rename the dashboard in the Homey app.</p>
         {/if}
+
+        <p class="mt-4">Raw settings for this dashboard:</p>
+
+        <TextArea  
+            value={JSON.stringify(dashboard, null, 2)} 
+            name="json"
+            placeholder="settings"
+            readonly
+        />
     {:else}
         <h1 class="text-center pt-8 pb-8">Unable to find dashboard: {dashboardId}</h1>
     {/if}

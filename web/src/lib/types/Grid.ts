@@ -10,6 +10,17 @@ export interface Grid {
 
 export interface GridItem {
     id: string;
+    version: number;
+    
+    card: WidgetSettings[];
+    view: WidgetSettings[];
+    
+    [key: number]: GridBreakpointItem;
+}
+
+export interface GridItem_v0 {
+    id: string;
+    version: number;
     settings: WidgetSettings;
     
     [key: number]: GridBreakpointItem;

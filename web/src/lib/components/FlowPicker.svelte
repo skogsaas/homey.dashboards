@@ -10,6 +10,8 @@
     import List from "stwui/list";
 
     import { flowFolders } from "$lib/stores/homey";
+    import IconButton from "./IconButton.svelte";
+    import { mdiDelete } from "./icons";
 
     export let flowId: string | undefined;
     export let flows: Flow[] = [];
@@ -72,7 +74,10 @@
 
 <Button on:click={() => open = true} class="w-full justify-start border border-border">
     {#if selected !== undefined}
-        {selected.folders} - {selected.flow.name}
+        <div class="flex justify-between w-full">
+            <span>{selected.folders} - {selected.flow.name}</span>
+            <IconButton data={mdiDelete} size="14px" on:click={() => flowId = undefined} />
+        </div>
     {:else if flowId !== undefined}
         Flow not found
     {:else}

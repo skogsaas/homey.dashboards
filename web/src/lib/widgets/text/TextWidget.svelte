@@ -1,39 +1,31 @@
 <script lang="ts">
     import type TextSettings from './TextSettings';
+    
     export let settings: TextSettings;
+    export let mode: 'card'|'view';
 
-    $: text = settings?.text ?? '';
+    $: text = settings?.text;
     $: size = settings?.size;
 </script>
 
 <div class="align-center">
-    {#if size == 1}
-        <h1 class="no-margin">{text}</h1>
-    {:else if size == 2}
-        <h2 class="no-margin">{text}</h2>
-    {:else if size == 3}
-        <h3 class="no-margin">{text}</h3>
-    {:else if size == 4}
-        <h4 class="no-margin">{text}</h4>
-    {:else if size == 5}
-        <h5 class="no-margin">{text}</h5>
-    {:else if size == 6}
-        <h6 class="no-margin">{text}</h6>
+    {#if text === undefined}
+        <span>Text not configured</span>
     {:else}
-        <div>{text}</div>
+        {#if size == 1}
+            <h1 class="m-0">{text}</h1>
+        {:else if size == 2}
+            <h2 class="m-0">{text}</h2>
+        {:else if size == 3}
+            <h3 class="m-0">{text}</h3>
+        {:else if size == 4}
+            <h4 class="m-0">{text}</h4>
+        {:else if size == 5}
+            <h5 class="m-0">{text}</h5>
+        {:else if size == 6}
+            <h6 class="m-0">{text}</h6>
+        {:else}
+            <div>{text}</div>
+        {/if}
     {/if}
 </div>
-
-<style>
-    .no-margin {
-        margin-top: 0px;
-        margin-bottom: 0px;
-    }
-
-    .align-center {
-        display: flex;
-        height: 100%;
-        justify-content: center;
-        align-items: center;
-    }
-</style>

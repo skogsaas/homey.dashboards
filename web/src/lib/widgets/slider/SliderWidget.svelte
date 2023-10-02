@@ -8,6 +8,7 @@
     import Slider from 'stwui/slider';
     
     export let settings: SliderSettings;
+    export let mode: 'card'|'view';
 
     $: device = $devices[settings.deviceId ?? ''];
     $: capability = device?.capabilitiesObj ? device.capabilitiesObj[settings.capabilityId ?? ''] : undefined;
@@ -63,54 +64,38 @@
     }
 </script>
 
-<div class="flex items-center h-12">
-    {#if device === undefined}
-        {#if settings?.deviceId !== undefined}
-            <span>Error: device not found</span>
-        {/if}
+{#if capability === undefined}
+    {#if settings.capabilityId !== undefined}
+        <span>Capability not found</span>
     {:else}
-        {#await $homey.baseUrl}
-            ...
-        {:then url}
-            <img class="w-8 h-8 m-1 text-default" src={url + device?.iconObj.url} alt={device?.icon} />
-        {/await}
-
-        <span class="w-full overflow-hidden overflow-ellipsis">{device?.name}</span>
+        <span>Slider not configured</span>
     {/if}
-</div>
-
-<div class="w-full h-full pl-1 pr-1">
-    {#if capability === undefined}
-        {#if settings.capabilityId !== undefined}
-            <span>Error: capability not found</span>
-        {/if}
-    {:else}
-        <div class="flex flex-col w-full">
-            <div class="mx-auto">
-                <div class="flex flex-col items-center">
-                    <h1>{formatValue(value) ?? '...'} {capability?.units ?? ''}</h1>
-                    <span>{settings?.title ?? capability.title}</span>
-                </div>
-            </div>
-
-            <div class="flex flex-row mt-2">
-                {#if !settings.hideMinMax}
-                    <span class="whitespace-nowrap mr-4">{formatValue(capability.min)} {capability.units ?? ''}</span>
-                {/if}
-
-                <Slider 
-                    class="w-full"
-                    bind:value={value}
-                    min={capability.min} 
-                    max={capability.max} 
-                    step={getStep(capability)}
-                    disabled={disabled} 
-                />
-                
-                {#if !settings.hideMinMax}
-                    <span class="whitespace-nowrap ml-4">{formatValue(capability.max)} {capability.units ?? ''}</span>
-                {/if}
+{:else}
+    <div class="flex flex-col w-full h-full pl-1 pr-1">
+        <div class="mx-auto">
+            <div class="flex flex-col items-center">
+                <h1>{formatValue(value) ?? '...'} {capability?.units ?? '%'}</h1>
+                <span>{settings?.title ?? capability.title}</span>
             </div>
         </div>
-    {/if}
-</div>
+
+        <div class="flex flex-row mt-2">
+            {#if !settings.hideMinMax}
+                <span class="whitespace-nowrap mr-4">{formatValue(capability.min)} {capability.units ?? '%'}</span>
+            {/if}
+
+            <Slider 
+                class="w-full"
+                bind:value={value}
+                min={capability.min} 
+                max={capability.max} 
+                step={getStep(capability)}
+                disabled={disabled} 
+            />
+            
+            {#if !settings.hideMinMax}
+                <span class="whitespace-nowrap ml-4">{formatValue(capability.max)} {capability.units ?? '%'}</span>
+            {/if}
+        </div>
+    </div>
+{/if}

@@ -1,21 +1,17 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from 'svelte';
+    import { onMount } from 'svelte';
 
-    import { mdiAlarm, mdiAlert, mdiArrowRight, mdiCheck } from '$lib/components/icons';
     import { editing } from '$lib/stores/dashboard';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
-    import Icon from 'stwui/icon';
     import List from 'stwui/list';
-    import ButtonGroup from 'stwui/button-group';
-    
-    const dispatcher = createEventDispatcher();
+    import type { CapabilitySettings_v4 } from '../CapabilitySettings';
 
-    export let settings: Capability_v3;
+    export let settings: CapabilitySettings_v4;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
-    export let mode: 'item'|'view';
+    export let mode: 'card'|'view';
 
     let value: string | undefined;
     $: disabled = !controllable || $editing;
@@ -29,18 +25,22 @@
     async function onValue(v: string | undefined) {
         if(capability.setable &&  v !== capability?.value && v !== undefined) {
             if(!disabled) {
-                await device.setCapabilityValue({ 
-                    deviceId: device.id,
-                    capabilityId: capability.id,
-                    value: v
-                });
+                await setCapabilityValue(v);
             }
         }
+    }
+
+    async function setCapabilityValue(value: number|boolean|string) {
+        await device.setCapabilityValue({ 
+            deviceId: device.id,
+            capabilityId: capability.id,
+            value
+        });
     }
 </script>
 
 {#if capability !== undefined}
-    {#if mode === 'item'}
+    {#if mode === 'card'}
         <span class="whitespace-nowrap">{capability.value ?? '...'} {capability.units ?? ''}</span>
     {:else}
         <div class="flex flex-col w-full">

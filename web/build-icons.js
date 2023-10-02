@@ -13,7 +13,21 @@ function camelize(str) {
         .replace(/\s+/g, '');
 }
 
-const body = meta.map(icon => `export const ${camelize('mdi ' + icon.name)}: string = '<svg viewBox="0 0 24 24"><path d="${icon.path}" /></svg>';\n`).join('');
+const body = meta
+    .filter(icon => !icon.deprecated)
+    .map(icon => `export const ${camelize('mdi ' + icon.name)}: string = '<svg viewBox="0 0 24 24"><path d="${icon.path}" /></svg>';\n`)
+    .join('');
 
-util.write(fileName, body);
+const lookup = meta
+    .filter(icon => !icon.deprecated)
+    .map(icon => `{ "id": "${icon.name}", "icon": ${camelize('mdi ' + icon.name)} }`)
+    .join(',\n');
+
+const result = body + 
+    "export interface IconMetadata { id: string; icon: string; }\n" +
+    "export const lookup: IconMetadata[] = [\n" +
+    lookup + 
+    "];";
+
+util.write(fileName, result);
 console.log(`\u2714 Build ${version}`);

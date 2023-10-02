@@ -1,7 +1,14 @@
 import type { WidgetSettings } from "../../types/Widgets";
 import { v4 as uuid } from 'uuid';
 
-export default interface CapabilitySettings_v3 extends WidgetSettings {
+export interface CapabilitySettings_v4 extends WidgetSettings {
+    deviceId: string | undefined;
+    capabilityId: string | undefined;
+    title: string | undefined;
+    iconId: string | undefined;
+}
+
+export interface CapabilitySettings_v3 extends WidgetSettings {
     deviceId: string | undefined;
     capabilities: Capability_v3[] | undefined;
 }
@@ -31,6 +38,9 @@ export function create() : WidgetSettings {
 
 export function migrate(settings: any) : any {
     switch(settings.version) {
+        case 4: return settings;
+
+        // This migration should be handled by GridItem migrations
         case 3: return settings;
         
         case 2: return migrate_v2_v3(settings as CapabilitySettings_v2);

@@ -2,17 +2,14 @@
     import { editing } from '$lib/stores/dashboard';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
-    import { createEventDispatcher } from 'svelte';
-
     import Slider from 'stwui/slider';
+    import type { CapabilitySettings_v4 } from '../CapabilitySettings';
 
-    const dispatcher = createEventDispatcher();
-
-    export let settings: Capability_v3;
+    export let settings: CapabilitySettings_v4;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
-    export let mode: 'item'|'view';
+    export let mode: 'card'|'view';
 
     let value: number;
     $: disabled = !controllable || $editing;
@@ -24,10 +21,10 @@
         value = c.value;
     }
 
-    function onValue(v: number) {
+    async function onValue(v: number) {
         if(v !== capability?.value) {
             if(!disabled) {
-                dispatcher('value', v);
+                await setCapabilityValue(v);
             }
         }
     }
@@ -43,22 +40,30 @@
 
         return v.toFixed(capability.decimals);
     }
+
+    async function setCapabilityValue(v: number|boolean|string) {
+        await device.setCapabilityValue({ 
+            deviceId: device.id,
+            capabilityId: capability.id,
+            value: v
+        });
+    }
 </script>
 
 {#if capability !== undefined}
-    {#if mode === 'item'}
-        <span class="whitespace-nowrap cursor-pointer">{formatValue(capability.value) ?? '...'} {capability.units ?? '%'}</span>
+    {#if mode === 'card'}
+        <span class="whitespace-nowrap cursor-pointer">{formatValue(value) ?? '...'} {capability.units ?? '%'}</span>
     {:else}
         <div class="flex flex-col w-full">
             <div class="mx-auto">
                 <div class="flex flex-col items-center">
-                    <h1>{formatValue(value) ?? '...'} {capability?.units ?? ''}</h1>
+                    <h1>{formatValue(value) ?? '...'} {capability?.units ?? '%'}</h1>
                     <span>{settings.title ?? capability.title}</span>
                 </div>
             </div>
 
             <div class="flex flex-row mt-4">
-                <span class="whitespace-nowrap mr-4">{formatValue(capability.min)} {capability.units ?? ''}</span>
+                <span class="whitespace-nowrap mr-4">{formatValue(capability.min)} {capability.units ?? '%'}</span>
                 <Slider 
                     class="w-full"
                     bind:value={value}
@@ -67,7 +72,7 @@
                     step={capability.step ?? Math.pow(0.1, capability.decimals)}
                     disabled={disabled} 
                 />
-                <span class="whitespace-nowrap ml-4">{formatValue(capability.max)} {capability.units ?? ''}</span>
+                <span class="whitespace-nowrap ml-4">{formatValue(capability.max)} {capability.units ?? '%'}</span>
             </div>
         </div>
     {/if}

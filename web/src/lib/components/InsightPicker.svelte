@@ -81,9 +81,9 @@
 
 <Button on:click={() => open = true} class="w-full justify-start border border-border">
     {#if selected !== undefined}
-        {getOwnerName(selected.ownerUri)} - {selected.title}
+        <span>{getOwnerName(selected.ownerUri)} - {selected.title}</span>
     {:else if logId !== undefined}
-        Capability not found
+        Insight not found
     {:else}
         {placeholder}
     {/if}

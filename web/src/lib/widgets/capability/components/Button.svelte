@@ -3,31 +3,50 @@
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
     import Button from 'stwui/button';
-    import { createEventDispatcher } from 'svelte';
-    import type { Capability_v3 } from '../CapabilitySettings';
+    import type { CapabilitySettings_v4 } from '../CapabilitySettings';
 
-    const dispatcher = createEventDispatcher();
-
-    export let settings: Capability_v3;
+    export let settings: CapabilitySettings_v4;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
-    export let mode: 'item'|'view';
+    export let mode: 'card'|'view';
 
     //$: value = capability?.value;
     $: disabled = !controllable || $editing;
 
-    function setValue(value: boolean) {
-        dispatcher('value', value);
+    async function setValue(value: boolean) {
+        await setCapabilityValue(value);
+    }
+
+    async function setCapabilityValue(value: number|boolean|string) {
+        await device.setCapabilityValue({ 
+            deviceId: device.id,
+            capabilityId: capability.id,
+            value
+        });
     }
 </script>
 
 {#if capability}
-    {#if mode === 'item'}
-        <Button type="primary" on:click={() => setValue(true)} {disabled}>{settings.title ?? capability.title}</Button>
-    {:else}
-        <div class="flex justify-center">
-            <Button size="xl" type="primary" on:click={() => setValue(true)} {disabled}>{settings.title ?? capability.title}</Button>
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    {#if !$editing}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <div on:click|stopPropagation>
+            {#if mode === 'card'}
+                <Button type="primary" on:click={() => setValue(true)} {disabled}>{settings.title ?? capability.title}</Button>
+            {:else}
+                <div class="flex justify-center">
+                    <Button size="xl" type="primary" on:click={() => setValue(true)} {disabled}>{settings.title ?? capability.title}</Button>
+                </div>
+            {/if}
         </div>
+    {:else}
+        {#if mode === 'card'}
+            <Button type="primary" {disabled}>{settings.title ?? capability.title}</Button>
+        {:else}
+            <div class="flex justify-center">
+                <Button size="xl" type="primary" {disabled}>{settings.title ?? capability.title}</Button>
+            </div>
+        {/if}
     {/if}
 {/if}

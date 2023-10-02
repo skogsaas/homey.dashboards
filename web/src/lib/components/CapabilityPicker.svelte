@@ -10,6 +10,8 @@
     import List from "stwui/list";
 
     import { homey } from "$lib/stores/homey";
+    import IconButton from "./IconButton.svelte";
+    import { mdiDelete } from "./icons";
 
     export let capabilityId: string | undefined;
     export let capabilities: CapabilityObj[] = [];
@@ -51,13 +53,16 @@
 </script>
 
 <Button on:click={() => open = true} class="w-full justify-start border border-border">
+    <span class="mr-1">Capability:</span>
+
     {#if selected}
         {#if selected.iconObj?.url}
             {#await $homey.baseUrl then url}
-                <img src={url + selected.iconObj?.url} alt={selected.title} class="h-6 w-6 mr-2" />
+                <img src={url + selected.iconObj?.url} alt={selected.title} class="h-6 w-6 mr-2 dark:invert" />
             {/await}
         {/if}
-        {selected.title}
+        <span class="mr-auto">{selected.title}</span>
+        <IconButton data={mdiDelete} size="14px" on:click={() => capabilityId = undefined} />
     {:else if capabilityId !== undefined}
         Capability not found
     {:else}
@@ -81,7 +86,7 @@
                                         <List.Item.Content.Title slot="title" class="flex">
                                             {#await $homey.baseUrl then url}
                                                 {#if capability?.iconObj?.url}
-                                                    <img src={url + capability.iconObj.url} alt={capability.title} class="h-6 w-6 mr-2" />
+                                                    <img src={url + capability.iconObj.url} alt={capability.title} class="h-6 w-6 mr-2 dark:invert" />
                                                 {/if}
                                             {/await}
                                             {capability.title}

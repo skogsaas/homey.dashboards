@@ -1,26 +1,27 @@
 <script lang="ts">
-    import { mdiAlert, mdiCheck } from '$lib/components/icons';
+    import { mdiAlert, mdiCheck, mdiMinus } from '$lib/components/icons';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
     import { formatDistance } from 'date-fns'
 
     import Icon from 'stwui/icon';
+    import type { CapabilitySettings_v4 } from '../CapabilitySettings';
 
-    export let settings: Capability_v3;
+    export let settings: CapabilitySettings_v4;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
-    export let mode: 'item'|'view';
+    export let mode: 'card'|'view';
     
     $: value = capability?.value;
 </script>
 
 {#if capability !== undefined}
-    {#if mode === 'item'}
+    {#if mode === 'card'}
         {#if capability.id.startsWith('alarm_')}
             {#if value}
                 <Icon class="bg-warn-icon" data={mdiAlert} />
             {:else}
-                <Icon data={mdiCheck} />
+                <Icon data={mdiMinus} />
             {/if}
         {:else}
             {#if capability.type === 'boolean'}
@@ -32,12 +33,18 @@
             {/if}
         {/if}
     {:else}
-        <div class="flex flex-col w-full">
+        <div class="flex items-center w-full">
+                <h3>{settings.title ?? capability.title}</h3>
+
+                {#if capability.lastUpdated}
+                    <span class="font-extralight ml-2 text-xs mr-auto">- {formatDistance(new Date(capability.lastUpdated), new Date(), { addSuffix: true })}</span>
+                {/if}
+
             {#if capability.id.startsWith('alarm_')}
                 {#if value}
                     <Icon class="bg-warn-icon" data={mdiAlert} />
                 {:else}
-                    <Icon data={mdiCheck} />
+                    <Icon data={mdiMinus} />
                 {/if}
             {:else}
                 {#if capability.type === 'boolean'}
@@ -47,12 +54,6 @@
                 {:else}
                     <h1 class="whitespace-nowrap">{value} {capability?.units ?? ''}</h1>
                 {/if}
-            {/if}
-
-            <span>{settings.title ?? capability.title}</span>
-
-            {#if capability.lastUpdated}
-                <span class="font-extralight">{formatDistance(new Date(capability.lastUpdated), new Date(), { addSuffix: true })}</span>
             {/if}
         </div>
     {/if}

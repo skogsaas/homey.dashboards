@@ -7,6 +7,7 @@
     import type DashboardLinkSettings from "./DashboardLinkSettings";
 
     import Select from "stwui/select";
+    import IconPicker from '$lib/components/IconPicker.svelte';
 
     export let settings: DashboardLinkSettings;
 
@@ -19,6 +20,7 @@
 
     let size: Option;
     let dashboard: Option | undefined;
+    let iconId: string |undefined;
 
     const sizes = [
         { value: '', label: 'Text'},
@@ -28,13 +30,16 @@
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards })
         .map(d => ({ value: d.id, label: d.title }));
 
+    $: onSettings(settings);
     $: onDashboard(dashboard);
     $: onSize(size);
+    $: onIcon(iconId);
 
-    onMount(() => {
+    function onSettings(s: DashboardLinkSettings) {
         dashboard = dashboards.find(d => d.value === settings.dashboardId);
         size = sizes.find(s => s.value === (settings.size ?? ''))!;
-    });
+        iconId = settings.iconId;
+    }
 
     function onDashboard(option: Option | undefined) {
         if(option === undefined || option.value === settings.dashboardId) {
@@ -51,30 +56,41 @@
 
         dispatch('settings', { ...settings, size: Number(option.value) });
     }
+
+    function onIcon(id: string | undefined) {
+        if(id === settings.iconId) {
+            return;
+        }
+
+        dispatch('settings', { ...settings, iconId: id });
+    }
 </script>
 
-<div style="margin-top: 20px">
-    <Select 
-        bind:value={dashboard} 
-        placeholder="Dashboard"
-        name="dashboard"
-    >
-        <Select.Options slot="options">
-            {#each dashboards as option}
-                <Select.Options.Option {option} />
-            {/each}
-        </Select.Options>
-    </Select>
+<Select 
+    bind:value={dashboard} 
+    placeholder="Dashboard"
+    name="dashboard"
+>
+    <Select.Options slot="options">
+        {#each dashboards as option}
+            <Select.Options.Option {option} />
+        {/each}
+    </Select.Options>
+</Select>
 
-    <Select 
-        bind:value={size} 
-        placeholder="Font size"
-        name="size"
-    >
-        <Select.Options slot="options">
-            {#each sizes as option}
-                <Select.Options.Option {option} />
-            {/each}
-        </Select.Options>
-    </Select>
+<Select 
+    bind:value={size} 
+    placeholder="Font size"
+    name="size"
+    class="mt-2"
+>
+    <Select.Options slot="options">
+        {#each sizes as option}
+            <Select.Options.Option {option} />
+        {/each}
+    </Select.Options>
+</Select>
+
+<div class="mt-2">
+    <IconPicker bind:iconId={iconId} />
 </div>

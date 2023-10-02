@@ -15,6 +15,7 @@
     import { dateFnsLocale } from '$lib/stores/i18n';
     
     export let settings: InsightSettings;
+    export let mode: 'card'|'view';
 
     let resolution: string;
     let series: Series_v4[];
@@ -56,7 +57,7 @@
                         millisecond: 'HH:mm:ss.SSS',
                         second: 'HH:mm:ss',
                         minute: 'HH:mm',
-                        hour: 'HH:mm',
+                        hour: 'HH',
                         day: 'd MMM',
                         week: 'w, R',
                         month: 'MMM yyyy',
@@ -184,21 +185,28 @@
         const aggregation = series.aggregation ?? 'none';
         const sampleRate = series.sampleRate ?? 60;
 
-        const entries = await $homey.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
-        const timeSeries = resample(entries, aggregation, sampleRate, log.decimals);
+        try {
+            const entries = await $homey.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
+            const timeSeries = resample(entries, aggregation, sampleRate, log.decimals);
 
-        data.datasets[index] = {
-            label: series.title ?? (getOwnerName(log.ownerUri) + ' - ' + log.title),
-            type: series.type ?? 'line',
-            borderColor: series.borderColor ?? colors[index % colors.length],
-            backgroundColor: series.backgroundColor ?? colors[index % colors.length],
-            fill: series.fill,
-            data: timeSeries,
-            tension: 0.5,
-            yAxisID: 'y' + log.units
+            data.datasets[index] = {
+                label: series.title ?? (getOwnerName(log.ownerUri) + ' - ' + log.title),
+                type: series.type ?? 'line',
+                borderColor: series.borderColor ?? colors[index % colors.length],
+                backgroundColor: series.backgroundColor ?? colors[index % colors.length],
+                fill: series.fill,
+                data: timeSeries,
+                tension: 0.5,
+                yAxisID: 'y' + log.units
+            };
+
+            return Math.max(entries.step - entries.updatesIn, 10_000);
+        }
+        catch(e) {
+            // Do nothing for now.
         }
 
-        return entries.step - entries.updatesIn;
+        return 30_000; // By default refresh every 30 seconds
     }
 
     function resample(entries: LogEntries, aggregation: string, sampleRate: number, decimals: number | null) {
@@ -275,10 +283,10 @@
     }
 </script>
 
-        {#if series === undefined || series.length === 0}
-            <span>No series selected</span>
-        {:else}
-            <div class="w-full h-full">
-                <Chart bind:chart type="line" {data} {options} />
-            </div>
-        {/if}
+{#if series === undefined || series.length === 0}
+    <span>Insights not configured</span>
+{:else}
+    <div class="w-full" class:h-full={mode !== 'view'} class:h-96={mode === 'view'}>
+        <Chart bind:chart type="line" {data} {options} />
+    </div>
+{/if}

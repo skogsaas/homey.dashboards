@@ -1,14 +1,9 @@
 <script lang="ts">
-    import { devices, homey, scopes } from '$lib/stores/homey';
-    import { editing } from '$lib/stores/dashboard';
+    import { devices, scopes } from '$lib/stores/homey';
 
-    import type CapabilitySettings from './CapabilitySettings';
-    import type { Capability_v3 } from './CapabilitySettings';
-
-    import type { CapabilityEvent, CapabilityMap, CapabilityObj, DeviceObj } from '$lib/types/Homey';
+    import type { CapabilityEvent, CapabilityObj, DeviceObj } from '$lib/types/Homey';
     
-    import Portal from 'stwui/portal';
-    import Modal from 'stwui/modal';
+    import Icon from 'stwui/icon';
 
     import Slider from './components/Slider.svelte';
     import Sensor from './components/Sensor.svelte';
@@ -16,31 +11,29 @@
     import Button from './components/Button.svelte';
     import Thermostat from './components/Thermostat.svelte';
     import Picker from './components/Picker.svelte';
+    import type { CapabilitySettings_v4 } from './CapabilitySettings';
+    import { getIcon } from '$lib/components/icons/utils';
     
-
-    export let settings: CapabilitySettings;
-
-    let viewOpen: boolean = false;
-    let viewSettings: Capability_v3 | undefined;
-    let viewCapability: CapabilityObj | undefined;
-    let viewClasses: string = '';
+    export let settings: CapabilitySettings_v4;
+    export let mode: 'card'|'view';    
 
     let deviceId: string = '';
-    let capabilities: Capability_v3[] = [];
+    let capabilityId: string = '';
 
-    let device: DeviceObj;
-    let capabilityMap: CapabilityMap = {};
+    let device: DeviceObj | undefined;
+    let capability: CapabilityObj | undefined;
 
     $: onSettings(settings);
 
     $: latestDevice = $devices[deviceId];
+    $: capability = latestDevice && capabilityId ? latestDevice.capabilitiesObj[capabilityId] : undefined;
     $: controllable = $scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.control');
 
     $: onDevice(latestDevice);
 
-    function onSettings(s: CapabilitySettings) {
+    function onSettings(s: CapabilitySettings_v4) {
         deviceId = s.deviceId ?? '';
-        capabilities = s.capabilities ?? []; 
+        capabilityId = s.capabilityId ?? '';
     }
 
     function onDevice(d: DeviceObj) {
@@ -52,8 +45,6 @@
         if(d !== undefined) {
             device = d;
 
-            capabilityMap = {...device.capabilitiesObj};
-
             if(device.on !== undefined) {
                 device.on('capability', updateCapability);
             }
@@ -61,22 +52,9 @@
     }
 
     function updateCapability(event: CapabilityEvent) {
-        if(device !== undefined) {
-            const capability = device.capabilitiesObj[event.capabilityId];
-
-            if(capability !== undefined) {
-                // Trigger an update
-                capabilityMap = {...device.capabilitiesObj};
-            }
+        if(device !== undefined && event.capabilityId === capabilityId) {
+            capability = device.capabilitiesObj[event.capabilityId];
         }
-    }
-
-    async function setCapabilityValue(capabilityId: string, value: number|boolean|string) {
-        await device.setCapabilityValue({ 
-            deviceId: device.id,
-            capabilityId,
-            value
-        });
     }
 
     function getComponent(capability: CapabilityObj) {
@@ -113,89 +91,37 @@
 
         return Sensor;
     }
-
-    function openView(s: Capability_v3, capability: CapabilityObj) {
-        if(!$editing) {
-            viewSettings = s;
-            viewClasses = '';
-            viewCapability = capability;
-            viewOpen = true;
-        }
-    }
 </script>
 
-<div class="flex items-center h-12">
-    {#if device == undefined}
-        {#if settings?.deviceId !== undefined}
-            <span>Error</span>
+{#if device !== undefined && capability !== undefined}
+    <div class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer">
+        {#if settings.iconId !== undefined}
+            <Icon data={getIcon(settings.iconId)} class="mr-1" />
         {/if}
-    {:else}
-        {#await $homey.baseUrl}
-            ...
-        {:then url}
-            <img class="w-8 h-8 m-1 text-default" src={url + device?.iconObj.url} alt={device?.icon} />
-        {/await}
 
-        <span class="w-full overflow-hidden overflow-ellipsis">{device?.name}</span>
-    {/if}
-</div>
-
-<div class="flex flex-col w-full overflow-hidden">
-    {#if device === undefined}
-        {#if settings.deviceId !== undefined}
-            <span class="w-full h-8 overflow-hidden overflow-ellipsis">Device not found.</span>
+        {#if mode === 'card'}
+            <div class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap flex-grow">
+                {settings.title ?? capability.title}
+            </div>
         {/if}
-    {:else}
-        {#each capabilities as capability}
-            {#if capabilityMap[capability.capabilityId] !== undefined}
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
-                <div
-                    class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer"
-                >
-                    <div 
-                        on:click={() => openView(capability, capabilityMap[capability.capabilityId])} 
-                        class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap"
-                    >
-                        {capability.title ?? capabilityMap[capability.capabilityId].title}
-                    </div>
-                    
-                    <svelte:component 
-                        this={getComponent(capabilityMap[capability.capabilityId])} 
-                        settings={capability}
-                        {device}
-                        capability={capabilityMap[capability.capabilityId]} 
-                        {controllable}
-                        mode="item"
-                        on:value={e => setCapabilityValue(capability.capabilityId, e.detail)}
-                    />
-                </div>
-            {/if}
-        {/each}
-    {/if}
-</div>
-
-<Portal>
-    {#if viewOpen && viewCapability !== undefined}
-        <Modal handleClose={() => viewOpen = false}>
-            <Modal.Content slot="content" class={viewClasses}>
-                <Modal.Content.Header slot="header" class="w-full text-center border-none">{device.name}</Modal.Content.Header>
-                <Modal.Content.Body slot="body">
-                    <svelte:component 
-                        this={getComponent(viewCapability)} 
-                        settings={viewSettings}
-                        {controllable}
-                        {device}
-                        capability={viewCapability} 
-                        mode="view"
-                        on:style={e => viewClasses = e.detail}
-                        on:value={e => setCapabilityValue(viewCapability.id, e.detail)}
-                    />
-                </Modal.Content.Body>
-                <Modal.Content.Footer slot="footer" class="w-full text-center border-none">
-                    
-                </Modal.Content.Footer>
-            </Modal.Content>
-        </Modal>
-    {/if}
-</Portal>
+        
+        <svelte:component 
+            this={getComponent(capability)} 
+            {settings}
+            {device}
+            {capability} 
+            {controllable}
+            {mode}
+        />
+    </div>
+{:else}
+    <span class="w-full h-8 overflow-hidden overflow-ellipsis font-extralight">
+        {#if device === undefined && settings.deviceId !== undefined}
+            Device not found
+        {:else if capability === undefined && settings.capabilityId !== undefined}
+            Capability not found
+        {:else}
+            Capability not configured
+        {/if}
+    </span>
+{/if}

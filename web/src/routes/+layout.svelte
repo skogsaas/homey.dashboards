@@ -140,8 +140,11 @@
             await device.connect();
             device.on('capability', (event: CapabilityEvent) => {
               const capability = device.capabilitiesObj[event.capabilityId];
-              capability.value = event.value;
-              capability.lastUpdated = event.transactionTime; 
+
+              if(capability !== undefined) {
+                capability.value = event.value;
+                capability.lastUpdated = event.transactionTime; 
+              }
             });
           });
 
@@ -263,14 +266,14 @@
   <title>Dashboard</title>
 </svelte:head>
 
-<div class="w-full h-full">
+<div class="w-full h-full text-content">
   {#if loading}
     <div class="w-full">
         <Progress size="xs" indeterminate value={0} />
     </div>
   {:else if $homey !== undefined}
     {#if menuOpen == false && toolbarOpen == false}
-      <IconButton data={mdiMenu} on:click={() => menuOpen = true} class="absolute left-0 top-0 z-10 text-primary-content bg-primary rounded-none rounded-br-full" size="42px" />
+      <IconButton data={mdiMenu} on:click={() => menuOpen = true} class="absolute left-0 top-0 z-10 text-primary-content bg-primary rounded-none rounded-br-3xl" size="32px" />
     {/if}
 
     <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
@@ -327,8 +330,8 @@
       <List>
           {#if $dashboard !== undefined}
             <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => toggleEdit()}>
-              <List.Item.Leading slot="leading" class="bg-surface">
-                <List.Item.Leading.Icon slot="icon" color="content" data={mdiViewDashboardEdit} />
+              <List.Item.Leading slot="leading">
+                <List.Item.Leading.Icon slot="icon" data={mdiViewDashboardEdit} />
               </List.Item.Leading>
               <List.Item.Content slot="content">
                 <List.Item.Content.Title slot="title">Edit widgets</List.Item.Content.Title>
@@ -336,8 +339,8 @@
             </List.Item>
 
             <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openDashboardSettings($dashboard)}>
-              <List.Item.Leading slot="leading" class="bg-surface">
-                <List.Item.Leading.Icon slot="icon" color="content" data={mdiCog} />
+              <List.Item.Leading slot="leading">
+                <List.Item.Leading.Icon slot="icon" data={mdiCog} />
               </List.Item.Leading>
               <List.Item.Content slot="content">
                 <List.Item.Content.Title slot="title">Dashboard settings</List.Item.Content.Title>
@@ -346,8 +349,8 @@
           {/if}
 
           <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openAddDashboard()}>
-            <List.Item.Leading slot="leading" class="bg-surface">
-              <List.Item.Leading.Icon slot="icon" color="content" data={mdiPlus} />
+            <List.Item.Leading slot="leading">
+              <List.Item.Leading.Icon slot="icon" data={mdiPlus} />
             </List.Item.Leading>
             <List.Item.Content slot="content">
               <List.Item.Content.Title slot="title">Add local dashboard</List.Item.Content.Title>

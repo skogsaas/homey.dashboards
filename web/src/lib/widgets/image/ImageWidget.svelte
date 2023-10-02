@@ -4,6 +4,7 @@
     import type ImageSettings from './ImageSettings';
     
     export let settings: ImageSettings;
+    export let mode: 'card'|'view';
 
     let refreshSlug = 0;
     let refreshClear: number | undefined;
@@ -24,10 +25,12 @@
 
 <div class="relative w-full h-full">
     {#if device === undefined || image === undefined}
-        {#if device === undefined}
-            <span>Error: device not found</span>
-        {:else if image === undefined}
-            <span>Error: image not found</span>
+        {#if device === undefined && settings.deviceId !== undefined}
+            <span>Device not found</span>
+        {:else if image === undefined && settings.imageId !== undefined}
+            <span>Image not found</span>
+        {:else}
+            <span>Image not configured</span>
         {/if}
     {:else}
         {#if !hideTitle}

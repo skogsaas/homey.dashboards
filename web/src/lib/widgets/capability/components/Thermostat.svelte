@@ -8,14 +8,15 @@
     import Icon from 'stwui/icon';
     import Slider from 'stwui/slider';
     import ButtonGroup from 'stwui/button-group';
+    import type { CapabilitySettings_v4 } from '../CapabilitySettings';
     
     const dispatcher = createEventDispatcher();
 
-    export let settings: Capability_v3;
+    export let settings: CapabilitySettings_v4;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
-    export let mode: 'item'|'view';
+    export let mode: 'card'|'view';
 
     let targetValue: number;
     $: disabled = !controllable || $editing;
@@ -78,7 +79,7 @@
 </script>
 
 {#if capability !== undefined}
-    {#if mode === 'item'}
+    {#if mode === 'card'}
         <span class="whitespace-nowrap">{capability.value ?? '...'} {capability.units ?? ''}</span>
     {:else}
         <div class="flex flex-col w-full">

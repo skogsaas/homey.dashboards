@@ -36,7 +36,9 @@ import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
 import type { WidgetSettings } from '$lib/types/Widgets';
 
 // Icons
-import { mdiArrowLeftRight, mdiChartLine, mdiImage, mdiPlay, mdiTextBoxEdit, mdiTune, mdiViewDashboard } from "$lib/components/icons";
+import { mdiArrowLeftRight, mdiChartLine, mdiImage, mdiMeterElectric, mdiPlay, mdiTextBoxEdit, mdiTune, mdiViewDashboard } from "$lib/components/icons";
+import DeviceWidget from './device/DeviceWidget.svelte';
+import DeviceEditor from './device/DeviceEditor.svelte';
 
 export interface WidgetInfo {
     type: string;
@@ -53,7 +55,7 @@ export interface WidgetInfo {
 export const widgets: WidgetInfo[] = [
     {
         type: 'capability', 
-        label: 'Device Capabilities',
+        label: 'Capability',
         icon: mdiTune,
         widget: CapabilityWidget, 
         editor: CapabilityEditor,
@@ -63,6 +65,17 @@ export const widgets: WidgetInfo[] = [
         ],
         create: createCapability,
         migration: migrateCapability
+    },
+    {
+        type: 'device', 
+        label: 'Device',
+        icon: mdiMeterElectric,
+        widget: DeviceWidget, 
+        editor: DeviceEditor,
+        view: undefined,
+        scopes: [],
+        create: () => ({ id: uuid(), type: 'device', version: 1 }),
+        migration: (e: WidgetSettings) => e
     },
     {
         type: 'dashboard-link', 
@@ -150,7 +163,7 @@ export function findLabel(type: string) : string | undefined {
 export function findWidget(type: string) : ComponentType {
     const component = widgets.find(widget => widget.type === type)?.widget;
 
-    if(component != undefined) {
+    if(component !== undefined) {
         return component;
     }
 
@@ -160,7 +173,7 @@ export function findWidget(type: string) : ComponentType {
 export function findEditor(type: string) : ComponentType {
     const editor = widgets.find(widget => widget.type === type)?.editor;
 
-    if(editor != undefined) {
+    if(editor !== undefined) {
         return editor;
     }
 

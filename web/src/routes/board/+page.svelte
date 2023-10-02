@@ -11,12 +11,10 @@
     import { editing, grid, dashboard as currentDashboard } from '$lib/stores/dashboard';
     
     // UI components
-    import ConfirmDialog from '$lib/ConfirmDialog.svelte';
     import AddWidgetDialog from '$lib/AddWidgetDialog.svelte';
     import EditWidgetView from '$lib/EditWidgetView.svelte';
 
     // Tailwind
-    import Drawer from "stwui/drawer";
     import Portal from "stwui/portal";
     import Modal from "stwui/modal";
     import Button from "stwui/button";
@@ -30,10 +28,13 @@
     
     import Grid from "$lib/components/grid/index.svelte";
     import gridHelp from "$lib/components/grid/utils/helper";
-    import WidgetContainer from '$lib/widgets/WidgetContainer.svelte';
+    import Widget from '$lib/widgets/Widget.svelte';
+
+    import { v4 as uuid } from 'uuid';
 
     import { webhookId, webhookUrl } from '$lib/constants';
-    import { mdiClose } from '$lib/components/icons';
+
+    import { migrate as migrateGridItem } from '$lib/widgets/migrations';
     
     const smallBreakpoint = 640;
     const mediumBreakpoint = 768;
@@ -55,15 +56,12 @@
     ];
 
     let items: GridItem[] = [];
-
-    let viewOpen: boolean = false;
-    let viewItem: GridItem | undefined;
-    let viewComponent: ComponentType | undefined;
     
     let editOpen: boolean = false;
     let editItem: GridItem;
 
-    let addWidgetOpen = false;
+    let viewOpen: boolean = false;
+    let viewItem: GridItem;
 
     let dashboard: Dashboard | undefined;
     let savingDashboard: boolean = false;
@@ -77,7 +75,11 @@
     $: onDashboard(resolvedDashboard);
     $: onEditing($editing);
 
-    onMount(() => {
+    onMount(async () => {
+        if($homey === undefined) { // Not logged in
+            await goto(base + '/');
+        }
+
         heartbeat = setInterval(() => sendHeartbeat(), 30 * 1000);
     });
 
@@ -91,7 +93,7 @@
         if(d !== undefined && !$editing && d.items !== items) {
             currentDashboard.set(d);
             dashboard = d;
-            items = migrateWidgets(d.items);
+            items = migrateWidgets(dashboard.items);
         }
     }
 
@@ -112,40 +114,35 @@
 
     function migrateWidgets(i: GridItem[]) : GridItem[] {
       const result: GridItem[] = [];
-      let changes: boolean = false;
 
       for(let item of i) {
-        const migration = findMigration(item.settings.type);
-        const migrated = migration !== undefined ? migration(item.settings) : item.settings;
+        let migratedItem = { ...migrateGridItem(item) };
 
-        if(migrated !== item.settings) {
-          changes = true;
+        for(let index = 0; index < migratedItem.card.length; index++) {
+            const settings = migratedItem.card[index];
+            const migration = findMigration(settings.type);
+            const migratedSettings = migration !== undefined ? migration(settings) : settings;
+
+            migratedItem.card[index] = { ...migratedSettings };
         }
 
-        result.push({ ...item, settings: migrated });
+        result.push(migratedItem);
       }
 
-      if(changes) {
-        return result;
-      }
-
-      return i;
+      return result;
     }
 
-    function addWidget(type: string) : void {
-        if(type === undefined) {
-          return;
-        }
+    function addWidget() {
+        // Create a new item, but don't add it until the user saves
+        const item: GridItem = { 
+            id: uuid(), 
+            version: 1, 
+            card: [],
+            view: []
+        };
 
-        const create = findCreate(type);
-
-        if(create !== undefined) {
-          const settings = create();
-          const item: GridItem = { id: settings?.id, settings };
-
-          editItem = addItem(item);
-          editOpen = true;
-        }
+        editItem = item;
+        editOpen = true;
     }
 
     function editWidget(item: GridItem) : void {
@@ -153,22 +150,9 @@
         editOpen = true;
     }
 
-    function saveWidget(settings: WidgetSettings) {
-      editOpen = false;
-      setItemSettings(editItem.id, settings);
-    }
-
-    function openView(item: GridItem) {
-        if($editing) {
-            return;
-        }
-
+    function viewWidget(item: GridItem) : void {
         viewItem = item;
-        viewComponent = findView(viewItem.settings.type);
-
-        if(viewItem !== undefined && viewComponent !== undefined) {
-            viewOpen = true;
-        }
+        viewOpen = true;
     }
 
     function addItem(item: GridItem) {
@@ -186,12 +170,23 @@
         });
 
         items = result;
-
-        return item;
     }
 
     function removeItem(id: string) {
         items = items.filter(item => item.id !== id);
+    }
+
+    function setItemSettings(item: GridItem) {
+        editOpen = false;
+
+        const index = items.findIndex(i => i.id === item.id);
+
+        if(index >= 0) {
+            items = [...items];
+            items[index] = item;
+        } else {
+            addItem(item);
+        }
     }
 
     function setItemFixed(id: string, fixed: boolean) { 
@@ -206,17 +201,6 @@
             });
         }
 
-        items = result;
-    }
-    
-    function setItemSettings(id: string, settings: WidgetSettings) {
-        const result = [...items];
-        const item = result.find(i => i.id === id);
-
-        if(item) {
-            item.settings = settings;
-        }
-        
         items = result;
     }
 
@@ -283,18 +267,7 @@
 
         editing.set(false);
     }
-
-    async function deleteDashboard() {
-        if(dashboard === undefined) {
-            return;
-        }
-
-        localDashboards.delete(dashboard);
-        editing.set(false);
-
-        await goto(base + '/');
-    }
-
+    
     function stripGrid(i: GridItem[]) { 
         const result = [...i];
 
@@ -351,20 +324,12 @@
 </script>
 
 {#if $homey !== undefined}
-    <EditWidgetView item={editItem} bind:open={editOpen} on:settings={(e) => saveWidget(e.detail)} />
+    <EditWidgetView item={editItem} bind:open={editOpen} on:item={(e) => setItemSettings(e.detail)} />
 
     <div class="flex justify-center">
         {#if $editing}
-            <div>
-                {#each widgets as widget}
-                    <Button on:click={() => addWidget(widget.type)} ariaLabel={widget.label}>
-                        <Icon data={widget.icon} />
-                    </Button>    
-                {/each}
-            </div>
-
             <div class="ml-4">
-                <Button on:click={() => (addWidgetOpen = true)}>Add</Button>
+                <Button on:click={() => addWidget()}>Add</Button>
                 <Button on:click={() => saveChanges()}>Save</Button>
                 <Button on:click={() => cancelChanges()}>Cancel</Button>
             </div>
@@ -384,38 +349,35 @@
         let:movePointerDown
         let:resizePointerDown
     >
-        <WidgetContainer 
+        <Widget 
+            settings={dataItem.card}
             fixed={item.fixed ?? false}
             on:fixed={(e) => setItemFixed(dataItem.id, e.detail)}
             on:edit={() => editWidget(dataItem)}
             on:delete={() => removeItem(dataItem.id)}
-            on:click={() => openView(dataItem)}
+            on:click={() => viewWidget(dataItem)}
             move={movePointerDown}
             resize={resizePointerDown}
-        >
-            <svelte:component 
-                this={findWidget(dataItem.settings.type)}
-                settings={dataItem.settings}
-            />
-        </WidgetContainer>
+        />
     </Grid>
-    
+
     <Portal>
         {#if viewOpen}
             <Modal handleClose={() => viewOpen = false}>
                 <Modal.Content slot="content">
                     <Modal.Content.Body slot="body">
-                        {#if viewItem !== undefined && viewComponent !== undefined}
-                            <svelte:component 
-                                this={viewComponent}
-                                settings={viewItem.settings}
-                            />
+                        {#if viewItem !== undefined}
+                            {#each (viewItem.view?.length > 0 ? viewItem.view : viewItem.card) as settings(settings.id)}
+                                <svelte:component 
+                                    this={findWidget(settings.type)}
+                                    settings={settings}
+                                    mode="view"
+                                />
+                            {/each}
                         {/if}
                     </Modal.Content.Body>
                 </Modal.Content>
             </Modal>
         {/if}
     </Portal>
-
-    <AddWidgetDialog bind:open={addWidgetOpen} on:selected={e => addWidget(e.detail)} />
 {/if}

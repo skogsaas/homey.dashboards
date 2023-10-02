@@ -10,6 +10,8 @@
     import Button from 'stwui/button';
     import List from "stwui/list";
     import { homey } from "$lib/stores/homey";
+    import IconButton from "./IconButton.svelte";
+    import { mdiDelete } from "./icons";
 
     export let deviceId: string | undefined;
     export let devices: DeviceObj[] = [];
@@ -51,11 +53,14 @@
 </script>
 
 <Button on:click={() => open = true} class="w-full justify-start border border-border">
+    <span class="mr-1">Device:</span>
+
     {#if selected !== undefined}
         {#await $homey.baseUrl then url}
-            <img src={url + selected.iconObj.url} alt={selected.name} class="h-6 w-6 mr-2" />
+            <img src={url + selected.iconObj.url} alt={selected.name} class="h-6 w-6 mr-2 dark:invert" />
         {/await}
-        {selected.name}
+        <span class="mr-auto">{selected.name}</span>
+        <IconButton data={mdiDelete} size="14px" on:click={() => deviceId = undefined} />
     {:else if deviceId !== undefined}
         Device not found
     {:else}
@@ -78,7 +83,7 @@
                                     <List.Item.Content slot="content">
                                         <List.Item.Content.Title slot="title" class="flex">
                                             {#await $homey.baseUrl then url}
-                                                <img src={url + device.iconObj.url} alt={device.name} class="h-6 w-6 mr-2" />
+                                                <img src={url + device.iconObj.url} alt={device.name} class="h-6 w-6 mr-2 dark:invert" />
                                             {/await}
                                             {device.name}
                                         </List.Item.Content.Title>

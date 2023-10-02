@@ -154,8 +154,6 @@
     }
 
     function stringToRgba(value: string) : RgbaColor {
-        console.log(value);
-
         var result = /^rgba\((.+),(.+),(.+),(.+)\)$/i.exec(value);
         return {
             r: parseInt(result![1]),

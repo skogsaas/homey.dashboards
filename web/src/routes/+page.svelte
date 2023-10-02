@@ -36,8 +36,6 @@
 
     onMount(async () => {
         const apiKey = $page.url.searchParams.get('api-key');
-        
-        console.log($page.url.origin);
 
         if($page.url.origin.includes('.homey.homeylocal.com') || $page.url.origin.includes('.connect.athom.com')){
             localHosting = true;
