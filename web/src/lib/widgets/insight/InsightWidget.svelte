@@ -260,7 +260,7 @@
             const prefix = 'homey:device:';
             const id = uri.slice(prefix.length);
 
-            return $devices[id].name;
+            return $devices[id]?.name ?? uri;
         } else if(uri.startsWith('homey:manager:apps')) {
             return 'Homey Apps';
         } else if(uri.startsWith('homey:manager:system')) {
