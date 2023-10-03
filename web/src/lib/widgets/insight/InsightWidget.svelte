@@ -286,7 +286,7 @@
 {#if series === undefined || series.length === 0}
     <span>Insights not configured</span>
 {:else}
-    <div class="w-full" class:h-full={mode !== 'view'} class:h-96={mode === 'view'}>
+    <div class="w-full flex-1 min-h-0" class:h-96={mode === 'view'}>
         <Chart bind:chart type="line" {data} {options} />
     </div>
 {/if}

@@ -30,7 +30,7 @@
     }
 </script>
 
-<Card on:click class="h-full w-full overflow-hidden">
+<Card on:click class="h-full w-full overflow-hidden flex flex-col">
     {#if $editing}
         <div class="absolute z-10 -top-4 left-0 flex w-full">
             <IconButton on:click={onEdit} data={mdiCog} size="18px" />
