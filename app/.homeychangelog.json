@@ -37,5 +37,8 @@
   },
   "0.12.0": {
     "en": "Mix devices and capabilities, custom cards and views."
+  },
+  "0.12.1": {
+    "en": "Fix controlling capabilities and editing dashboard links."
   }
 }
