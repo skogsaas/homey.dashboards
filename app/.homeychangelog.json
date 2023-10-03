@@ -40,5 +40,8 @@
   },
   "0.12.1": {
     "en": "Fix controlling capabilities and editing dashboard links."
+  },
+  "0.12.2": {
+    "en": "Fix insights crashing when resolving owner name, and auto-adjust height when displayed as card. "
   }
 }
