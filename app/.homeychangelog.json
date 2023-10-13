@@ -43,5 +43,8 @@
   },
   "0.12.2": {
     "en": "Fix insights crashing when resolving owner name, and auto-adjust height when displayed as card. "
+  },
+  "0.12.3": {
+    "en": "Fixes Insight picker get owner name"
   }
 }
