@@ -28,10 +28,12 @@ export interface DeviceManager extends Manager {
 
     getDeviceSettingsObj(opts: { id: string }) : Promise<any>;
     setDeviceSettings(opts: { id: string, settings: object }) : Promise<any>;
+
+    setCapabilityValue(opts: { deviceId: string, capabilityId: string, value: string|number|boolean }) : Promise<any>;
 }
 
 export interface FlowManager extends Manager {
-    getFlowFolders() : Promise<>
+    getFlowFolders() : Promise<any>;
     getFlows() : Promise<BasicFlowMap>;
     getAdvancedFlows(): Promise<AdvancedFlowMap>;
 
@@ -105,6 +107,7 @@ export interface AppSettingsObj {
 
 export interface DeviceObj extends Emitter {
     id: string;
+    uri: string;
     driverId: string;
     driverUri: string;
     ownerUri: string;
@@ -215,7 +218,6 @@ export interface Log extends Emitter {
     uri: string;
     ownerId: string;
     ownerUri: string;
-    //ownerName: string;
     title: string;
     titleTrue: string | null;
     titleFalse: string | null;

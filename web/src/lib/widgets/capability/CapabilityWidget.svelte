@@ -11,10 +11,10 @@
     import Button from './components/Button.svelte';
     import Thermostat from './components/Thermostat.svelte';
     import Picker from './components/Picker.svelte';
-    import type { CapabilitySettings_v4 } from './CapabilitySettings';
+    import type { CapabilitySettings_v5 } from './CapabilitySettings';
     import { getIcon } from '$lib/components/icons/utils';
     
-    export let settings: CapabilitySettings_v4;
+    export let settings: CapabilitySettings_v5;
     export let mode: 'card'|'view';    
 
     let deviceId: string = '';
@@ -31,9 +31,12 @@
 
     $: onDevice(latestDevice);
 
-    function onSettings(s: CapabilitySettings_v4) {
-        deviceId = s.deviceId ?? '';
-        capabilityId = s.capabilityId ?? '';
+    function onSettings(s: CapabilitySettings_v5) {
+        if(s.capabilityUri) {
+            const segments = s.capabilityUri.split(':');
+            deviceId = segments[2];
+            capabilityId = segments[3];
+        }
     }
 
     function onDevice(d: DeviceObj) {
@@ -116,10 +119,12 @@
     </div>
 {:else}
     <span class="w-full h-8 overflow-hidden overflow-ellipsis font-extralight">
-        {#if device === undefined && settings.deviceId !== undefined}
-            Device not found
-        {:else if capability === undefined && settings.capabilityId !== undefined}
-            Capability not found
+        {#if settings.capabilityUri !== undefined}
+            {#if capability === undefined}
+                Capability not found
+            {:else if device === undefined}
+                Device not found
+            {/if}
         {:else}
             Capability not configured
         {/if}

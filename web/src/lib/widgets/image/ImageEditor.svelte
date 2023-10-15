@@ -8,7 +8,7 @@
     import Toggle from 'stwui/toggle';
 
     import DevicePicker from '$lib/components/DevicePicker.svelte';
-    import type { ImageObj } from '$lib/types/Homey';
+    import type { DeviceObj, ImageObj } from '$lib/types/Homey';
 
     export let settings: ImageSettings;
 
@@ -49,6 +49,8 @@
     let hideTitle: boolean;
     let fontColor: Option;
     let fontBlur: boolean;
+
+    const deviceFilter = (device: DeviceObj) => device.images.length > 0;
 
     $: imageDevices = (Object.values($devices) ?? [])
         .filter(d => d.images.length > 0)
@@ -143,7 +145,7 @@
     }
 </script>
 
-<DevicePicker bind:deviceId={deviceId} devices={imageDevices} />
+<DevicePicker bind:deviceId={deviceId} {deviceFilter} />
 
 <div>
 {#if deviceId}

@@ -26,7 +26,6 @@
     $: onSettings(settings);
 
     $: device = deviceId ? $devices[deviceId] : undefined;
-    $: flatDevices = Object.values($devices);
 
     $: onDevice(deviceId);
     $: onTitle(title);
@@ -60,7 +59,7 @@
 </script>
 
 <div>
-    <DevicePicker bind:deviceId={deviceId} devices={flatDevices} />
+    <DevicePicker bind:deviceId={deviceId} />
 </div>
 
 {#if device}

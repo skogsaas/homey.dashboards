@@ -1,64 +1,55 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    import { devices } from '$lib/stores/homey';
-
     // UI elements
     import DevicePicker from '$lib/components/DevicePicker.svelte';
 
     // Tailwind
     import Input from "stwui/input";
 
+    import { devices } from '$lib/stores/homey';
+
     import type { DeviceObj } from '$lib/types/Homey';
     import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
-    import type { CapabilitySettings_v4, Capability_v3 } from './CapabilitySettings';
+    import type { CapabilitySettings_v5 } from './CapabilitySettings';
     import IconPicker from '$lib/components/IconPicker.svelte';
 
     const dispatch = createEventDispatcher();
     
-    export let settings: CapabilitySettings_v4;
+    export let settings: CapabilitySettings_v5;
 
-    let deviceId: string | undefined;
-    let capabilityId: string | undefined;
+    let capabilityUri: string | undefined;
     let title: string | undefined;
     let iconId: string | undefined;
 
+    let deviceId: string | undefined;
+    let capabilityId: string | undefined;
+
     let device: DeviceObj | undefined;
+    $: device = deviceId ? $devices[deviceId] : undefined;
+    $: capability = device && capabilityId ? device.capabilitiesObj[capabilityId] : undefined;
 
     $: onSettings(settings);
 
-    $: device = deviceId ? $devices[deviceId] : undefined;
-    $: capability = capabilityId && device ? device.capabilitiesObj[capabilityId] : undefined;
-    
-    $: flatDevices = Object.values($devices);
-    $: flatCapabilities = (device?.capabilitiesObj ? Object.values(device.capabilitiesObj) : [])
-            .sort((a, b) => {
-                if(a.title === b.title) return 0;
-                if(a.title < b.title) return -1;
-                return 1;
-            });
-
-    $: onDevice(deviceId);
-    $: onCapability(capabilityId);
+    $: onCapability(capabilityUri);
     $: onTitle(title);
     $: onIcon(iconId);
 
-    function onSettings(s: CapabilitySettings_v4) {
-        deviceId = s?.deviceId;
-        capabilityId = s?.capabilityId
+    function onSettings(s: CapabilitySettings_v5) {
+        capabilityUri = s?.capabilityUri;
         title = s?.title;
         iconId = s?.iconId;
     }
 
-    function onDevice(id: string | undefined) {
-        if(id !== settings.deviceId) {
-            dispatch('settings', { ...settings, deviceId: id, capabilityId: undefined });
-        }
-    }
-
     function onCapability(id: string | undefined) {
-        if(id !== settings.capabilityId) {
-            dispatch('settings', { ...settings, capabilityId: id });
+        if(id !== settings.capabilityUri) {
+            dispatch('settings', { ...settings, capabilityUri: id });
+
+            if(id) {
+                const segments = id.split(':');
+                deviceId = segments[2];
+                capabilityId = segments[3];
+            }
         }
     }
 
@@ -71,21 +62,15 @@
     }
 
     function onIcon(id: string | undefined) {
-        if(id !== settings.capabilityId) {
+        if(id !== settings.iconId) {
             dispatch('settings', { ...settings, iconId: id });
         }
     }
 </script>
 
-<div>
-    <DevicePicker bind:deviceId={deviceId} devices={flatDevices} />
+<div class="mt-2">
+    <CapabilityPicker bind:capabilityUri={capabilityUri} />
 </div>
-
-{#if device}
-    <div class="mt-2">
-        <CapabilityPicker bind:capabilityId={capabilityId} capabilities={flatCapabilities} />
-    </div>
-{/if}
 
 {#if capability}
     <Input name="title" bind:value={title} placeholder={capability.title} class="mt-2" />

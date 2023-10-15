@@ -5,17 +5,16 @@
 
     import Portal from 'stwui/portal';
     import Modal from 'stwui/modal';
-    import Drawer from 'stwui/drawer';
     import Input from 'stwui/input';
     import Button from 'stwui/button';
     import List from "stwui/list";
-    import { homey } from "$lib/stores/homey";
+    import { devices, homey } from "$lib/stores/homey";
     import IconButton from "./IconButton.svelte";
     import { mdiDelete } from "./icons";
 
     export let deviceId: string | undefined;
-    export let devices: DeviceObj[] = [];
     export let placeholder: string = 'Select device';
+    export let deviceFilter: ((device: DeviceObj) => boolean) | undefined = undefined;
 
     const dispatch = createEventDispatcher();
 
@@ -23,15 +22,16 @@
     let search: string = '';
     let filtered: DeviceObj[] = [];
     let selected: DeviceObj | undefined;
-
-    $: sorted = (devices ?? [])
+    
+    $: flatDevices = Object.values($devices).filter(device => deviceFilter ? deviceFilter(device) : true);
+    $: sorted = (flatDevices ?? [])
         .sort((a, b) => {
             if(a.name === b.name) return 0;
             if(a.name < b.name) return -1;
             return 1;
         });
 
-    $: selected = deviceId !== undefined ? devices.find(d => d.id === deviceId) : undefined;
+    $: selected = deviceId !== undefined ? flatDevices.find(d => d.id === deviceId) : undefined;
     $: filterDevices(search, sorted);
 
     function filterDevices(value: string, s: DeviceObj[]) {

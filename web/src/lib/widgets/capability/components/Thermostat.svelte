@@ -8,11 +8,11 @@
     import Icon from 'stwui/icon';
     import Slider from 'stwui/slider';
     import ButtonGroup from 'stwui/button-group';
-    import type { CapabilitySettings_v4 } from '../CapabilitySettings';
+    import type { CapabilitySettings_v5 } from '../CapabilitySettings';
     
     const dispatcher = createEventDispatcher();
 
-    export let settings: CapabilitySettings_v4;
+    export let settings: CapabilitySettings_v5;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;

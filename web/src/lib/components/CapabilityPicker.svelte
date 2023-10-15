@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { CapabilityObj } from "$lib/types/Homey";
+    import type { CapabilityObj, DeviceObj } from "$lib/types/Homey";
 
     import { createEventDispatcher } from "svelte";
 
@@ -9,46 +9,65 @@
     import Button from 'stwui/button';
     import List from "stwui/list";
 
-    import { homey } from "$lib/stores/homey";
+    import { devices, homey } from "$lib/stores/homey";
     import IconButton from "./IconButton.svelte";
     import { mdiDelete } from "./icons";
 
-    export let capabilityId: string | undefined;
-    export let capabilities: CapabilityObj[] = [];
+    export let capabilityUri: string | undefined;
     export let placeholder: string = 'Select capability';
+    export let deviceFilter: ((device: DeviceObj) => boolean) | undefined = undefined;
+    export let capabilityFilter: ((capability: CapabilityObj) => boolean) | undefined = undefined;
 
     const dispatch = createEventDispatcher();
 
+    interface Item  {
+        device: DeviceObj;
+        capability: CapabilityObj;
+        uri: string;
+        title: string;
+    }
+
     let open: boolean = false;
     let search: string = '';
-    let filtered: CapabilityObj[] = [];
-    let selected: CapabilityObj | undefined;
+    let filtered: Item[] = [];
+    let selected: Item | undefined;
 
-    $: sorted = (capabilities ?? [])
+    $: flatDevices = Object.values($devices).filter(device => deviceFilter ? deviceFilter(device) : true);
+    $: flatCapabilities = flatDevices
+        .flatMap(device => Object
+            .values(device.capabilitiesObj)
+            .filter(capability => capabilityFilter ? capabilityFilter(capability) : true)
+            .map(capability => ({ 
+                device, 
+                capability, 
+                uri: device.uri + ':' + capability.id,
+                title: (device.name + ' ' + capability.title).toLowerCase()
+            })));
+    $: sorted = (flatCapabilities ?? [])
         .sort((a, b) => {
             if(a.title === b.title) return 0;
             if(a.title < b.title) return -1;
             return 1;
         });
 
-    $: selected = capabilityId !== undefined ? capabilities.find(d => d.id === capabilityId) ?? undefined : undefined;
+    $: selected = capabilityUri !== undefined ? flatCapabilities.find(c => c.uri === capabilityUri) ?? undefined : undefined;
     $: filterCapabilities(search, sorted);
 
-    function filterCapabilities(value: string, s: CapabilityObj[]) {
+    function filterCapabilities(value: string, s: Item[]) {
         const normalized = value.toLowerCase();
 
         if(value.length > 0) {
-            filtered = sorted.filter(d => d.title.toLowerCase().includes(normalized));
+            filtered = sorted.filter(d => d.title.includes(normalized));
         } else {
             filtered = sorted;
         }
     }
 
-    function onCapability(capability: CapabilityObj) {
-        capabilityId = capability.id;
+    function onItem(item: Item) {
+        capabilityUri = item.uri;
         open = false;
         
-        dispatch('capabilityId', capabilityId);
+        dispatch('capabilityUri', capabilityUri);
     }
 </script>
 
@@ -56,14 +75,14 @@
     <span class="mr-1">Capability:</span>
 
     {#if selected}
-        {#if selected.iconObj?.url}
+        {#if selected.capability.iconObj?.url}
             {#await $homey.baseUrl then url}
-                <img src={url + selected.iconObj?.url} alt={selected.title} class="h-6 w-6 mr-2 dark:invert" />
+                <img src={url + selected.capability.iconObj?.url} alt={selected.title} class="h-6 w-6 mr-2 dark:invert" />
             {/await}
         {/if}
         <span class="mr-auto">{selected.title}</span>
-        <IconButton data={mdiDelete} size="14px" on:click={() => capabilityId = undefined} />
-    {:else if capabilityId !== undefined}
+        <IconButton data={mdiDelete} size="14px" on:click={() => capabilityUri = undefined} />
+    {:else if capabilityUri !== undefined}
         Capability not found
     {:else}
         {placeholder}
@@ -80,19 +99,20 @@
                     </div>
                     <div class="flex-grow overflow-auto">
                         <List>
-                            {#each filtered as capability}
-                                <List.Item class="cursor-pointer" on:click={() => onCapability(capability)}>
+                            {#each filtered as item}
+                                <List.Item class="cursor-pointer" on:click={() => onItem(item)}>
                                     <List.Item.Content slot="content">
                                         <List.Item.Content.Title slot="title" class="flex">
                                             {#await $homey.baseUrl then url}
-                                                {#if capability?.iconObj?.url}
-                                                    <img src={url + capability.iconObj.url} alt={capability.title} class="h-6 w-6 mr-2 dark:invert" />
+                                                {#if item.capability?.iconObj?.url}
+                                                    <img src={url + item.capability.iconObj.url} alt={item.capability.title} class="h-6 w-6 mr-2 dark:invert" />
                                                 {/if}
                                             {/await}
-                                            {capability.title}
+                                            {item.device.name}
                                         </List.Item.Content.Title>
                                         <List.Item.Content.Description slot="description" class="w-full flex justify-between">
-                                            <span>{capability?.value} {capability?.units ?? ''}</span>
+                                            <span>{item.capability.title}</span>
+                                            <span>{item.capability?.value} {item.capability?.units ?? ''}</span>
                                         </List.Item.Content.Description>
                                     </List.Item.Content>
                                 </List.Item>

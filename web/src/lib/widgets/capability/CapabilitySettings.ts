@@ -1,6 +1,12 @@
 import type { WidgetSettings } from "../../types/Widgets";
 import { v4 as uuid } from 'uuid';
 
+export interface CapabilitySettings_v5 extends WidgetSettings {
+    capabilityUri: string | undefined;
+    title: string | undefined;
+    iconId: string | undefined;
+}
+
 export interface CapabilitySettings_v4 extends WidgetSettings {
     deviceId: string | undefined;
     capabilityId: string | undefined;
@@ -32,21 +38,44 @@ export function create() : WidgetSettings {
     return { 
         id: uuid(), 
         type: 'capability', 
-        version: 3
+        version: 5
      };
 }
 
 export function migrate(settings: any) : any {
-    switch(settings.version) {
-        case 4: return settings;
+    while(settings.version !== 5) {
+        settings = migrateOnce(settings);
+    }
 
-        // This migration should be handled by GridItem migrations
-        case 3: return settings;
-        
+    return settings;
+}
+
+function migrateOnce(settings: any) : any {
+    switch(settings.version) {
+        case 5: return settings;
+        case 4: return migrate_v4_v5(settings as CapabilitySettings_v4);
+        case 3: return migrate_v3_v4(settings);
         case 2: return migrate_v2_v3(settings as CapabilitySettings_v2);
         case 1:
         default: return migrate_v1_v2(settings as CapabilitySettings_v1);
     }
+}
+
+function migrate_v4_v5(v4: CapabilitySettings_v4) : CapabilitySettings_v5 {
+    const settings: CapabilitySettings_v5 = {
+        id: v4.id,
+        type: v4.type,
+        version: 5,
+        capabilityUri: 'homey:device:' + v4.deviceId + ':' + v4.capabilityId,
+        title: v4.title,
+        iconId: v4.iconId
+    }
+
+    return settings;
+}
+
+function migrate_v3_v4(v3: any) : CapabilitySettings_v4 {
+    return {...v3, version: 4}; // This migration is handled by a grid item migration.
 }
 
 function migrate_v2_v3(v2: CapabilitySettings_v2) : CapabilitySettings_v3 {

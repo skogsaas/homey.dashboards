@@ -5,9 +5,9 @@
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
     import List from 'stwui/list';
-    import type { CapabilitySettings_v4 } from '../CapabilitySettings';
+    import type { CapabilitySettings_v5 } from '../CapabilitySettings';
 
-    export let settings: CapabilitySettings_v4;
+    export let settings: CapabilitySettings_v5;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;

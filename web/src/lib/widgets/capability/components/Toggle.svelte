@@ -5,11 +5,11 @@
 
     import Toggle from 'stwui/toggle';
     import { createEventDispatcher } from 'svelte';
-    import type { CapabilitySettings_v4 } from '../CapabilitySettings';
+    import type { CapabilitySettings_v5 } from '../CapabilitySettings';
 
     const dispatcher = createEventDispatcher();
 
-    export let settings: CapabilitySettings_v4;
+    export let settings: CapabilitySettings_v5;
     export let device: DeviceObj;
     export let capability: CapabilityObj;
     export let controllable: boolean;
