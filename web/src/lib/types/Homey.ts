@@ -7,6 +7,7 @@ export interface Homey {
     flow: FlowManager;
     insights: InsightsManager;
     images: ImagesManager;
+    logic: LogicManager;
     sessions: SessionManager;
     system: SystemManager;
     zones: ZoneManager;
@@ -50,6 +51,15 @@ export interface ImagesManager extends Manager {
     getImages() : Promise<any>;
 }
 
+export interface LogicManager extends Manager {
+    getVariable(opts: { id: string }) : Promise<Variable>;
+    getVariables() : Promise<VariableMap>;
+
+    createVariable(opts: { variable: { name: string, type: string, value: string|number|boolean } }) : Promise<any>;
+    updateVariable(opts: { id: string, variable: { name?: string, value?: string|number|boolean } }) : Promise<any>;
+    deleteVariable(opts: { id: string }) : Promise<any>;
+}
+
 export interface SessionManager extends Manager {
     getSessionMe() : Promise<Session>;
 }
@@ -77,6 +87,7 @@ export type BasicFlowMap = { [key: string]: BasicFlow; }
 export type AdvancedFlowMap = { [key: string]: AdvancedFlow; }
 export type ZoneMap = { [key: string]: Zone; }
 export type LogMap = { [key: string]: Log; }
+export type VariableMap = { [key: string]: Variable; }
 
 export interface Emitter {
     homey: Homey;
@@ -211,6 +222,21 @@ export interface CapabilityEvent {
     value: any;
     transactionId: string;
     transactionTime: number;
+}
+
+export interface VariableEvent {
+    id: string;
+    name: string;
+    type: string;
+    value: string;
+}
+
+export interface Variable extends Emitter {
+    id: string;
+    uri: string;
+    name: string;
+    type: string;
+    value: string;
 }
 
 export interface Log extends Emitter {

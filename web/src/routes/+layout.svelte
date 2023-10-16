@@ -7,7 +7,7 @@
     import { base } from '$app/paths';
 
     // Stores
-    import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys } from '$lib/stores/homey';
+    import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys, variables } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import { dashboard, editing } from '$lib/stores/dashboard';
     import { apiKey } from '$lib/stores/auth';
@@ -31,7 +31,7 @@
     import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant } from "$lib/components/icons";
 
     // Types
-    import type { AdvancedFlow, BasicFlow, CapabilityEvent, Homey } from '$lib/types/Homey';
+    import type { AdvancedFlow, BasicFlow, CapabilityEvent, VariableEvent, Homey } from '$lib/types/Homey';
     import type Dashboard from '$lib/types/Dashboard';
 
     import { clientId, clientSecret } from '$lib/constants';
@@ -66,6 +66,7 @@
         await loadSession();
 
         await loadDevices();
+        await loadVariables();
         await loadFlows();
         await loadZones();
         await loadInsights();
@@ -152,6 +153,21 @@
         }
       } catch(e) {
         error = 'Devices: ' + e;
+      }
+    }
+
+    async function loadVariables() {
+      try {
+        if($scopes.includes('homey') || $scopes.includes('homey.logic') || $scopes.includes('homey.logic.readonly')) {
+          await $homey.logic.connect();
+          const v = await $homey.logic.getVariables();
+
+          $homey.logic.on('variable.update', (event: VariableEvent) => variables.onUpdate(event));
+
+          variables.set(v);
+        }
+      } catch(e) {
+        error = 'Variables: ' + e;
       }
     }
 
@@ -263,10 +279,10 @@
 </script>
 
 <svelte:head>
-  <title>Dashboard</title>
+  <title>{$dashboard !== undefined ? $dashboard.title : 'Dashboard'}</title>
 </svelte:head>
 
-<div class="w-full h-full text-content">
+<div class="w-full min-h-full text-content overflow-y-scroll" >
   {#if loading}
     <div class="w-full">
         <Progress size="xs" indeterminate value={0} />

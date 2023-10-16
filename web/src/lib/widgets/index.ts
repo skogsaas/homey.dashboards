@@ -9,6 +9,16 @@ import {
     migrate as migrateCapability 
 } from './capability/CapabilitySettings';
 
+import DeviceWidget from './device/DeviceWidget.svelte';
+import DeviceEditor from './device/DeviceEditor.svelte';
+
+import VariableWidget from './variable/VariableWidget.svelte';
+import VariableEditor from './variable/VariableEditor.svelte';
+import { 
+    create as createVariable,
+    migrate as migrateVariable 
+} from './variable/VariableSettings';
+
 import DashboardLinkEditor from './dashboard-link/DashboardLinkEditor.svelte';
 import DashboardLinkWidget from './dashboard-link/DashboardLinkWidget.svelte';
 
@@ -36,9 +46,7 @@ import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
 import type { WidgetSettings } from '$lib/types/Widgets';
 
 // Icons
-import { mdiArrowLeftRight, mdiChartLine, mdiImage, mdiMeterElectric, mdiPlay, mdiTextBoxEdit, mdiTune, mdiViewDashboard } from "$lib/components/icons";
-import DeviceWidget from './device/DeviceWidget.svelte';
-import DeviceEditor from './device/DeviceEditor.svelte';
+import { mdiArrowLeftRight, mdiChartLine, mdiImage, mdiMeterElectric, mdiPlay, mdiTextBoxEdit, mdiTune, mdiVariable, mdiViewDashboard } from "$lib/components/icons";
 
 export interface WidgetInfo {
     type: string;
@@ -151,6 +159,19 @@ export const widgets: WidgetInfo[] = [
         ],
         create: () => ({ id: uuid(), type: 'slider', version: 1 }),
         migration: (e: WidgetSettings) => e
+    },
+    {
+        type: 'variable', 
+        label: 'Variable',
+        icon: mdiVariable,
+        widget: VariableWidget, 
+        editor: VariableEditor,
+        view: undefined,
+        scopes: [
+            { oneOf: ['homey', 'homey.logic', 'homey.logic.readonly'] }
+        ],
+        create: createVariable,
+        migration: migrateVariable
     },
 ];
 

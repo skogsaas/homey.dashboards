@@ -52,14 +52,6 @@
 
     const deviceFilter = (device: DeviceObj) => device.images.length > 0;
 
-    $: imageDevices = (Object.values($devices) ?? [])
-        .filter(d => d.images.length > 0)
-        .sort((a, b) => {
-            if(a.name === b.name) return 0;
-            if(a.name < b.name) return -1;
-            return 1;
-        });
-
     let images: Option[] = [];
 
     $: onSettings(settings);

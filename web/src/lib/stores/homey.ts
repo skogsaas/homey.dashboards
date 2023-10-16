@@ -16,6 +16,8 @@ import type {
     LogMap, 
     OAuthUser, 
     Session, 
+    VariableEvent, 
+    VariableMap, 
     Zone, 
     ZoneMap 
 } from '$lib/types/Homey';
@@ -91,6 +93,25 @@ function onCapability(existing: DeviceMap, deviceId: string, event: CapabilityEv
 }
 */
 
+function createVariables() {
+    const { subscribe, set, update } = writable({} as VariableMap);
+
+    return {
+        subscribe,
+        set,
+        onUpdate: (patch: VariableEvent) => update((existing: VariableMap) => onVariable(existing, patch)),
+    };
+}
+
+function onVariable(existing: VariableMap, patch: any) : VariableMap {
+    const variableId: string = patch.id;
+
+    const copy = { ...existing };
+    copy[variableId] = { ...existing[variableId], ...patch };
+
+    return copy;
+}
+
 function createBasicFlows() {
     const { subscribe, set, update } = writable({} as BasicFlowMap);
 
@@ -129,6 +150,7 @@ export const baseUrl = createBaseUrl();
 export const session = writable(undefined as (Session | undefined));
 export const scopes = derived(session, (s: Session) => s?.scopes ?? [], []);
 export const devices = createDevices();
+export const variables = createVariables();
 export const flowFolders = writable({} as FlowFolderMap);
 export const basicFlows = createBasicFlows();
 export const advancedFlows = createAdvancedFlows();
