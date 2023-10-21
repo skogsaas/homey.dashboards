@@ -13,13 +13,8 @@
     import ConfirmDialog from '$lib/ConfirmDialog.svelte';
     
     // Tailwind
-    import Input from 'stwui/input';
-    import Button from 'stwui/button';
-    import Progress from 'stwui/progress';
-    import TextArea from "stwui/text-area";
-
-    import tooltip from 'stwui/actions/tooltip'
-
+    import { Input, Button, Progress, TextArea } from 'stwui';
+    
     // Types
     import type Dashboard from '$lib/types/Dashboard';
     
@@ -31,6 +26,8 @@
     let deleteDashboardOpen: boolean = false;
 
     let title: string = '';
+    let backgroundImage: string | undefined;
+
     let changes: boolean;
 
     $: dashboards = { ...$homeyDashboards, ...$localDashboards };
@@ -38,19 +35,22 @@
     $: resolvedDashboard = dashboardId !== null ? dashboards[dashboardId] : undefined;
 
     $: onDashboard(resolvedDashboard);
-    $: changes = hasChanges(title);
+    $: changes = hasChanges(title, backgroundImage);
 
     function onDashboard(d: Dashboard | undefined) {
         if(d !== undefined) {
             currentDashboard.set(d);
             dashboard = d;
 
+            console.log(dashboard);
+
             title = dashboard.title;
+            backgroundImage = dashboard.backgroundImage;
         }
     }
 
-    function hasChanges(_title: string) {
-        return _title !== dashboard?.title;
+    function hasChanges(_title: string, _backgroundImage: string | undefined) {
+        return _title !== dashboard?.title || _backgroundImage !== dashboard?.backgroundImage;
     }
 
     async function saveDashboard() {
@@ -58,11 +58,13 @@
             savingDashboard = true;
 
             if(dashboard.source === 'localstorage') {
-                const d = { ...dashboard, title };
+                const d = { ...dashboard, title, backgroundImage };
                 localDashboards.update(d);
             } else if(dashboard.source === 'homey') {
-                const settings = { items: dashboard.items };
+                const settings = { items: dashboard.items, backgroundImage };
                 let success: boolean = false;
+
+                console.log(settings);
 
                 // Send over webhook
                 try {
@@ -116,26 +118,26 @@
         {#if dashboard.source === 'localstorage'}
             <Input name="name" bind:value={title} placeholder="Dashboard name" />
 
-            <div class="flex justify-between mt-4">
-                <Button type="danger" on:click={() => deleteDashboardOpen = true}>Delete</Button>
-                <Button on:click={() => saveDashboard()} disabled={!changes}>Save</Button>
+            <Button type="danger" on:click={() => deleteDashboardOpen = true}>Delete</Button>
 
-                {#if savingDashboard}
-                    <Progress size="xs" indeterminate value={0} />
-                {/if}
-            </div>
+            {#if savingDashboard}
+                <Progress size="xs" indeterminate value={0} />
+            {/if}
         {:else}
             <p>If you want to edit the name of this dashboard, rename the dashboard in the Homey app.</p>
         {/if}
 
-        <p class="mt-4">Raw settings for this dashboard:</p>
+        <Input name="backgroundImage" bind:value={backgroundImage} placeholder="Background image url" />
 
+        <p class="mt-4">Raw settings for this dashboard</p>
         <TextArea  
             value={JSON.stringify(dashboard, null, 2)} 
             name="json"
             placeholder="settings"
             readonly
         />
+
+        <Button class="mt-4" on:click={() => saveDashboard()} disabled={!changes}>Save</Button>
     {:else}
         <h1 class="text-center pt-8 pb-8">Unable to find dashboard: {dashboardId}</h1>
     {/if}

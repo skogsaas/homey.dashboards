@@ -282,7 +282,10 @@
   <title>{$dashboard !== undefined ? $dashboard.title : 'Dashboard'}</title>
 </svelte:head>
 
-<div class="w-full min-h-full text-content overflow-y-scroll" >
+<div 
+  class="w-full min-h-full text-content overflow-y-scroll bg-fixed bg-no-repeat bg-cover" 
+  style={$dashboard?.backgroundImage && $dashboard.backgroundImage.length > 0 ? `background-image: url(${$dashboard.backgroundImage})` : ''} 
+>
   {#if loading}
     <div class="w-full">
         <Progress size="xs" indeterminate value={0} />

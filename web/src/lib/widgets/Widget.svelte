@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     
-    import { editing } from '$lib/stores/dashboard';
+    import { editing, dashboard } from '$lib/stores/dashboard';
     
     import Card from 'stwui/card';
 

@@ -236,7 +236,7 @@ export interface Variable extends Emitter {
     uri: string;
     name: string;
     type: string;
-    value: string;
+    value: string|boolean|number;
 }
 
 export interface Log extends Emitter {

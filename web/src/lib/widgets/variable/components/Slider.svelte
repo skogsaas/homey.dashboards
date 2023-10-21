@@ -1,79 +1,61 @@
 <script lang="ts">
     import { editing } from '$lib/stores/dashboard';
-    import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
-
+    import type { Variable } from '$lib/types/Homey';
+    
     import Slider from 'stwui/slider';
-    import type { CapabilitySettings_v5 } from '../VariableSettings';
+    import type { VariableSettings_v1 } from '../VariableSettings';
+    import { homey } from '$lib/stores/homey';
 
-    export let settings: CapabilitySettings_v5;
-    export let device: DeviceObj;
-    export let capability: CapabilityObj;
+    export let settings: VariableSettings_v1;
+    export let variable: Variable;
     export let controllable: boolean;
     export let mode: 'card'|'view';
-
+    
     let value: number;
     $: disabled = !controllable || $editing;
 
-    $: onCapability(capability);
+    $: onVariable(variable);
     $: onValue(value);
 
-    function onCapability(c: CapabilityObj) {
-        value = c.value;
+    function onVariable(c: Variable) {
+        value = c.value as number;
     }
 
     async function onValue(v: number) {
-        if(v !== capability?.value) {
+        if(v !== variable?.value) {
             if(!disabled) {
-                await setCapabilityValue(v);
+                await setVariableValue(v)
             }
         }
     }
 
-    function formatValue(v: number | null | undefined) : string | undefined | null {
-        if(v === null || v === undefined) {
-            return v;
-        }
-
-        if(capability.units === '%' || !capability.units) {
-            return (100.0 / (capability.max - capability.min) * v).toFixed(0);
-        }
-
-        return v.toFixed(capability.decimals);
-    }
-
-    async function setCapabilityValue(v: number|boolean|string) {
-        await device.setCapabilityValue({ 
-            deviceId: device.id,
-            capabilityId: capability.id,
-            value: v
-        });
+    async function setVariableValue(value: number|boolean|string) {
+        await $homey.logic.updateVariable({ id: variable.id, variable: { value } });
     }
 </script>
 
-{#if capability !== undefined}
-    {#if mode === 'card'}
-        <span class="whitespace-nowrap cursor-pointer">{formatValue(value) ?? '...'} {capability.units ?? '%'}</span>
-    {:else}
-        <div class="flex flex-col w-full">
-            <div class="mx-auto">
-                <div class="flex flex-col items-center">
-                    <h1>{formatValue(value) ?? '...'} {capability?.units ?? '%'}</h1>
-                    <span>{settings.title ?? capability.title}</span>
-                </div>
-            </div>
-
-            <div class="flex flex-row mt-4">
-                <span class="whitespace-nowrap mr-4">{formatValue(capability.min)} {capability.units ?? '%'}</span>
-                <Slider 
-                    class="w-full"
-                    bind:value={value}
-                    min={capability.min} 
-                    max={capability.max} 
-                    step={capability.step ?? Math.pow(0.1, capability.decimals)}
-                    disabled={disabled} 
-                />
-                <span class="whitespace-nowrap ml-4">{formatValue(capability.max)} {capability.units ?? '%'}</span>
+{#if mode === 'card'}
+    <span class="whitespace-nowrap cursor-pointer">{value} {settings.number?.unit ?? ''}</span>
+{:else}
+    <div class="flex flex-col w-full">
+        <div class="mx-auto">
+            <div class="flex flex-col items-center">
+                <h1>{value} {settings.number?.unit ?? ''}</h1>
+                <span>{settings.title ?? variable.name}</span>
             </div>
         </div>
-    {/if}
+
+        <div class="flex flex-row mt-4">
+            <span class="whitespace-nowrap mr-4">{settings.number?.min ?? ''} {settings.number?.unit ?? ''}</span>
+            <Slider 
+                class="w-full"
+                bind:value={value}
+                min={settings.number?.min} 
+                max={settings.number?.max} 
+                step={settings.number?.step}
+                disabled={disabled} 
+            />
+            <span class="whitespace-nowrap ml-4">{settings.number?.max ?? ''} {settings.number?.unit ?? ''}</span>
+        </div>
+    </div>
 {/if}

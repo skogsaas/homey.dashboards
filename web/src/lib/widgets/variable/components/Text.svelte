@@ -2,31 +2,30 @@
     import { editing } from '$lib/stores/dashboard';
     import type { Variable } from '$lib/types/Homey';
     
-    import Toggle from 'stwui/toggle';
+    import {Input } from 'stwui';
     import type { VariableSettings_v1 } from '../VariableSettings';
     import { homey } from '$lib/stores/homey';
+    import IconButton from '$lib/components/IconButton.svelte';
+    import { mdiContentSave } from '$lib/components/icons';
 
     export let settings: VariableSettings_v1;
     export let variable: Variable;
     export let controllable: boolean;
     export let mode: 'card'|'view';
     
-    let value: boolean;
+    let value: string;
     $: disabled = !controllable || $editing;
 
     $: onVariable(variable);
-    $: onValue(value);
 
     function onVariable(c: Variable) {
-        value = !!c.value;
+        value = c.value as string;
     }
 
-    async function onValue(v: boolean) {
-        if(v !== variable?.value) {
+    async function saveValue() {
+        if(value !== variable?.value) {
             if(!disabled) {
-                await setVariableValue(v)
-            } else {
-                value = !v;
+                await setVariableValue(value)
             }
         }
     }
@@ -36,23 +35,15 @@
     }
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-
-<div class:w-full={mode === 'view'} on:click={e => { if(!$editing) { e.stopPropagation(); } }}>
+<div class:w-full={mode === 'view'}>
     {#if mode === 'card'}
-        <Toggle
-            name="toggle"
-            bind:on={value}
-        />
+        <span class="whitespace-nowrap cursor-pointer">{value}</span>
     {:else}
         <div class="flex flex-row items-center w-full">
             <h3>{settings.title ?? variable.name}</h3>
             <div class="mx-auto"></div>
-            <Toggle
-                name="toggle"
-                bind:on={value}
-            />
+            <IconButton data={mdiContentSave} on:click={() => saveValue()} />
+            <Input name="text" bind:value={value} {disabled} />
         </div>
     {/if}
 </div>

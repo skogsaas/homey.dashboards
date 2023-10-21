@@ -5,6 +5,13 @@ export interface VariableSettings_v1 extends WidgetSettings {
     variableId: string | undefined;
     title: string | undefined;
     iconId: string | undefined;
+
+    number?: {
+        min?: number; 
+        max?: number;
+        step?: number;
+        unit?: string;
+    }
 }
 
 export function create() : WidgetSettings {

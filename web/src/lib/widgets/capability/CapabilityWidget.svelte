@@ -98,11 +98,11 @@
 
 {#if device !== undefined && capability !== undefined}
     <div class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer">
-        {#if settings.iconId !== undefined}
-            <Icon data={getIcon(settings.iconId)} class="mr-1" />
-        {/if}
-
         {#if mode === 'card'}
+            {#if settings.iconId !== undefined}
+                <Icon data={getIcon(settings.iconId)} class="mr-1" />
+            {/if}
+        
             <div class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap flex-grow">
                 {settings.title ?? capability.title}
             </div>

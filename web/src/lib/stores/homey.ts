@@ -162,13 +162,14 @@ export const dashboards = derived(
     (d: DeviceMap) => Object.values(d)
         .filter(e => e.driverId === driverId)
         .reduce((existing: DashboardMap, dev: DeviceObj) => {
-            const dashboard: Dashboard = {
+            let dashboard: Dashboard = {
                 id: dev.data.id, // The custom device.data.id is used instead of the device.id, as the device id is not accessible for the installable app.
                 source: 'homey',
                 title: dev.name,
-                items: dev.settings.items ?? []
-            }
-            existing[dashboard.id] = dashboard;
+                items: []
+            };
+
+            existing[dashboard.id] = { ...dashboard, ...dev.settings };
 
             return existing;
         }, {} as DashboardMap), 

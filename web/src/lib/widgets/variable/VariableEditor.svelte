@@ -5,7 +5,7 @@
     import DevicePicker from '$lib/components/DevicePicker.svelte';
 
     // Tailwind
-    import Input from "stwui/input";
+    import { Input, InputNumber } from "stwui";
 
     import { devices, variables } from '$lib/stores/homey';
 
@@ -22,22 +22,32 @@
     let variableId: string | undefined;
     let title: string | undefined;
     let iconId: string | undefined;
+    let min: number | undefined;
+    let max: number | undefined;
+    let step: number | undefined;
+    let unit: string | undefined;
 
     let variable: Variable | undefined;
 
     $: onSettings(settings);
 
-    $: onCapability(variableId);
+    $: onVariableId(variableId);
     $: onTitle(title);
     $: onIcon(iconId);
+    $: onNumber(min, max, step, unit);
 
     function onSettings(s: VariableSettings_v1) {
         variableId = s?.variableId;
         title = s?.title;
         iconId = s?.iconId;
+
+        min = s.number?.min;
+        max = s.number?.max;
+
+        variable = $variables[variableId ?? ''];
     }
 
-    function onCapability(id: string | undefined) {
+    function onVariableId(id: string | undefined) {
         if(id !== settings.variableId) {
             dispatch('settings', { ...settings, variableId: id });
         }
@@ -56,14 +66,35 @@
             dispatch('settings', { ...settings, iconId: id });
         }
     }
+
+    function onNumber(min: number | undefined, max: number | undefined, step: number | undefined, unit: string | undefined) {
+        console.log(settings, min, max)
+
+        if(min !== settings.number?.min || 
+            max !== settings.number?.max || 
+            step !== settings.number?.step ||
+            unit !== settings.number?.unit
+        ) {
+            const number = settings.number ?? {};
+
+            dispatch('settings', { ...settings, number: { ...number, min, max, step, unit } });
+        }
+    }
 </script>
 
 <div class="mt-2">
-    <VariablePicker bind:variableId={variableId} on:variable={(v) => (variable = v.detail)} />
+    <VariablePicker bind:variableId={variableId} on:variable={(e) => (variable = e.detail)} />
 </div>
 
-{#if variable}
+{#if variable !== undefined}
     <Input name="title" bind:value={title} placeholder={variable.name} class="mt-2" />
+
+    {#if variable.type === 'number'} 
+        <InputNumber name="min" placeholder="Min" bind:value={min} />
+        <InputNumber name="max" placeholder="Max" bind:value={max} />
+        <InputNumber name="step" placeholder="Step" bind:value={step} />
+        <Input name="unit" placeholder="Unit" bind:value={unit} />
+    {/if}
 {/if}
 
 <div class="mt-2">
