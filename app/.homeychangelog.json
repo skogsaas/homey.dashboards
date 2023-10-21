@@ -46,5 +46,8 @@
   },
   "0.12.3": {
     "en": "Fixes Insight picker get owner name"
+  },
+  "0.13.0": {
+    "en": "Add widget for logic variables and dashboard background image"
   }
 }
