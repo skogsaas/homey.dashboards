@@ -6,6 +6,8 @@
     import Toggle from 'stwui/toggle';
     import { createEventDispatcher } from 'svelte';
     import type { CapabilitySettings_v5 } from '../CapabilitySettings';
+    import { Icon } from 'stwui';
+    import { getIcon } from '$lib/components/icons/utils';
 
     const dispatcher = createEventDispatcher();
 
@@ -58,6 +60,9 @@
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div class="flex items-center w-full" on:click={e => { if(!$editing) { e.stopPropagation(); } }}>
+            {#if settings.iconId !== undefined}
+                <Icon data={getIcon(settings.iconId)} class="mr-1" />
+            {/if}
             <h3>{settings.title ?? capability.title}</h3>
             <span class="font-extralight ml-2 text-xs mr-auto">{formatDistance(new Date(capability.lastUpdated), new Date(), { addSuffix: true })}</span>
 

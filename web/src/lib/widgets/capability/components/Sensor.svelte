@@ -5,6 +5,7 @@
 
     import Icon from 'stwui/icon';
     import type { CapabilitySettings_v5 } from '../CapabilitySettings';
+    import { getIcon } from '$lib/components/icons/utils';
 
     export let settings: CapabilitySettings_v5;
     export let device: DeviceObj;
@@ -34,6 +35,10 @@
         {/if}
     {:else}
         <div class="flex items-center w-full">
+                {#if settings.iconId !== undefined}
+                    <Icon data={getIcon(settings.iconId)} class="mr-1" />
+                {/if}
+                
                 <h3>{settings.title ?? capability.title}</h3>
 
                 {#if capability.lastUpdated}
