@@ -49,5 +49,11 @@
   },
   "0.13.0": {
     "en": "Add widget for logic variables and dashboard background image"
+  },
+  "0.13.1": {
+    "en": "Fixes missing view icons"
+  },
+  "0.13.2": {
+    "en": "Fixes exception when selecting an unconfigured variable and insights migration"
   }
 }

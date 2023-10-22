@@ -47,12 +47,20 @@ export function create() : WidgetSettings {
 }
 
 export function migrate(settings: any) : any {
+    while(settings.version !== 4) {
+        settings = migrateOnce(settings);
+    }
+
+    return settings;
+}
+
+export function migrateOnce(settings: any) : any {
     switch(settings.version) {
         case 4: return settings;
         case 3: return migrate_v3_v4(settings as InsightSettings_v3);
         case 2: return migrate_v2_v3(settings as InsightSettings_v2);
         case 1:
-        default: return migrate(migrate_v1_v2(settings as InsightSettings_v1));
+        default: return migrate_v1_v2(settings as InsightSettings_v1);
     }
 }
 
@@ -61,7 +69,7 @@ function migrate_v3_v4(v3: InsightSettings_v3) : InsightSettings_v4 {
         id: v3.id,
         type: v3.type,
         version: 4,
-        series: v3.series.map(s => ({ ...s, type: 'line' }))
+        series: (v3.series ?? []).map(s => ({ ...s, type: 'line' }))
     }
 
     return settings;

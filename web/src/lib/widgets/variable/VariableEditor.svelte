@@ -68,8 +68,6 @@
     }
 
     function onNumber(min: number | undefined, max: number | undefined, step: number | undefined, unit: string | undefined) {
-        console.log(settings, min, max)
-
         if(min !== settings.number?.min || 
             max !== settings.number?.max || 
             step !== settings.number?.step ||
@@ -86,7 +84,7 @@
     <VariablePicker bind:variableId={variableId} on:variable={(e) => (variable = e.detail)} />
 </div>
 
-{#if variable !== undefined}
+{#if variable}
     <Input name="title" bind:value={title} placeholder={variable.name} class="mt-2" />
 
     {#if variable.type === 'number'} 
