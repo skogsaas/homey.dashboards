@@ -6,7 +6,12 @@ function createApiKey() {
     return {
         subscribe,
         set: (apikey: string|undefined) => {
-            localStorage.apikey = apikey;
+            if(apikey !== undefined) {
+                localStorage.apikey = apikey;
+            } else {
+                delete localStorage.apikey;
+            }
+            
             set(apikey); 
         }
     };

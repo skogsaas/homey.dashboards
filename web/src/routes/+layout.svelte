@@ -276,6 +276,23 @@
       menuOpen = false;
     }
 
+    async function logout() {
+      if($apiKey !== undefined) {
+        apiKey.set(undefined);
+      } else {
+        const cloudApi = new AthomCloudAPI({
+            clientId,
+            clientSecret
+        });
+
+        await cloudApi.logout();
+      }
+
+      $homey.set(undefined);
+
+      return goto(base + '/');
+    }
+
 </script>
 
 <svelte:head>
@@ -395,6 +412,14 @@
           Enter fullscreen
         </Button>
       {/if}
+
+      <Divider>
+        <Divider.Label slot="label"></Divider.Label>
+      </Divider>
+
+      <Button on:click={() => logout()} class="mt-4">
+        Sign out
+      </Button>
     </Drawer>
 
     {#if toolbarOpen}
