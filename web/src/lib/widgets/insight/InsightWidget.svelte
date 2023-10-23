@@ -50,7 +50,7 @@
         },
         scales: { 
             x: { 
-                type: 'timeseries',
+                type: 'time',
                 time: {
                     displayFormats: {
                         datetime: 'd MMM yyyy, HH:mm:ss',
@@ -197,7 +197,8 @@
                 fill: series.fill,
                 data: timeSeries,
                 tension: 0.5,
-                yAxisID: 'y' + log.units
+                yAxisID: 'y' + log.units,
+                stepped: log.type === 'boolean' ? true : undefined
             };
 
             return Math.max(entries.step - entries.updatesIn, 10_000);
