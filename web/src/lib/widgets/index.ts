@@ -25,6 +25,9 @@ import DashboardLinkWidget from './dashboard-link/DashboardLinkWidget.svelte';
 import FlowEditor from "./flow/FlowEditor.svelte";
 import FlowWidget from "./flow/FlowWidget.svelte";
 
+import IframeWidget from './iframe/IframeWidget.svelte';
+import IframeEditor from './iframe/IframeEditor.svelte';
+
 import ImageWidget from "./image/ImageWidget.svelte";
 import ImageEditor from "./image/ImageEditor.svelte";
 
@@ -46,7 +49,7 @@ import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
 import type { WidgetSettings } from '$lib/types/Widgets';
 
 // Icons
-import { mdiArrowLeftRight, mdiChartLine, mdiImage, mdiMeterElectric, mdiPlay, mdiTextBoxEdit, mdiTune, mdiVariable, mdiViewDashboard } from "$lib/components/icons";
+import { mdiArrowLeftRight, mdiChartLine, mdiImage, mdiImageFrame, mdiMeterElectric, mdiPlay, mdiTextBoxEdit, mdiTune, mdiVariable, mdiViewDashboard } from "$lib/components/icons";
 
 export interface WidgetInfo {
     type: string;
@@ -107,6 +110,17 @@ export const widgets: WidgetInfo[] = [
             { oneOf: ['homey', 'homey.flow', 'homey.flow.start'] }
         ],
         create: () => ({ id: uuid(), type: 'flow', version: 1 }),
+        migration: (e: WidgetSettings) => e
+    },
+    {
+        type: 'iframe', 
+        label: 'Iframe',
+        icon: mdiImageFrame,
+        widget: IframeWidget, 
+        editor: IframeEditor,
+        view: undefined,
+        scopes: [],
+        create: () => ({ id: uuid(), type: 'iframe', version: 1 }),
         migration: (e: WidgetSettings) => e
     },
     {
