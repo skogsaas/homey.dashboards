@@ -1,15 +1,15 @@
 {
   "0.3.0": {
-    "en": "Login with HP23 API-key"
+    "en": "Login with HP23 API-key."
   },
   "0.3.1": {
-    "en": "Login with online Athom signin"
+    "en": "Login with online Athom signin."
   },
   "0.6.0": {
-    "en": "Add dashboard device"
+    "en": "Add dashboard device."
   },
   "0.6.4": {
-    "en": "Hide options for non HP23 users"
+    "en": "Hide options for non HP23 users."
   },
   "0.7.0": {
     "en": "Refactored UI, add support for multiple Homeys, and support multiple insights in same graph."
@@ -24,13 +24,13 @@
     "en": "Refactored editing UI to fix scrolling on mobile devices."
   },
   "0.9.1": {
-    "en": "Fix dragging widgets on mobile devices"
+    "en": "Fix dragging widgets on mobile devices."
   },
   "0.10.0": {
-    "en": "Added dashboard link widget"
+    "en": "Added dashboard link widget."
   },
   "0.10.2": {
-    "en": "Fix exception when selecting device"
+    "en": "Fix exception when selecting device."
   },
   "0.11.2": {
     "en": "Added Slider widget, custom insight colors and override titles."
@@ -42,18 +42,21 @@
     "en": "Fix controlling capabilities and editing dashboard links."
   },
   "0.12.2": {
-    "en": "Fix insights crashing when resolving owner name, and auto-adjust height when displayed as card. "
+    "en": "Fix insights crashing when resolving owner name, and auto-adjust height when displayed as card."
   },
   "0.12.3": {
-    "en": "Fixes Insight picker get owner name"
+    "en": "Fixes Insight picker get owner name."
   },
   "0.13.0": {
-    "en": "Add widget for logic variables and dashboard background image"
+    "en": "Add widget for logic variables and dashboard background image."
   },
   "0.13.1": {
-    "en": "Fixes missing view icons"
+    "en": "Fixes missing view icons."
   },
   "0.13.2": {
-    "en": "Fixes exception when selecting an unconfigured variable and insights migration"
+    "en": "Fixes exception when selecting an unconfigured variable and insights migration."
+  },
+  "0.14.0": {
+    "en": "Add iframe widget, add logout button and add stepped insights for boolean values."
   }
 }
