@@ -156,7 +156,7 @@
                             </Input>
                         {/if}
 
-                        <p class="pt-8">Obtain an API-Key by navigating to <b>Homey -> Settings -> API Keys</b>.</p>
+                        <p class="pt-8">Obtain an API-Key by navigating to <b>my.homey.app -> Settings -> API Keys</b>.</p>
                         <Input name="local-key" bind:value={localKey} error={localKeyError} label="Homey API-Key">
                             <Input.Label slot="label">Homey API-key</Input.Label>
                         </Input>
