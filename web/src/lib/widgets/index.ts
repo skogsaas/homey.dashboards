@@ -40,6 +40,10 @@ import {
 
 import SliderEditor from './slider/SliderEditor.svelte';
 import SliderWidget from './slider/SliderWidget.svelte';
+import { 
+    create as createSlider,
+    migrate as migrateSlider 
+} from './slider/SliderSettings';
 
 import TextEditor from "./text/TextEditor.svelte";
 import TextWidget from "./text/TextWidget.svelte";
@@ -171,8 +175,8 @@ export const widgets: WidgetInfo[] = [
         scopes: [
             { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] }
         ],
-        create: () => ({ id: uuid(), type: 'slider', version: 1 }),
-        migration: (e: WidgetSettings) => e
+        create: createSlider,
+        migration: migrateSlider
     },
     {
         type: 'variable', 

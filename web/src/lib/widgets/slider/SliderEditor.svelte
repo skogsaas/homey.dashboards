@@ -10,73 +10,45 @@
     import Input from 'stwui/input';
     import Toggle from 'stwui/toggle';
 
-    import type SliderSettings from "./SliderSettings";
-    import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
+    import type { SliderSettings_v2 } from "./SliderSettings";
+    import type { CapabilityObj } from '$lib/types/Homey';
     import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
 
     const dispatch = createEventDispatcher();
     
-    export let settings: SliderSettings;
+    export let settings: SliderSettings_v2;
 
-    let deviceId: string | undefined;
-    let capabilityId: string | undefined;
-    let title: string | undefined;
     let hideMinMax: boolean = false;
 
-    let device: DeviceObj | undefined;
+    let capabilityUri: string | undefined;
+    let title: string | undefined;
+    let iconId: string | undefined;
+
+    let capability: CapabilityObj | undefined;
 
     $: onSettings(settings);
 
-    $: device = deviceId ? $devices[deviceId] : undefined;
-    $: capability = device?.capabilitiesObj ? device.capabilitiesObj[capabilityId ?? ''] : undefined;
-
-    $: flatDevices = Object.values($devices)
-            .filter(d => Object.values(d.capabilitiesObj)
-                .some(c => 
-                    c.setable &&
-                    c.type === 'number' && 
-                    c.min !== undefined && 
-                    c.max !== undefined
-                ));
-    $: flatCapabilities = (device?.capabilitiesObj ? Object.values(device.capabilitiesObj) : [])
-            .filter(c => 
-                    c.setable &&
-                    c.type === 'number' && 
-                    c.min !== undefined && 
-                    c.max !== undefined)
-            .sort((a, b) => {
-                if(a.title === b.title) return 0;
-                if(a.title < b.title) return -1;
-                return 1;
-            });
-
-    $: onDevice(deviceId);
-    $: onCapability(capabilityId);
+    $: onCapability(capabilityUri);
     $: onTitle(title);
     $: onHideMinMax(hideMinMax);
 
-    function onSettings(s: SliderSettings) {
-        deviceId = s?.deviceId;
-        capabilityId = s?.capabilityId;
+    function onSettings(s: SliderSettings_v2) {
+        capabilityUri = s?.capabilityUri;
         title = s?.title;
         hideMinMax = s?.hideMinMax ?? false;
     }
 
-    function onDevice(id: string | undefined) {
-        if(id !== undefined && id !== settings.deviceId) {
-            dispatch('settings', { ...settings, deviceId: id, capabilityIds: [] });
-        }
-    }
-
     function onCapability(id: string | undefined) {
-        if(id !== undefined && id !== settings.capabilityId) {
-            dispatch('settings', { ...settings, capabilityId });
+        if(id !== settings.capabilityUri) {
+            dispatch('settings', { ...settings, capabilityUri: id });
         }
     }
 
     function onTitle(t: string | undefined) {
-        if(t !== settings.title) {
-            dispatch('settings', { ...settings, title });
+        const value = t !== undefined && t.length > 0 ? t : undefined;
+
+        if(value !== settings.title) {
+            dispatch('settings', { ...settings, title: value });
         }
     }
 
@@ -85,18 +57,21 @@
             dispatch('settings', { ...settings, hideMinMax: hide });
         }
     }
+
+    function capabilityFilter(capability: CapabilityObj) : boolean {
+        return capability.setable &&
+            capability.type === 'number' && 
+            capability.min !== undefined && 
+            capability.max !== undefined;
+    }
 </script>
 
-<DevicePicker bind:deviceId={deviceId} devices={flatDevices} />
-
-{#if device}
-    <div class="pt-4">
-        <CapabilityPicker bind:capabilityId={capabilityId} capabilities={flatCapabilities} />
-    </div>
-{/if}
+<div class="mt-2">
+    <CapabilityPicker bind:capabilityUri={capabilityUri} on:capability={(c) => (capability = c.detail)} {capabilityFilter} />
+</div>
 
 {#if capability}
-    <Input class="pt-4" name="title" bind:value={title} placeholder={capability.title} />
+    <Input name="title" bind:value={title} placeholder={capability.title} class="mt-2" />
 
     <div class="pt-4">
         <Toggle

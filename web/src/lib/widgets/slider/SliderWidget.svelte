@@ -1,25 +1,41 @@
 <script lang="ts">
     import { editing } from '$lib/stores/dashboard';
     import { devices, homey, scopes } from '$lib/stores/homey';
-    import type { CapabilityObj } from '$lib/types/Homey';
+    import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
-    import type SliderSettings from './SliderSettings';
+    import type { SliderSettings_v2 } from './SliderSettings';
 
     import Slider from 'stwui/slider';
     
-    export let settings: SliderSettings;
+    export let settings: SliderSettings_v2;
     export let mode: 'card'|'view';
 
-    $: device = $devices[settings.deviceId ?? ''];
-    $: capability = device?.capabilitiesObj ? device.capabilitiesObj[settings.capabilityId ?? ''] : undefined;
+    let deviceId: string = '';
+    let capabilityId: string = '';
 
+    let device: DeviceObj | undefined;
+    let capability: CapabilityObj | undefined;
+
+    $: onSettings(settings);
+
+    $: latestDevice = $devices[deviceId];
+    $: capability = latestDevice && capabilityId ? latestDevice.capabilitiesObj[capabilityId] : undefined;
     $: controllable = $scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.control');
+
     $: disabled = !controllable || $editing;
 
     let value: number;
 
     $: onCapability(capability);
     $: onValue(value);
+
+    function onSettings(s: SliderSettings_v2) {
+        if(s.capabilityUri) {
+            const segments = s.capabilityUri.split(':');
+            deviceId = segments[2];
+            capabilityId = segments[3];
+        }
+    }
 
     function onCapability(c: CapabilityObj | undefined) {
         value = c?.value ?? 0.0;
@@ -56,16 +72,18 @@
     }
 
     async function setCapabilityValue(capabilityId: string, value: number|boolean|string) {
-        await device.setCapabilityValue({ 
-            deviceId: device.id,
-            capabilityId,
-            value
-        });
+        if(device) {
+            await device.setCapabilityValue({ 
+                deviceId: device.id,
+                capabilityId,
+                value
+            });
+        }
     }
 </script>
 
 {#if capability === undefined}
-    {#if settings.capabilityId !== undefined}
+    {#if settings.capabilityUri !== undefined}
         <span>Capability not found</span>
     {:else}
         <span>Slider not configured</span>

@@ -25,6 +25,7 @@
         capability: CapabilityObj;
         uri: string;
         title: string;
+        search: string;
     }
 
     let open: boolean = false;
@@ -32,16 +33,17 @@
     let filtered: Item[] = [];
     let selected: Item | undefined;
 
-    $: flatDevices = Object.values($devices).filter(device => deviceFilter ? deviceFilter(device) : true);
+    $: flatDevices = (Object.values($devices ?? {})).filter(device => deviceFilter ? deviceFilter(device) : true);
     $: flatCapabilities = flatDevices
         .flatMap(device => Object
-            .values(device.capabilitiesObj)
+            .values(device.capabilitiesObj ?? {})
             .filter(capability => capabilityFilter ? capabilityFilter(capability) : true)
             .map(capability => ({ 
                 device, 
                 capability, 
                 uri: device.uri + ':' + capability.id,
-                title: (device.name + ' ' + capability.title).toLowerCase()
+                title: (device.name + ' - ' + capability.title),
+                search: (device.name + ' ' + capability.title).toLowerCase()
             })));
     $: sorted = (flatCapabilities ?? [])
         .sort((a, b) => {
@@ -58,7 +60,7 @@
         const normalized = value.toLowerCase();
 
         if(value.length > 0) {
-            filtered = sorted.filter(d => d.title.includes(normalized));
+            filtered = sorted.filter(d => d.search.includes(normalized));
         } else {
             filtered = sorted;
         }
