@@ -1,7 +1,7 @@
 import type { GridItem, GridItem_v0 } from "$lib/types/Grid";
 import { findCreate } from ".";
 import type { CapabilitySettings_v3, CapabilitySettings_v4 } from "./capability/CapabilitySettings";
-import { migrate as migrateCapability }from "./capability/CapabilitySettings";
+import { migrateOnce }from "./capability/CapabilitySettings";
 import { v4 as uuid } from 'uuid';
 import type { DeviceSettings_v1 } from "./device/DeviceSettings";
 import type SliderSettings from "./slider/SliderSettings";
@@ -60,4 +60,12 @@ function migrate_v0_v1(v0: GridItem_v0) : GridItem {
     }
 
     return item;
+}
+
+function migrateCapability(settings: any) : any {
+    while(settings.version < 3) {
+        settings = migrateOnce(settings);
+    }
+
+    return settings;
 }

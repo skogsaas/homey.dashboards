@@ -50,7 +50,7 @@ export function migrate(settings: any) : any {
     return settings;
 }
 
-function migrateOnce(settings: any) : any {
+export function migrateOnce(settings: any) : any {
     switch(settings.version) {
         case 5: return settings;
         case 4: return migrate_v4_v5(settings as CapabilitySettings_v4);
