@@ -83,6 +83,13 @@
                     <div>
                         <Input bind:value={search} name="search" placeholder="Search" />
                     </div>
+                    
+                    {#if search.length === 0} 
+                        <div class="mt-2 mb-4">
+                            NOTE: There are {lookup.length} icons available. Only {limit} are listed until you enter a search string.
+                        </div>
+                    {/if}
+
                     <div class="flex-grow overflow-auto">
                         <List>
                             {#each filtered as icon}
