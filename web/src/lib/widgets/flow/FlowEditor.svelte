@@ -2,13 +2,13 @@
     import { onMount, createEventDispatcher } from 'svelte';
     import { advancedFlows, basicFlows } from '$lib/stores/homey';
 
-    import type FlowSettings from "./FlowSettings";
+    import type { FlowSettings_v1 } from "./FlowSettings";
     import type { Flow } from '../../types/Homey';
 
     import FlowPicker from '$lib/components/FlowPicker.svelte';
     import IconPicker from '$lib/components/IconPicker.svelte';
 
-    export let settings: FlowSettings;
+    export let settings: FlowSettings_v1;
 
     const dispatch = createEventDispatcher();
 
@@ -28,7 +28,7 @@
     $: onFlow(flowId);
     $: onIcon(iconId);
 
-    function onSettings(s: FlowSettings) {
+    function onSettings(s: FlowSettings_v1) {
         flowId = s?.flowId;
         iconId = s?.iconId;
     }

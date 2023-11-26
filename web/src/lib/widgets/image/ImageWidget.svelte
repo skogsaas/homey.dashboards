@@ -1,10 +1,11 @@
 <script lang="ts">
     import { devices, homey } from '$lib/stores/homey';
+    import type { WidgetContext } from '$lib/types/Widgets';
 
     import type ImageSettings from './ImageSettings';
     
     export let settings: ImageSettings;
-    export let mode: 'card'|'view';
+    export let context: WidgetContext;
 
     let refreshSlug = 0;
     let refreshClear: number | undefined;

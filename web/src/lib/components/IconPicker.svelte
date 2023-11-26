@@ -6,7 +6,7 @@
     import List from 'stwui/list';
     import Icon from 'stwui/icon';
 
-    import { lookup, type IconMetadata, mdiDelete } from "./icons";
+    import { lookup, type IconMetadata, mdiDelete, mdiClose } from "./icons";
     import IconButton from './IconButton.svelte';
 
     export let iconId: string | undefined;
@@ -80,6 +80,12 @@
         <Modal handleClose={() => open = false}>
             <Modal.Content slot="content">
                 <Modal.Content.Body slot="body" class="h-full flex flex-col">
+                    <div class="relative w-full">
+                        <div class="absolute -top-4 -right-5 z-10">
+                            <IconButton data={mdiClose} on:click={() => open = false} />
+                        </div>
+                    </div>
+                    
                     <div>
                         <Input bind:value={search} name="search" placeholder="Search" />
                     </div>

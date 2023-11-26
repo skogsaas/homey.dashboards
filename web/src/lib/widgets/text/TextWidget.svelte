@@ -1,8 +1,9 @@
 <script lang="ts">
+    import type { WidgetContext } from '$lib/types/Widgets';
     import type TextSettings from './TextSettings';
     
     export let settings: TextSettings;
-    export let mode: 'card'|'view';
+    export let context: WidgetContext;
 
     $: text = settings?.text;
     $: size = settings?.size;

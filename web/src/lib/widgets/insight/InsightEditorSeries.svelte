@@ -1,5 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
+    import { v4 as uuid } from 'uuid';
 
     import Select from 'stwui/select';
     import Input from 'stwui/input';
@@ -7,11 +8,14 @@
     import Toggle from 'stwui/toggle';
 
     import { colors } from './colors';
-    import ColorPicker, { type RgbaColor } from 'svelte-awesome-color-picker';
+
+    import ColorPicker from '$lib/components/ColorPicker.svelte';
     
-    import type { Series_v4 } from './InsightSettings';
+    import type { Series_v5 } from './InsightSettings';
+    import ThresholdEditor from '$lib/components/thresholds/ThresholdEditor.svelte';
+    import type { Threshold } from '$lib/types/Widgets';
     
-    export let series: Series_v4;
+    export let series: Series_v5;
     export let index: number;
 
     const dispatch = createEventDispatcher();
@@ -57,8 +61,8 @@
     let insightId: string | undefined;
     let title: string | undefined;
     let type: Option;
-    let borderColor: RgbaColor;
-    let backgroundColor: RgbaColor;
+    let border: Threshold[];
+    let background: Threshold[];
     let fill: boolean;
     let aggregation: Option;
     let sampleRate: Option;
@@ -68,21 +72,21 @@
     $: onInsight(insightId);
     $: onTitle(title);
     $: onType(type);
-    $: onBorderColor(borderColor);
-    $: onBackgroundColor(backgroundColor);
+    $: onBorder(border);
+    $: onBackground(background);
     $: onFill(fill);
     $: onAggregation(aggregation);
     $: onSampleRate(sampleRate);
     
-    function onSeries(s: Series_v4) {
+    function onSeries(s: Series_v5) {
         insightId = series.insightId;
         title = series.title;
         type = types.find(t => t.value === (series.type ?? 'line'))!;
-        borderColor = stringToRgba(series.borderColor ?? colors[index % colors.length]);
-        backgroundColor = stringToRgba(series.backgroundColor ?? colors[index % colors.length]);
         fill = series.fill ?? false;
         aggregation = aggregations.find(a => a.value === (series?.aggregation ?? 'none'))!;
         sampleRate = sampleRates.find(r => r.value === ('' + (series?.sampleRate ?? 60)))!;
+        border = s.border ?? [{ id: uuid(), color: colors[index % colors.length], value: Number.MIN_SAFE_INTEGER }];
+        background = s.background ?? [{ id: uuid(), color: colors[index % colors.length], value: Number.MIN_SAFE_INTEGER }];
     };
 
     function onInsight(value: string | undefined) {
@@ -109,24 +113,20 @@
         dispatch('series', { ...series, type: option.value });
     }
 
-    function onBorderColor(value: RgbaColor) {
-        const stringValue = `rgba(${value.r},${value.g},${value.b},${value.a})`
-        
-        if(stringValue === series.borderColor) {
+    function onBorder(value: Threshold[]) {
+        if(value === series.border) {
             return;
         }
 
-        dispatch('series', { ...series, borderColor: stringValue });
+        dispatch('series', { ...series, border: value });
     }
 
-    function onBackgroundColor(value: RgbaColor) {
-        const stringValue = `rgba(${value.r},${value.g},${value.b},${value.a})`
-        
-        if(stringValue === series.backgroundColor) {
+    function onBackground(value: Threshold[]) {
+        if(value === series.background) {
             return;
         }
 
-        dispatch('series', { ...series, backgroundColor: stringValue });
+        dispatch('series', { ...series, background: value });
     }
 
     function onFill(value: boolean) {
@@ -151,16 +151,6 @@
         }
 
         dispatch('series', { ...series, sampleRate: Number(option.value) });
-    }
-
-    function stringToRgba(value: string) : RgbaColor {
-        var result = /^rgba\((.+),(.+),(.+),(.+)\)$/i.exec(value);
-        return {
-            r: parseInt(result![1]),
-            g: parseInt(result![2]),
-            b: parseInt(result![3]),
-            a: parseFloat(result![4])
-        }
     }
 </script>
 
@@ -202,11 +192,12 @@
     </Divider>
 
     <h3 class="mb-4">{type.label + ' color'}</h3>
-    <ColorPicker bind:rgb={borderColor} isOpen isPopup={false} isInput={false} />
+    <ThresholdEditor bind:thresholds={border} colorMode="rgba" />
     
     <h3 class="mb-4 mt-4">Background color</h3>
-    
-    <div class="mb-4">
+    <ThresholdEditor bind:thresholds={background} colorMode="rgba" />
+
+    <div class="mt-4">
         <Toggle
             name="fill"
             bind:on={fill}
@@ -216,6 +207,4 @@
             </Toggle.ContentLeft>
         </Toggle>
     </div>
-
-    <ColorPicker bind:rgb={backgroundColor} label="Background color" isOpen isPopup={false} isInput={false} />
 </div>

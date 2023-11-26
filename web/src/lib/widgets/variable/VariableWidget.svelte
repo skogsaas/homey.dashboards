@@ -1,19 +1,20 @@
 <script lang="ts">
     import { variables, scopes } from '$lib/stores/homey';
 
-    import type { CapabilityEvent, Variable, VariableEvent } from '$lib/types/Homey';
+    import type { Variable } from '$lib/types/Homey';
     
-    import Slider from './components/Slider.svelte'
-    import Toggle from './components/Toggle.svelte'
-    import Text from './components/Text.svelte'
+    import NumberVariable from './components/NumberVariable.svelte'
+    import BooleanVariable from './components/BooleanVariable.svelte'
+    import Textvariable from './components/TextVariable.svelte'
     
     import Icon from 'stwui/icon';
 
-    import type { VariableSettings_v1 } from './VariableSettings';
+    import type { VariableSettings_v2 } from './VariableSettings';
     import { getIcon } from '$lib/components/icons/utils';
+    import type { WidgetContext } from '$lib/types/Widgets';
     
-    export let settings: VariableSettings_v1;
-    export let mode: 'card'|'view';    
+    export let settings: VariableSettings_v2;
+    export let context: WidgetContext;
 
     let variableId: string = '';
     let variable: Variable | undefined;
@@ -23,14 +24,14 @@
     $: variable = $variables[variableId];
     $: controllable = $scopes.includes('homey') || $scopes.includes('homey.logic');
     
-    function onSettings(s: VariableSettings_v1) {
+    function onSettings(s: VariableSettings_v2) {
         variableId = s.variableId ?? '';
     }
 </script>
 
 {#if variable !== undefined}
     <div class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer">
-        {#if mode === 'card'}
+        {#if context.mode === 'card'}
             {#if settings.iconId !== undefined}
                 <Icon data={getIcon(settings.iconId)} class="mr-1" />
             {/if}
@@ -41,11 +42,11 @@
         {/if}
 
         {#if variable.type === 'number'}
-            <Slider {settings} {variable} {controllable} {mode} />
+            <NumberVariable {settings} {variable} {controllable} mode={context.mode} />
         {:else if variable.type === 'boolean'}
-            <Toggle {settings} {variable} {controllable} {mode} />
+            <BooleanVariable {settings} {variable} {controllable} mode={context.mode} />
         {:else} 
-            <Text {settings} {variable} {controllable} {mode} />
+            <Textvariable {settings} {variable} {controllable} mode={context.mode} />
         {/if}
     </div>
 {:else}

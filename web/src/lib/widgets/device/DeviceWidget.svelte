@@ -6,9 +6,10 @@
     import { getIcon } from '$lib/components/icons/utils';
 
     import Icon from 'stwui/icon';
+    import type { WidgetContext } from '$lib/types/Widgets';
 
     export let settings: DeviceSettings_v1;
-    export let mode: 'card'|'view';
+    export let context: WidgetContext;
 
     let device: DeviceObj;
     $: device = $devices[settings.deviceId ?? ''];

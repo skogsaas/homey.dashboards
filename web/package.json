@@ -1,6 +1,6 @@
 {
   "name": "skogsaas.dashboards.svelte",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "private": true,
   "scripts": {
     "dev": "vite dev",
@@ -43,7 +43,7 @@
     "@mdi/svg": "^7.2.96",
     "@mdi/util": "^0.3.2",
     "@sentry/svelte": "^7.69.0",
-    "chart.js": "^4.3.0",
+    "chart.js": "^4.4.0",
     "chartjs-adapter-date-fns": "^3.0.0",
     "date-fns": "^2.30.0",
     "handlebars": "^4.7.8",

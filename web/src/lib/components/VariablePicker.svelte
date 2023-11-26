@@ -12,7 +12,7 @@
 
     import { variables } from "$lib/stores/homey";
     import IconButton from "./IconButton.svelte";
-    import { mdiDelete, mdiVariable } from "./icons";
+    import { mdiClose, mdiDelete, mdiVariable } from "./icons";
 
     export let variableId: string | undefined;
     export let placeholder: string = 'Select variable';
@@ -79,6 +79,11 @@
         <Modal handleClose={() => open = false}>
             <Modal.Content slot="content">
                 <Modal.Content.Body slot="body" class="h-full">
+                    <div class="relative w-full">
+                        <div class="absolute -top-4 -right-5 z-10">
+                            <IconButton data={mdiClose} on:click={() => open = false} />
+                        </div>
+                    </div>
                     <div>
                         <Input bind:value={search} name="search" placeholder="Search" />
                     </div>

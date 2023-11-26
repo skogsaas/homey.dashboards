@@ -2,11 +2,11 @@
     import { editing } from '$lib/stores/dashboard';
     import type { Variable } from '$lib/types/Homey';
     
-    import Slider from 'stwui/slider';
-    import type { VariableSettings_v1 } from '../VariableSettings';
+    import type { VariableSettings_v2 } from '../VariableSettings';
     import { homey } from '$lib/stores/homey';
+    import Numeric from '$lib/components/numeric/Numeric.svelte';
 
-    export let settings: VariableSettings_v1;
+    export let settings: VariableSettings_v2;
     export let variable: Variable;
     export let controllable: boolean;
     export let mode: 'card'|'view';
@@ -35,7 +35,19 @@
 </script>
 
 {#if mode === 'card'}
-    <span class="whitespace-nowrap cursor-pointer">{value} {settings.number?.unit ?? ''}</span>
+    {#if settings.number?.variant === 'input'}
+        <Numeric
+            variant={settings.number?.variant}
+            bind:value={value}
+            min={settings.number?.min} 
+            max={settings.number?.max} 
+            step={settings.number?.step}
+            unit="%"
+            disabled={disabled} 
+        />
+    {:else}
+        <span class="whitespace-nowrap cursor-pointer">{value} {settings.number?.unit ?? ''}</span>
+    {/if}
 {:else}
     <div class="flex flex-col w-full">
         <div class="mx-auto">
@@ -47,8 +59,8 @@
 
         <div class="flex flex-row mt-4">
             <span class="whitespace-nowrap mr-4">{settings.number?.min ?? ''} {settings.number?.unit ?? ''}</span>
-            <Slider 
-                class="w-full"
+            <Numeric
+                variant={settings.number?.variant}
                 bind:value={value}
                 min={settings.number?.min} 
                 max={settings.number?.max} 

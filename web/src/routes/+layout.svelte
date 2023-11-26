@@ -246,18 +246,18 @@
 
       localDashboards.update(d);
       
-      await goto(base + '/board?id=' + d.id);
+      await goto(base + '/board/?id=' + d.id);
     }
 
     function openDashboard(dash: Dashboard) : Promise<void> {
       menuOpen = false;
       dashboardMenuOpen = false;
-      return goto(base + '/board?id=' + dash.id)
+      return goto(base + '/board/?id=' + dash.id)
     }
 
     function openDashboardSettings(dash: Dashboard) : Promise<void> {
       menuOpen = false;
-      return goto(base + '/board/settings?id=' + dash.id)
+      return goto(base + '/board/settings/?id=' + dash.id)
     }
 
     function openAddDashboard() {
@@ -442,7 +442,7 @@
         </Dropdown>
         
         {#if $dashboard !== undefined}
-          <Button on:click={() => goto(base + '/board?id=' + $dashboard.id)}>{$dashboard.title}</Button>
+          <Button on:click={() => goto(base + '/board/?id=' + $dashboard.id)}>{$dashboard.title}</Button>
         {/if}
 
         <div class="flex flex-grow justify-end">
@@ -454,7 +454,7 @@
             <Button on:click={() => toggleEdit()}>
               <Button.Icon slot="icon" data={mdiViewDashboardEdit} />
             </Button>
-            <Button on:click={() => goto(base + '/board/settings?id=' + $dashboard.id)}>
+            <Button on:click={() => goto(base + '/board/settings/?id=' + $dashboard.id)}>
               <Button.Icon slot="icon" data={mdiCog} />
             </Button>
           {/if}

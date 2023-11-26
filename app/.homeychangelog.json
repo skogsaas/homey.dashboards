@@ -58,5 +58,11 @@
   },
   "0.14.0": {
     "en": "Add iframe widget, add logout button and add stepped insights for boolean values."
+  },
+  "0.14.1": {
+    "en": "Fix Slider widget editor after combining CapabilityPicker."
+  },
+  "0.15.0": {
+    "en": "Add insight thresholds, variable variants and bug fixes."
   }
 }

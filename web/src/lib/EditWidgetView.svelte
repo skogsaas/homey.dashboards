@@ -1,11 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    import {dndzone} from "svelte-dnd-action";
-
-    import { findCreate, findEditor, findWidget, widgets } from './widgets';
-    import type { WidgetSettings } from './types/Widgets';
-    import type { GridItem } from './types/Grid';
+    import { v4 as uuid } from 'uuid';
+    
+    import { findCreate, findEditor, findWidget, widgets as widgetTypes } from './widgets';
+    import type { WidgetContext, WidgetSettings, WidgetSettingsMap } from './types/Widgets';
+    import type { GridItemCollectionSettings_v2, GridItem_v1 } from './types/Grid';
 
     import Button from "stwui/button";
     import Divider from "stwui/divider";
@@ -13,96 +13,126 @@
 
     import Drawer from './components/Drawer.svelte';
     import IconButton from './components/IconButton.svelte';
+    import type { ColumnSettings_v1 } from './widgets/column/ColumnSettings';
+    import { dndzone } from 'svelte-dnd-action';
     import { mdiDelete } from './components/icons';
 
     export let open: boolean = false;
-    export let item: GridItem | undefined;
+    export let item: GridItem_v1 | undefined;
 
     const dispatch = createEventDispatcher();
 
-    let active: 'card'|'view' = 'card';
+    let copy: GridItem_v1 | undefined;
 
-    let cardSettings: WidgetSettings[] = [];
-    let viewSettings: WidgetSettings[] = [];
-    let selectedWidget: WidgetSettings | undefined;
+    let mode: 'card'|'view' = 'card';
+    let context: WidgetContext = { mode: 'card', editing: true, select: selectWidget, update: updateWidget };
 
     $: onOpen(open);
-    $: onActive(active);
+    $: onMode(mode);
     $: onItem(item);
-    $: onSelectedSettings(selectedWidget);
+    $: onSelected(selected);
 
-    function onOpen(o: boolean) {
-        if(o) {
-            active = 'card';
+    let settings: WidgetSettings[];
+    let selected: WidgetSettings | undefined;
+
+    function onOpen(_open: boolean) {
+        if(_open) {
+            mode = 'card';
         }
     }
 
-    function onActive(a: string) {
-        selectedWidget = undefined;
+    function onMode(_mode: string) {
+        selected = undefined;
     }
 
-    function onItem(i: GridItem | undefined) {
-        if(item === undefined) {
-            cardSettings = [];
-            viewSettings = [];
-        } else {
-            // Make a copy of the settings to use until it is saved by the user.
-            cardSettings = (item.card ?? []).map(s => ({ ...s }));
-            viewSettings = (item.view ?? []).map(s => ({ ...s }));
+    function onItem(_item: GridItem_v1 | undefined) {
+        if(_item === undefined) {
+            return;
+        }
 
-            selectedWidget = cardSettings[0];
+        copy = JSON.parse(JSON.stringify(_item));
+
+        settings = mode === 'card' ? copy!.card : copy!.view;
+        context = { mode, editing: true, select: selectWidget, update: updateWidget };
+
+        if(settings.length > 0) {
+            selected = settings[0];
         }
     }
 
-    function onSelectedSettings(settings: WidgetSettings | undefined) {
+    function onSelected(_selected: WidgetSettings | undefined) {
+        if(_selected !== undefined) {
+            context = { ...context }; // Force refresh
+        }
+    }
+
+    function selectWidget(id: string) {
+        selected = settings?.find(w => w.id === id);
+    }
+
+    function updateWidget(_settings: WidgetSettings) {
         if(settings !== undefined) {
-            if(active === 'card') {
-                const index = cardSettings.findIndex(s => s.id === settings.id);
-                const copy = [...cardSettings];
-                copy[index] = settings;
+            const index = settings.findIndex(s => s.id === _settings.id);
+            const settingsCopy = [...settings];
+            settingsCopy[index] = _settings;
+            settings = settingsCopy;
 
-                cardSettings = copy;
+            if(mode === 'card') {
+                copy!.card = settings;
             } else {
-                const index = viewSettings.findIndex(s => s.id === settings.id);
-                const copy = [...viewSettings];
-                copy[index] = settings;
+                copy!.view = settings;
+            }
 
-                viewSettings = copy;
+            if(selected !== undefined && selected.id === _settings.id) {
+                selected = _settings;
             }
         }
     }
 
     function handleSort(e: any) {
-        if(active === 'card') {
-            cardSettings = e.detail.items;
+        settings = e.detail.items;
+            
+        if(mode === 'card') {
+            copy!.card = settings;
         } else {
-            viewSettings = e.detail.items;
+            copy!.view = settings;
         }
     }
 
     function addWidget(type: string) : void {
-        if(type === undefined) {
+        if(type === undefined || copy === undefined) {
           return;
         }
 
         const create = findCreate(type);
 
         if(create !== undefined) {
-            const settings = create();
+            const widget = create();
 
-            if(active === 'card') {
-                cardSettings = [...cardSettings, settings];
+            settings = [...settings!, widget];
+            
+            if(mode === 'card') {
+                copy.card = settings;
             } else {
-                viewSettings = [...viewSettings, settings];
+                copy.view = settings;
             }
+
+            context = { ...context };
         }
     }
 
     function removeWidget(id: string) {
-        if(active === 'card') {
-            cardSettings = cardSettings.filter(s => s.id !== id);
-        } else {
-            viewSettings = viewSettings.filter(s => s.id !== id);
+        if(copy !== undefined && selected !== undefined) {
+
+            settings = settings!.filter(w => w.id !== id);
+
+            if(mode === 'card') {
+                copy.card = settings;
+            } else {
+                copy.view = settings;
+            }
+
+            context = { ...context };
         }
     }
 
@@ -116,7 +146,7 @@
     }
 
     function save() {
-        dispatch('item', { ...item, card: cardSettings, view: viewSettings });
+        dispatch('item', { ...copy });
     }
 </script>
 
@@ -134,7 +164,7 @@
 
             <div class="flex justify-evenly w-full flex-wrap">
                 <!-- svelte-ignore a11y-no-static-element-interactions -->
-                {#each widgets as widget}
+                {#each widgetTypes as widget}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <div class="flex items-center cursor-pointer" on:click={() => addWidget(widget.type)}>
                         <IconButton data={widget.icon} />
@@ -143,29 +173,29 @@
                 {/each}
             </div>
 
-            <Tabs currentTab={active} variant="full-width">
-                <Tabs.Tab key="card" href="#card" on:click={() => (active = 'card')}>Card</Tabs.Tab>
-                <Tabs.Tab key="view" href="#view" on:click={() => (active = 'view')}>View</Tabs.Tab>
+            <Tabs currentTab={mode} variant="full-width">
+                <Tabs.Tab key="card" href="#card" on:click={() => (mode = 'card')}>Card</Tabs.Tab>
+                <Tabs.Tab key="view" href="#view" on:click={() => (mode = 'view')}>View</Tabs.Tab>
              </Tabs>
 
-             <Divider>
+            <Divider>
                 <Divider.Label slot="label">Preview</Divider.Label>
-            </Divider> 
+            </Divider>
 
-            <div use:dndzone={{ items: active === 'card' ? cardSettings : viewSettings, flipDurationMs: 200 }} on:consider={handleSort} on:finalize={handleSort} class="w-full">
-                {#each (active === 'card' ? cardSettings : viewSettings) as settings(settings.id)}
-                    {#if settings?.type !== undefined}
+            <div use:dndzone={{ items: settings, flipDurationMs: 200 }} on:consider={handleSort} on:finalize={handleSort} class="w-full">
+                {#each settings as s(s.id)}
+                    {#if s?.type !== undefined}
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <!-- svelte-ignore a11y-no-static-element-interactions -->
-                        <div class="w-full flex justify-between" on:click={e => selectedWidget = settings} class:border-2={selectedWidget === settings}>
+                        <div class="w-full flex justify-between" on:click={e => context.select(s.id)} class:border-2={selected === s}>
                             <svelte:component 
-                                this={findWidget(settings.type)}
-                                settings={settings}
-                                mode={active}
+                                this={findWidget(s.type)}
+                                settings={s}
+                                context={context}
                             />
 
                             <div class="flex items-center">
-                                <IconButton data={mdiDelete} on:click={() => removeWidget(settings.id)} />
+                                <IconButton data={mdiDelete} on:click={() => removeWidget(s.id)} />
                             </div>
                         </div>
                     {/if}
@@ -176,12 +206,12 @@
                 <Divider.Label slot="label">Settings</Divider.Label>
             </Divider>
 
-            {#if selectedWidget}
+            {#if selected}
                 <div class="mt-5">
                     <svelte:component 
-                        this={findEditor(selectedWidget.type)}
-                        settings={selectedWidget}
-                        on:settings={e => selectedWidget = e.detail}
+                        this={findEditor(selected.type)}
+                        settings={selected}
+                        on:settings={e => updateWidget(e.detail)}
                     />
                 </div>
             {/if}

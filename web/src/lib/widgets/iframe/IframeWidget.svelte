@@ -4,6 +4,7 @@
     import type IframeSettings from './IframeSettings';
 
     export let settings: IframeSettings;
+    export let context: WidgetContext;
 
     $: style = getSize(settings);
     $: sandbox = getSandbox(settings);

@@ -2,11 +2,11 @@
     import { editing } from '$lib/stores/dashboard';
     import type { Variable } from '$lib/types/Homey';
     
-    import Toggle from 'stwui/toggle';
-    import type { VariableSettings_v1 } from '../VariableSettings';
+    import Boolean from '$lib/components/boolean/Boolean.svelte';
+    import type { VariableSettings_v2 } from '../VariableSettings';
     import { homey } from '$lib/stores/homey';
 
-    export let settings: VariableSettings_v1;
+    export let settings: VariableSettings_v2;
     export let variable: Variable;
     export let controllable: boolean;
     export let mode: 'card'|'view';
@@ -41,17 +41,31 @@
 
 <div class:w-full={mode === 'view'} on:click={e => { if(!$editing) { e.stopPropagation(); } }}>
     {#if mode === 'card'}
-        <Toggle
-            name="toggle"
-            bind:on={value}
+        <Boolean
+            variant={settings.boolean?.variant}
+            bind:value={value}
+            color={settings.boolean?.color}
+            colorTrue={settings.boolean?.colorTrue}
+            colorFalse={settings.boolean?.colorFalse}
+            icon={settings.boolean?.iconId}
+            iconTrue={settings.boolean?.iconTrueId}
+            iconFalse={settings.boolean?.iconFalseId}
+            {disabled}
         />
     {:else}
         <div class="flex flex-row items-center w-full">
             <h3>{settings.title ?? variable.name}</h3>
             <div class="mx-auto"></div>
-            <Toggle
-                name="toggle"
-                bind:on={value}
+            <Boolean
+                variant={settings.boolean?.variant}
+                bind:value={value}
+                color={settings.boolean?.color}
+                colorTrue={settings.boolean?.colorTrue}
+                colorFalse={settings.boolean?.colorFalse}
+                icon={settings.boolean?.iconId}
+                iconTrue={settings.boolean?.iconTrueId}
+                iconFalse={settings.boolean?.iconFalseId}
+                {disabled}
             />
         </div>
     {/if}

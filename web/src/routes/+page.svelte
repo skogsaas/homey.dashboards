@@ -116,7 +116,7 @@
                 <Card.Content>
                     <List>
                         {#each dashboards as dashboard}
-                            <List.Item on:click={() => goto(base + '/board?id=' + dashboard.id)} class="cursor-pointer">   
+                            <List.Item on:click={() => goto(base + '/board/?id=' + dashboard.id)} class="cursor-pointer">   
                                 {dashboard.title}
                             </List.Item>
                         {/each}

@@ -2,8 +2,8 @@
     import { createEventDispatcher } from 'svelte';
     import { devices, insights } from '$lib/stores/homey';
 
-    import type InsightSettings from "./InsightSettings";
-    import type { Series_v4 } from './InsightSettings';
+    import type { InsightSettings_v5 } from "./InsightSettings";
+    import type { Series_v5 } from './InsightSettings';
 
     import Button from 'stwui/button';
     import Select from 'stwui/select';
@@ -38,18 +38,18 @@
         {value: 'last2Years', label: 'Last 2 years'}
     ];
 
-    export let settings: InsightSettings;
+    export let settings: InsightSettings_v5;
 
     let openInsightId: string | undefined;
     let resolution: Option;
-    let series: Series_v4[] = [];
+    let series: Series_v5[] = [];
 
     let selectedLogId: string | undefined;
 
     $: onSettings(settings);
     $: onResolution(resolution);
 
-    function onSettings(s: InsightSettings) {
+    function onSettings(s: InsightSettings_v5) {
         resolution = resolutions.find(r => r.value === (settings.resolution ?? 'today'))!;
         series = [...settings?.series ?? []];
     };
@@ -70,7 +70,7 @@
         dispatch('settings', { ...settings, series: updatedSeries });
     }
 
-    function onSeries(index: number, s: Series_v4) {
+    function onSeries(index: number, s: Series_v5) {
         const updatedSeries = [...series];
         updatedSeries[index] = s;
 

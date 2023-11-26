@@ -8,8 +8,10 @@
 
     import type DashboardLinkSettings from './DashboardLinkSettings';
     import { getIcon } from '$lib/components/icons/utils';
+    import type { WidgetContext } from '$lib/types/Widgets';
 
     export let settings: DashboardLinkSettings;
+    export let context: WidgetContext;
 
     $: dashboardId = settings?.dashboardId;
     $: dashboards = { ...$homeyDashboards, ...$localDashboards };

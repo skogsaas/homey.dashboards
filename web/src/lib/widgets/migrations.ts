@@ -1,22 +1,28 @@
-import type { GridItem, GridItem_v0 } from "$lib/types/Grid";
+import type { GridItem_v1, GridItem_v0 } from "$lib/types/Grid";
 import { findCreate } from ".";
 import type { CapabilitySettings_v3, CapabilitySettings_v4 } from "./capability/CapabilitySettings";
-import { migrateOnce }from "./capability/CapabilitySettings";
 import { v4 as uuid } from 'uuid';
 import type { DeviceSettings_v1 } from "./device/DeviceSettings";
-import type SliderSettings from "./slider/SliderSettings";
+import type { SliderSettings_v1 } from "./slider/SliderSettings";
 
-export function migrate(item: GridItem) : GridItem {
+export function migrate(settings: any) : any {
+    while(settings.version !== 1) {
+        settings = migrateOnce(settings);
+    }
+
+    return settings;
+}
+export function migrateOnce(item: any) : any {
     switch(item.version) {
         case 1: return item;
 
         case undefined:
-        default: return migrate_v0_v1(item as unknown as GridItem_v0);
+        default: return migrate_v0_v1(item as GridItem_v0);
     }
 }
 
-function migrate_v0_v1(v0: GridItem_v0) : GridItem {
-    const item: GridItem = {
+function migrate_v0_v1(v0: GridItem_v0) : GridItem_v1 {
+    const item: GridItem_v1 = {
         ...v0,
         version: 1,
         card: [v0.settings],
@@ -46,7 +52,7 @@ function migrate_v0_v1(v0: GridItem_v0) : GridItem {
         
         item.card = [device, ...settings_v4];
     } else if(v0.settings.type === 'slider') {
-        const settings_v1 = v0.settings as SliderSettings;
+        const settings_v1 = v0.settings as SliderSettings_v1;
         const device: DeviceSettings_v1 = { 
             id: uuid(), 
             type: 'device', 

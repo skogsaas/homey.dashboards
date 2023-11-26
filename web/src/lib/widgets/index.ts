@@ -190,7 +190,7 @@ export const widgets: WidgetInfo[] = [
         ],
         create: createVariable,
         migration: migrateVariable
-    },
+    }
 ];
 
 export function findLabel(type: string) : string | undefined {

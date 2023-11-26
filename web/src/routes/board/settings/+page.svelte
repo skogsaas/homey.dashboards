@@ -42,8 +42,6 @@
             currentDashboard.set(d);
             dashboard = d;
 
-            console.log(dashboard);
-
             title = dashboard.title;
             backgroundImage = dashboard.backgroundImage;
         }
@@ -63,8 +61,6 @@
             } else if(dashboard.source === 'homey') {
                 const settings = { items: dashboard.items, backgroundImage };
                 let success: boolean = false;
-
-                console.log(settings);
 
                 // Send over webhook
                 try {

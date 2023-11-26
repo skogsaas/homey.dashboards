@@ -1,16 +1,17 @@
 <script lang="ts">
     import { advancedFlows, basicFlows, homey } from '$lib/stores/homey';
 
-    import type FlowSettings from './FlowSettings';
+    import type { FlowSettings_v1 } from './FlowSettings';
     import type { Flow } from '$lib/types/Homey';
 
     import { editing } from '$lib/stores/dashboard';
     
     import IconButton from '$lib/components/IconButton.svelte';
     import { getIcon } from '$lib/components/icons/utils';
+    import type { WidgetContext } from '$lib/types/Widgets';
 
-    export let settings: FlowSettings;
-    export let mode: 'card'|'view';
+    export let settings: FlowSettings_v1;
+    export let context: WidgetContext;
 
     $: flow = settings?.flowId !== undefined ? $basicFlows[settings.flowId] as Flow ?? $advancedFlows[settings.flowId] as Flow : undefined;   
 

@@ -2,13 +2,14 @@
     import { editing } from '$lib/stores/dashboard';
     import { devices, homey, scopes } from '$lib/stores/homey';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
+    import type { WidgetContext } from '$lib/types/Widgets';
 
     import type { SliderSettings_v2 } from './SliderSettings';
 
     import Slider from 'stwui/slider';
     
     export let settings: SliderSettings_v2;
-    export let mode: 'card'|'view';
+    export let context: WidgetContext;
 
     let deviceId: string = '';
     let capabilityId: string = '';
@@ -18,8 +19,8 @@
 
     $: onSettings(settings);
 
-    $: latestDevice = $devices[deviceId];
-    $: capability = latestDevice && capabilityId ? latestDevice.capabilitiesObj[capabilityId] : undefined;
+    $: device = $devices[deviceId];
+    $: capability = device && capabilityId ? device.capabilitiesObj[capabilityId] : undefined;
     $: controllable = $scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.control');
 
     $: disabled = !controllable || $editing;
@@ -29,22 +30,22 @@
     $: onCapability(capability);
     $: onValue(value);
 
-    function onSettings(s: SliderSettings_v2) {
-        if(s.capabilityUri) {
-            const segments = s.capabilityUri.split(':');
+    function onSettings(_settings: SliderSettings_v2) {
+        if(_settings.capabilityUri) {
+            const segments = _settings.capabilityUri.split(':');
             deviceId = segments[2];
             capabilityId = segments[3];
         }
     }
 
-    function onCapability(c: CapabilityObj | undefined) {
-        value = c?.value ?? 0.0;
+    function onCapability(_capability: CapabilityObj | undefined) {
+        value = _capability?.value ?? 0.0;
     }
 
-    async function onValue(v: number) {
-        if(capability !== undefined && v !== capability.value) {
+    async function onValue(_value: number) {
+        if(capability !== undefined && _value !== capability.value) {
             if(!disabled) {
-                await setCapabilityValue(capability.id, v);
+                await setCapabilityValue(_value);
             }
         }
     }
@@ -71,12 +72,12 @@
         return value;
     }
 
-    async function setCapabilityValue(capabilityId: string, value: number|boolean|string) {
-        if(device) {
+    async function setCapabilityValue(_value: number|boolean|string) {
+        if(device && capability) {
             await device.setCapabilityValue({ 
                 deviceId: device.id,
-                capabilityId,
-                value
+                capabilityId: capability.id,
+                value: _value
             });
         }
     }

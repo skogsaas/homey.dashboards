@@ -21,9 +21,9 @@
     import Icon from "stwui/icon";
 
     // Types
-    import type { GridItem } from '$lib/types/Grid';
-    import type { WidgetSettings } from '$lib/types/Widgets';
-    import { widgets, findCreate, findLabel, findMigration, findView, findWidget } from '$lib/widgets';
+    import type { GridItem_v1 } from '$lib/types/Grid';
+    import type { WidgetContext } from '$lib/types/Widgets';
+    import { findMigration, findWidget } from '$lib/widgets';
     import type Dashboard from '$lib/types/Dashboard';
     
     import Grid from "$lib/components/grid/index.svelte";
@@ -35,6 +35,8 @@
     import { webhookId, webhookUrl } from '$lib/constants';
 
     import { migrate as migrateGridItem } from '$lib/widgets/migrations';
+    import IconButton from '$lib/components/IconButton.svelte';
+    import { mdiClose } from '$lib/components/icons';
     
     const smallBreakpoint = 640;
     const mediumBreakpoint = 768;
@@ -55,13 +57,14 @@
         [xlargeBreakpoint, xlargeColumns]
     ];
 
-    let items: GridItem[] = [];
+    let items: GridItem_v1[] = [];
     
     let editOpen: boolean = false;
-    let editItem: GridItem;
+    let editItem: GridItem_v1;
 
     let viewOpen: boolean = false;
-    let viewItem: GridItem;
+    let viewItem: GridItem_v1 | undefined;
+    let viewContext: WidgetContext = { mode: "view", editing: false, select: () => {}, update: () => {} };
 
     let dashboard: Dashboard | undefined;
     let savingDashboard: boolean = false;
@@ -100,7 +103,7 @@
     function onEditing(edit: boolean) { 
         const result = [...items];
 
-        result.forEach((item: GridItem) => { 
+        result.forEach((item: GridItem_v1) => { 
             columns.forEach(column => {
                 item[column].draggable = edit && !item[column].fixed;
                 item[column].resizable = edit && !item[column].fixed;
@@ -112,8 +115,8 @@
         items = result;
     }
 
-    function migrateWidgets(i: GridItem[]) : GridItem[] {
-      const result: GridItem[] = [];
+    function migrateWidgets(i: any[]) : GridItem_v1[] {
+      const result: GridItem_v1[] = [];
 
       for(let item of i) {
         let migratedItem = { ...migrateGridItem(item) };
@@ -134,9 +137,9 @@
 
     function addWidget() {
         // Create a new item, but don't add it until the user saves
-        const item: GridItem = { 
+        const item: GridItem_v1 = { 
             id: uuid(), 
-            version: 1, 
+            version: 1,
             card: [],
             view: []
         };
@@ -145,17 +148,17 @@
         editOpen = true;
     }
 
-    function editWidget(item: GridItem) : void {
+    function editWidget(item: GridItem_v1) : void {
         editItem = item;
         editOpen = true;
     }
 
-    function viewWidget(item: GridItem) : void {
+    function viewWidget(item: GridItem_v1) : void {
         viewItem = item;
         viewOpen = true;
     }
 
-    function addItem(item: GridItem) {
+    function addItem(item: GridItem_v1) {
         const result = [...items, item];
 
         columns.forEach(column => {
@@ -176,7 +179,7 @@
         items = items.filter(item => item.id !== id);
     }
 
-    function setItemSettings(item: GridItem) {
+    function setItemSettings(item: GridItem_v1) {
         editOpen = false;
 
         const index = items.findIndex(i => i.id === item.id);
@@ -268,7 +271,7 @@
         editing.set(false);
     }
     
-    function stripGrid(i: GridItem[]) { 
+    function stripGrid(i: GridItem_v1[]) { 
         const result = [...i];
 
         result.forEach((item: any) => { 
@@ -366,12 +369,17 @@
             <Modal handleClose={() => viewOpen = false}>
                 <Modal.Content slot="content">
                     <Modal.Content.Body slot="body">
+                        <div class="relative w-full">
+                            <div class="absolute -top-4 -right-5 z-10">
+                                <IconButton data={mdiClose} on:click={() => viewOpen = false} />
+                            </div>
+                        </div>
                         {#if viewItem !== undefined}
                             {#each (viewItem.view?.length > 0 ? viewItem.view : viewItem.card) as settings(settings.id)}
                                 <svelte:component 
                                     this={findWidget(settings.type)}
                                     settings={settings}
-                                    mode="view"
+                                    context={viewContext}
                                 />
                             {/each}
                         {/if}

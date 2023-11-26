@@ -5,20 +5,21 @@
     import 'chart.js/auto';
     import 'chartjs-adapter-date-fns';
 
-    import type InsightSettings from './InsightSettings';
-    import type { Series_v4 } from './InsightSettings';
+    import type { InsightSettings_v5 } from './InsightSettings';
+    import type { Series_v5 } from './InsightSettings';
     import { colors } from './colors';
 
     import type { Log, LogEntries, LogMap } from '$lib/types/Homey';
     
     import { onDestroy, } from 'svelte';
     import { dateFnsLocale } from '$lib/stores/i18n';
+    import type { Threshold, WidgetContext } from '$lib/types/Widgets';
     
-    export let settings: InsightSettings;
-    export let mode: 'card'|'view';
+    export let settings: InsightSettings_v5;
+    export let context: WidgetContext;
 
     let resolution: string;
-    let series: Series_v4[];
+    let series: Series_v5[];
 
     $: onSettings(settings);
     $: onInsights($insights);
@@ -32,6 +33,10 @@
             datasets: [
             ]
         };
+
+    let plugins: any[] = [{
+        beforeRender: (context: any, options: any) => thresholdColors(context, options)
+    }]
 
     let options: any = {
         plugins: {
@@ -83,7 +88,7 @@
         }
     })
 
-    async function onSettings(s: InsightSettings) {
+    async function onSettings(s: InsightSettings_v5) {
         let load: boolean = false;
 
         if(resolution === undefined || resolution !== s.resolution) {
@@ -91,7 +96,7 @@
             load = true;
         }
 
-        if(series === undefined || series.length != s.series.length || JSON.stringify(series) !== JSON.stringify(s.series)) {
+        if(series === undefined || series.length != s.series?.length || JSON.stringify(series) !== JSON.stringify(s.series)) {
             if(s?.series !== undefined) {
                 series = [...s.series];
                 load = true;
@@ -171,7 +176,7 @@
         }
     };
 
-    async function getTimeSeries(series: Series_v4, index: number) : Promise<number> {
+    async function getTimeSeries(series: Series_v5, index: number) : Promise<number> {
         if(series.insightId === undefined) {
             return -1;
         }
@@ -189,15 +194,17 @@
             const entries = await $homey.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
             const timeSeries = resample(entries, aggregation, sampleRate, log.decimals);
 
+            const yAxis = 'y' + log.units;
+
             data.datasets[index] = {
                 label: series.title ?? (getOwnerName(log.ownerUri) + ' - ' + log.title),
                 type: series.type ?? 'line',
-                borderColor: series.borderColor ?? colors[index % colors.length],
-                backgroundColor: series.backgroundColor ?? colors[index % colors.length],
+                borderThresholds: series.border,
+                backgroundThresholds: series.background,
                 fill: series.fill,
                 data: timeSeries,
                 tension: 0.5,
-                yAxisID: 'y' + log.units,
+                yAxisID: yAxis,
                 stepped: log.type === 'boolean' ? true : undefined
             };
 
@@ -256,6 +263,58 @@
         }
     }
 
+    function thresholdColors(context: any, options: any) {
+        context.data.datasets.forEach((dataset: any, index: number) => {
+            const borderThresholds: Threshold[] | undefined = dataset.borderThresholds;
+            const backgroundThresholds: Threshold[] | undefined = dataset.backgroundThresholds;
+
+            const scale = context.scales[dataset.yAxisID];
+
+            dataset.borderColor = createGradient(context, borderThresholds, scale, index);
+            dataset.backgroundColor = createGradient(context, backgroundThresholds, scale, index);
+        });
+    }
+
+    function createGradient(_chart: any, thresholds: Threshold[] | undefined, scale: any, index: number) {
+        if(_chart === undefined) return;
+
+        const {ctx, chartArea} = _chart;
+
+        let gradient = ctx.createLinearGradient(0, _chart.height, 0, 0);
+
+        let previous: Threshold | undefined = undefined;
+
+        if(thresholds !== undefined) {
+            for (let i = thresholds.length - 1; i >= 0; i--) {
+                const threshold = thresholds[i];
+                
+                if(previous === undefined) {                    
+                    gradient.addColorStop(0, threshold.color); // Base color start
+                } else {
+                    const yPos = scale.getPixelForValue(threshold.value);
+                    const factor = 1 -(yPos / _chart.height);
+
+                    if(factor < 0 || factor > 1) {
+                        break;
+                    }
+
+                    gradient.addColorStop(factor, previous.color); // Previous color end
+                    gradient.addColorStop(factor, threshold.color); // Current color start
+                }
+
+                previous = threshold;
+            }
+        }
+
+        if(previous !== undefined) {
+            gradient.addColorStop(1, previous.color); // Previous color end
+        } else {
+            return colors[index % colors.length];
+        }
+        
+        return gradient;
+    }
+
     function getOwnerName(uri: string) {
         if(uri.startsWith('homey:device:')) {
             const prefix = 'homey:device:';
@@ -287,7 +346,13 @@
 {#if series === undefined || series.length === 0}
     <span>Insights not configured</span>
 {:else}
-    <div class="w-full flex-1 min-h-0" class:h-96={mode === 'view'}>
-        <Chart bind:chart type="line" {data} {options} />
+    <div class="w-full min-h-0" class:flex-1={context.mode !== 'view'} class:h-96={context.mode === 'view'}>
+        <Chart 
+            bind:chart 
+            type="line" 
+            {data} 
+            {options} 
+            {plugins}
+        />
     </div>
 {/if}

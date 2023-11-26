@@ -17,6 +17,8 @@
     export let move: any;
     export let resize: any;
 
+    $: context = { editing: false, mode: 'card' };
+
     function onEdit() {
         dispatch('edit');
     }
@@ -47,12 +49,12 @@
             <IconButton on:pointerdown={resize} data={mdiArrowTopLeftBottomRight} class="absolute z-10 -right-3 -bottom-3 touch-none" size="18px" />
         {/if}
     {/if}
-    
+
     {#each settings as s(s.id)}
         <svelte:component 
             this={findWidget(s.type)}
             settings={s}
-            mode="card"
+            {context}
         />
     {/each}
 </Card>
