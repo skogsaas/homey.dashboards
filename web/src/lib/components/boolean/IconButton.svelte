@@ -29,7 +29,7 @@
     }
 </script>
 
-{#if value}
+{#if value === true}
     <IconButton on:click={() => setValue(false)} data={currentIconTrue} color={currentColorTrue} />
 {:else}
     <IconButton on:click={() => setValue(true)} data={currentIconFalse} color={currentColorFalse} />

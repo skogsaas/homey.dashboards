@@ -35,7 +35,7 @@
         class:hover:bg-hover={!disabled}
         on:click={() => setValue(true)}
     >
-        {#if value}
+        {#if value === true}
 		    <Icon slot="icon" data={currentIconTrue} color={currentColorTrue} />
         {:else}
             <Icon slot="icon" data={currentIconTrue} />
@@ -47,7 +47,7 @@
         class:hover:bg-hover={!disabled}
         on:click={() => setValue(false)}
     >
-        {#if value}
+        {#if value === true}
 		    <Icon slot="icon" data={currentIconFalse} />
         {:else}
             <Icon slot="icon" data={currentIconFalse} color={currentColorFalse} />

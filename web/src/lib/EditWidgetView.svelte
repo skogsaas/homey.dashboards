@@ -122,7 +122,7 @@
     }
 
     function removeWidget(id: string) {
-        if(copy !== undefined && selected !== undefined) {
+        if(copy !== undefined) {
 
             settings = settings!.filter(w => w.id !== id);
 
@@ -133,6 +133,10 @@
             }
 
             context = { ...context };
+
+            if(selected?.id === id) {
+                selected = undefined;
+            }
         }
     }
 

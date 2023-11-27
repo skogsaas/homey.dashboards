@@ -20,15 +20,15 @@
 
     $: width = (iconTrue ?? icon) || (iconFalse ?? icon) ? 'w-[48px]' : 'w-[2.8rem]';
 	$: translate =
-		value && ((iconTrue ?? icon) || (iconFalse ?? icon))
+		value === true && ((iconTrue ?? icon) || (iconFalse ?? icon))
 			? 'translate-x-[calc(100%+0.1rem)]'
-			: !value
-			? 'translate-x-[0.1rem]'
-			: 'translate-x-[calc(100%-0.1rem)]';
+			: value !== true
+                ? 'translate-x-[0.1rem]'
+                : 'translate-x-[calc(100%-0.1rem)]';
 
     function setValue(v: boolean) {
         if(!disabled) {
-            value = v;
+            value = v === true;
         }
     }
 </script>
@@ -36,16 +36,16 @@
 <div class="flex items-center">
     <div
         class="border relative inline-flex flex-shrink-0 h-[1.6rem] rounded-full cursor-pointer outline-none focus:outline-none {width}"
-        class:border-border={!value}
-        class:border-primary={value}
+        class:border-border={value !== true}
+        class:border-primary={value === true}
     >
         <button
             aria-label="toggle"
             on:click={() => setValue(!value)}
             type="button"
             class="relative inline-flex items-center justify-between flex-shrink-0 h-full w-full border-2 border-transparent rounded-full cursor-pointer ease-in-out outline-none focus:outline-none"
-            class:bg-default={!value}
-            class:bg-primary={value}
+            class:bg-default={value !== true}
+            class:bg-primary={value === true}
         >
             <span
                 aria-hidden="true"

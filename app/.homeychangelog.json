@@ -64,5 +64,8 @@
   },
   "0.15.0": {
     "en": "Add insight thresholds, variable variants and bug fixes."
+  },
+  "0.15.1": {
+    "en": "Fix selection not cleard while deleting widget."
   }
 }
