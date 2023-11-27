@@ -67,5 +67,8 @@
   },
   "0.15.1": {
     "en": "Fix selection not cleard while deleting widget."
+  },
+  "0.15.2": {
+    "en": "Restore variable widget leading icon."
   }
 }

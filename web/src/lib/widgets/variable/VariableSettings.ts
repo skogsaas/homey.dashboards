@@ -1,6 +1,10 @@
 import type { Threshold, WidgetSettings } from "../../types/Widgets";
 import { v4 as uuid } from 'uuid';
 
+export interface VariableSettings_v3 extends VariableSettings_v2 {
+    iconId: string | undefined;
+}
+
 export interface VariableSettings_v2 extends WidgetSettings {
     variableId: string | undefined;
     title: string | undefined;
@@ -51,7 +55,7 @@ export function create() : WidgetSettings {
 }
 
 export function migrate(settings: any) : any {
-    while(settings.version !== 2) {
+    while(settings.version !== 3) {
         settings = migrateOnce(settings);
     }
 
@@ -60,10 +64,21 @@ export function migrate(settings: any) : any {
 
 function migrateOnce(settings: any) : any {
     switch(settings.version) {
-        case 2: return settings;
+        case 3: return settings;
+        case 2: return migrate_v2_v3(settings as VariableSettings_v2);
         case 1:
         default: return migrate_v1_v2(settings as VariableSettings_v1);
     }
+}
+
+function migrate_v2_v3(v2: VariableSettings_v2) : VariableSettings_v3 {
+    const settings: VariableSettings_v3 = {
+        ...v2,
+        version: 3,
+        iconId: v2.boolean?.iconId
+    }
+
+    return settings;
 }
 
 function migrate_v1_v2(v1: VariableSettings_v1) : VariableSettings_v2 {

@@ -15,8 +15,7 @@
 
     // Types
     import type { Variable } from '$lib/types/Homey';
-    import type { VariableSettings_v2 } from './VariableSettings';
-    import ThresholdEditor from '$lib/components/thresholds/ThresholdEditor.svelte';
+    import type { VariableSettings_v3 } from './VariableSettings';
     import type { Threshold } from '$lib/types/Widgets';
     
     interface Option {
@@ -38,10 +37,11 @@
 
     const dispatch = createEventDispatcher();
     
-    export let settings: VariableSettings_v2;
+    export let settings: VariableSettings_v3;
 
     let variableId: string | undefined;
     let title: string | undefined;
+    let iconId: string | undefined;
 
     // Boolean settings
     let booleanVariant: Option;
@@ -66,12 +66,14 @@
 
     $: onVariableId(variableId);
     $: onTitle(title);
+    $: onIconId(iconId);
     $: onBoolean(booleanVariant, booleanIconId, booleanIconTrueId, booleanIconFalseId, booleanColor, booleanColorTrue, booleanColorFalse);
     $: onNumber(numberVariant, numberMin, numberMax, numberStep, numberUnit, numberThresholds);
 
-    function onSettings(s: VariableSettings_v2) {
+    function onSettings(s: VariableSettings_v3) {
         variableId = s?.variableId;
         title = s?.title;
+        iconId = s?.iconId;
 
         booleanVariant = booleanVariants.find(v => v.value === (s.boolean?.variant ?? 'toggle'))!;
         booleanIconId = s.boolean?.iconId;
@@ -102,6 +104,12 @@
 
         if(value !== settings.title) {
             dispatch('settings', { ...settings, title: value });
+        }
+    }
+
+    function onIconId(id: string | undefined) {
+        if(id !== settings.iconId) {
+            dispatch('settings', { ...settings, iconId: id });
         }
     }
 
@@ -143,6 +151,10 @@
 
 {#if variable}
     <Input name="title" bind:value={title} placeholder={variable.name} class="mt-2" />
+
+    <div class="mt-1">
+        <IconPicker bind:iconId={iconId} placeholder="Leading icon" />
+    </div>
 
     {#if variable.type === 'boolean'}
 
