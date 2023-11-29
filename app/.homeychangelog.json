@@ -70,5 +70,8 @@
   },
   "0.15.2": {
     "en": "Restore variable widget leading icon."
+  },
+  "0.15.3": {
+    "en": "Fix selecting view editing mode."
   }
 }

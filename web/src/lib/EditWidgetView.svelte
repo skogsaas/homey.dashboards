@@ -43,6 +43,16 @@
 
     function onMode(_mode: string) {
         selected = undefined;
+
+        if(copy !== undefined) {
+            settings = mode === 'card' ? copy!.card : copy!.view;
+        }
+        
+        context = { mode, editing: true, select: selectWidget, update: updateWidget };
+
+        if(settings !== undefined && settings.length > 0) {
+            selected = settings[0];
+        }
     }
 
     function onItem(_item: GridItem_v1 | undefined) {
