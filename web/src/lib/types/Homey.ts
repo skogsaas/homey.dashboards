@@ -2,6 +2,8 @@ export interface Homey {
     id: string;
     baseUrl: Promise<string>;
 
+    __io: any;
+
     apps: AppManager;
     devices: DeviceManager;
     flow: FlowManager;

@@ -1,13 +1,21 @@
-import type { WidgetSettings, WidgetSettingsMap } from "./Widgets";
+import type { WidgetSettings } from "./Widgets";
 
-import { create as createColumn } from '$lib/widgets/column/ColumnSettings';
-
-export interface Grid {
+export interface GridLayout_v1 {
+    breakpoint: number;
     columns: number;
-    width: number;
-    pxX: number;
-    pxY: number;
-    gaps: number[];
+    rowHeight: number;
+
+    items: GridLayoutItem_v1[];
+}
+
+export interface GridLayoutItem_v1 {
+    id: string;
+    x: number; 
+    y: number; 
+    w: number; 
+    h: number;
+    container?: boolean;
+    children?: GridLayoutItem_v1[];
 }
 
 export interface GridItem_v1 {
@@ -38,26 +46,4 @@ export interface GridBreakpointItem {
     fixed: boolean;
     customDragger: boolean;
     customResizer: boolean;
-}
-
-export interface GridResizeEvent {
-    cols: number;
-    width: number;
-    xPerPx: number;
-    yPerPx: number;
-}
-
-export interface GridItemCollectionSettings_v2 {
-    root: string;
-    widgets: WidgetSettingsMap;
-}
-
-export const createItemCollection = () : GridItemCollectionSettings_v2 => {
-    const root = createColumn();
-    return {
-        root: root.id,
-        widgets: {
-            [root.id]: root
-        }
-    }
 }

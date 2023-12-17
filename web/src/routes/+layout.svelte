@@ -31,7 +31,7 @@
     import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant } from "$lib/components/icons";
 
     // Types
-    import type { AdvancedFlow, BasicFlow, CapabilityEvent, VariableEvent, Homey } from '$lib/types/Homey';
+    import type { AdvancedFlow, BasicFlow, CapabilityEvent, VariableEvent, Homey, OAuthHomey } from '$lib/types/Homey';
     import type Dashboard from '$lib/types/Dashboard';
 
     import { clientId, clientSecret } from '$lib/constants';
@@ -42,6 +42,17 @@
 
     let loading: boolean = true;
     let error: any | undefined = undefined;
+    
+    let heartbeat: number;
+    let heartbeatInterval = 1000;
+    let heartbeatClear: any | undefined;
+
+    // Heartbeat logic to check for page frozen
+    $: {
+        if(heartbeatClear !== undefined) clearInterval(heartbeatClear);
+
+        heartbeatClear = setInterval(() => { heartbeat = Date.now(); }, heartbeatInterval);
+    }
 
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
     $: fullscreenSupported = document.fullscreenEnabled;
@@ -56,6 +67,16 @@
       //document.body.setAttribute('data-theme', 'dark');
       await loadData()
     });
+
+    async function reconnect() {      
+      if($homey !== undefined && heartbeat < (Date.now() - heartbeatInterval * 2)) {
+        console.log('reconnecting');
+        
+        $homey.__io.io.engine.close();
+        
+        await loadData()
+      }
+    }
 
     async function loadData() {
       loading = true;
@@ -139,6 +160,7 @@
           
           Object.values(d).forEach(async (device) => {
             await device.connect();
+
             device.on('capability', (event: CapabilityEvent) => {
               const capability = device.capabilitiesObj[event.capabilityId];
 
@@ -299,8 +321,10 @@
   <title>{$dashboard !== undefined ? $dashboard.title : 'Dashboard'}</title>
 </svelte:head>
 
+<svelte:window on:visibilitychange={e => reconnect()} />
+
 <div 
-  class="w-full min-h-full text-content overflow-y-scroll bg-fixed bg-no-repeat bg-cover" 
+  class="w-full h-full text-content overflow-y-scroll bg-fixed bg-no-repeat bg-cover" 
   style={$dashboard?.backgroundImage && $dashboard.backgroundImage.length > 0 ? `background-image: url(${$dashboard.backgroundImage})` : ''} 
 >
   {#if loading}
@@ -314,7 +338,7 @@
 
     <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
 
-    <Drawer bind:open={menuOpen} position="left" size="xs" class="overflow-auto">
+    <Drawer bind:open={menuOpen} position="left" size="xs" backdrop={true}>
       {#if $user !== undefined}
         <Media>
           <Media.Avatar src={$user.avatar.small} />

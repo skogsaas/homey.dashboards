@@ -8,7 +8,7 @@
     // Stores
     import { devices, homey, dashboards as homeyDashboards, scopes } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
-    import { editing, grid, dashboard as currentDashboard } from '$lib/stores/dashboard';
+    import { editing, dashboard as currentDashboard } from '$lib/stores/dashboard';
     
     // UI components
     import AddWidgetDialog from '$lib/AddWidgetDialog.svelte';
@@ -21,371 +21,196 @@
     import Icon from "stwui/icon";
 
     // Types
-    import type { GridItem_v1 } from '$lib/types/Grid';
-    import type { WidgetContext } from '$lib/types/Widgets';
-    import { findMigration, findWidget } from '$lib/widgets';
-    import type Dashboard from '$lib/types/Dashboard';
+    import type { GridItem_v1, GridLayoutItem_v1, GridLayout_v1 } from '$lib/types/Grid';
+    import type { WidgetContext, WidgetSettings, WidgetSettingsMap } from '$lib/types/Widgets';
+    import { findMigration, findWidget, widgets as widgetTypes, type WidgetInfo, findCreate, findEditor } from '$lib/widgets';
+    import type { DashboardMap, Dashboard_v2 } from '$lib/types/Dashboard';
     
-    import Grid from "$lib/components/grid/index.svelte";
-    import gridHelp from "$lib/components/grid/utils/helper";
     import Widget from '$lib/widgets/Widget.svelte';
 
     import { v4 as uuid } from 'uuid';
 
     import { webhookId, webhookUrl } from '$lib/constants';
 
-    import { migrate as migrateGridItem } from '$lib/widgets/migrations';
+    import { migrate, migrate as migrateGridItem } from '$lib/widgets/migrations';
     import IconButton from '$lib/components/IconButton.svelte';
-    import { mdiClose } from '$lib/components/icons';
-    
-    const smallBreakpoint = 640;
-    const mediumBreakpoint = 768;
-    const largeBreakpoint = 1024;
-    const xlargeBreakpoint = 1280;
-    export const breakpoints: number[] = [smallBreakpoint, mediumBreakpoint, largeBreakpoint, xlargeBreakpoint];
+    import { mdiAppsBox, mdiArrowLeft, mdiChevronDoubleLeft, mdiChevronDoubleRight, mdiClose, mdiCloseCircle, mdiCog, mdiSettingsHelper, mdiWidgets } from '$lib/components/icons';
+    import Grid from '$lib/components/grid/Grid.svelte';
+    import Drawer from '$lib/components/Drawer.svelte';
+    import { CalculatePosition } from '$lib/components/grid/GridUtils';
+    import { Divider } from 'stwui';
 
-    const smallColumns = 6;
-    const mediumColumns = 12;
-    const largeColumns = 18;
-    const xlargeColumns = 24;
-    export const columns: number[] = [smallColumns, mediumColumns, largeColumns, xlargeColumns];
+    let layout: GridLayout_v1 | undefined;
+    let items: GridLayoutItem_v1[] | undefined;
+    let widgets: WidgetSettingsMap | undefined;
 
-    export const breakpointColumns = [
-        [smallBreakpoint, smallColumns], 
-        [mediumBreakpoint, mediumColumns],
-        [largeBreakpoint, largeColumns],
-        [xlargeBreakpoint, xlargeColumns]
-    ];
-
-    let items: GridItem_v1[] = [];
-    
     let editOpen: boolean = false;
-    let editItem: GridItem_v1;
+    let editItem: WidgetSettings | undefined;
 
-    let viewOpen: boolean = false;
-    let viewItem: GridItem_v1 | undefined;
-    let viewContext: WidgetContext = { mode: "view", editing: false, select: () => {}, update: () => {} };
+    let widgetsOpen: boolean = true;
 
-    let dashboard: Dashboard | undefined;
-    let savingDashboard: boolean = false;
+    let dashboards: DashboardMap;
+    let dashboard: Dashboard_v2 | undefined;
 
-    let heartbeat: number | undefined;
+    $: dashboardId = $page.url.searchParams.get('id');
 
     $: dashboards = { ...$homeyDashboards, ...$localDashboards };
-    $: dashboardId = $page.url.searchParams.get('id');
-    $: resolvedDashboard = dashboardId !== null ? dashboards[dashboardId] : undefined;
+    $: dashboard = dashboardId !== null ? dashboards[dashboardId] : undefined;
 
-    $: onDashboard(resolvedDashboard);
-    $: onEditing($editing);
+    $: onDashboard(dashboard);
 
     onMount(async () => {
         if($homey === undefined) { // Not logged in
             await goto(base + '/');
         }
-
-        heartbeat = setInterval(() => sendHeartbeat(), 30 * 1000);
     });
 
-    onDestroy(() => {
-        if(heartbeat !== undefined) {
-            clearInterval(heartbeat);
-        }
-    });
+    function onDashboard(_dashboard: Dashboard_v2 | undefined)
+    {
+        layout = { columns: 24, rowHeight: 48, breakpoint: 0, items: [] };
+        items = layout?.items ?? [];
+        widgets = _dashboard?.widgets ?? {};
 
-    function onDashboard(d: Dashboard | undefined) {
-        if(d !== undefined && !$editing && d.items !== items) {
-            currentDashboard.set(d);
-            dashboard = d;
-            items = migrateWidgets(dashboard.items);
-        }
+        console.log("dashboard");
     }
 
-    function onEditing(edit: boolean) { 
-        const result = [...items];
-
-        result.forEach((item: GridItem_v1) => { 
-            columns.forEach(column => {
-                item[column].draggable = edit && !item[column].fixed;
-                item[column].resizable = edit && !item[column].fixed;
-                item[column].customDragger = true;
-                item[column].customResizer = true;
-            });
-        });
-
-        items = result;
-    }
-
-    function migrateWidgets(i: any[]) : GridItem_v1[] {
-      const result: GridItem_v1[] = [];
-
-      for(let item of i) {
-        let migratedItem = { ...migrateGridItem(item) };
-
-        for(let index = 0; index < migratedItem.card.length; index++) {
-            const settings = migratedItem.card[index];
-            const migration = findMigration(settings.type);
-            const migratedSettings = migration !== undefined ? migration(settings) : settings;
-
-            migratedItem.card[index] = { ...migratedSettings };
-        }
-
-        result.push(migratedItem);
-      }
-
-      return result;
-    }
-
-    function addWidget() {
-        // Create a new item, but don't add it until the user saves
-        const item: GridItem_v1 = { 
-            id: uuid(), 
-            version: 1,
-            card: [],
-            view: []
-        };
-
-        editItem = item;
-        editOpen = true;
-    }
-
-    function editWidget(item: GridItem_v1) : void {
-        editItem = item;
-        editOpen = true;
-    }
-
-    function viewWidget(item: GridItem_v1) : void {
-        viewItem = item;
-        viewOpen = true;
-    }
-
-    function addItem(item: GridItem_v1) {
-        const result = [...items, item];
-
-        columns.forEach(column => {
-            item[column] = gridHelp.item({ x: 0, y: 0, w: 3, h: 3, resizable: true, draggable: true });
-            
-            const findOutPosition = gridHelp.findSpace(item, result, column);
-
-            item[column] = {
-                ...item[column],
-                ...findOutPosition
-            };
-        });
-
-        items = result;
-    }
-
-    function removeItem(id: string) {
-        items = items.filter(item => item.id !== id);
-    }
-
-    function setItemSettings(item: GridItem_v1) {
-        editOpen = false;
-
-        const index = items.findIndex(i => i.id === item.id);
-
-        if(index >= 0) {
-            items = [...items];
-            items[index] = item;
-        } else {
-            addItem(item);
+    function selectWidget(id: any) {
+        if(widgets !== undefined) {
+            editItem = widgets[id];
         }
     }
 
-    function setItemFixed(id: string, fixed: boolean) { 
-        const result = [...items];
-        const item = result.find(i => i.id === id);
+    function getWidget(id: any) : WidgetSettings {
+        if(widgets === undefined) return { id, type: 'unknown', version: 1 };
 
-        if(item) {
-            columns.forEach(column => {
-                item[column].fixed = fixed;
-                item[column].draggable = !fixed;
-                item[column].resizable = !fixed;
-            });
-        }
-
-        items = result;
+        return widgets[id];
     }
 
-    async function saveChanges() {
-        if(dashboard === undefined) {
-            editing.set(false);
-            return;
-        } else {
-            savingDashboard = true;
-            dashboard.items = items;
+    function addWidget(info: WidgetInfo, e: any) {
+        var create = findCreate(info.type);
 
-            if(dashboard.source === 'localstorage') {
-                const d = { ...dashboard, items: stripGrid(items) };
-                localDashboards.update(d);
-            } else if(dashboard.source === 'homey') {
-                const settings = { items: stripGrid(items) };
-                let success: boolean = false;
+        if(create !== undefined && layout !== undefined && widgets !== undefined) {
+            const widget = create();
+            const item = { id: widget.id, x: layout.columns / 2, y: 0, w: 2, h: 2 };
 
-                const dashboardDevice = Object.values($devices).find(device => device.data.id === dashboard!.id);
-
-                if(dashboardDevice !== undefined) {
-                    dashboardDevice.settings = settings;
-                }
-
-                // Send over webhook
-                try {
-                    const url = webhookUrl + webhookId + '?homey=' + $homey.id + '&operation=save_dashboard&dashboardId=' + dashboard.id;
-                    const response = await fetch(url, { method: 'POST', body: JSON.stringify(settings) });
-
-                    if(response.ok) {
-                        success = true;
-                    }
-                } catch(e) {
-                }
-
-                // Try accessing the api directly
-                if(!success) {
-                    if($scopes.includes('homey') || $scopes.includes('homey.app')) {
-                        try {
-                            const app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
-                            
-                            if(app !== undefined) {
-                                await app.put({ path: '/dashboards/' + dashboard.id, body: settings });
-                                success = true;
-                            }
-                        } catch(e) {
-                            // Do nothing
-                        }
-                    }
-                }
-            }
+            items = [...(items ?? []), item];
+            widgets[widget.id] = widget;
         }
-
-        savingDashboard = false;
-        editing.set(false);
     }
 
-    function cancelChanges() {
-        if(dashboard === undefined) {
-            return;
-        }
+    function updateWidget(widget: WidgetSettings) {
+        const copy = { ...widgets };
+        copy[widget.id] = widget;
 
-        items = migrateWidgets(dashboard.items ?? []);
-
-        editing.set(false);
-    }
-    
-    function stripGrid(i: GridItem_v1[]) { 
-        const result = [...i];
-
-        result.forEach((item: any) => { 
-            columns.forEach(column => {
-                delete item[column].draggable;
-                delete item[column].resizable;
-                delete item[column].customDragger;
-                delete item[column].customResizer;
-            });
-        });
-
-        return result;
+        widgets = copy;
+        items = [...items ?? []]; // Force reload
     }
 
-    async function sendHeartbeat() {
-        let success: boolean = false;
+    function addContainer() {
+        if(layout !== undefined && widgets !== undefined) {
+            const id = uuid();
+            const item = { id, x: layout.columns / 2, y: 0, w: 4, h: 4, container: true, children: [] };
 
-        // Send over webhook
-        try {
-            let url = webhookUrl + webhookId + '?homey=' + $homey.id + '&operation=active_dashboard';
-
-            if(dashboard !== undefined) {
-                url += '&dashboardId=' + dashboard.id;
-            }
-
-            const response = await fetch(url, { method: 'POST', body: '' });
-
-            if(response.ok) {
-                success = true;
-            }
-        } catch(e) {
+            items = [...(items ?? []), item];
+            widgets[id] = { id, type: 'unknown', version: 1 };
         }
-
-        // Try accessing the api directly
-        /* TODO: Create local api for this
-        if(!success) {
-            if($scopes.includes('homey') || $scopes.includes('homey.app')) {
-                try {
-                    const app = await $homey.apps.getApp({ id: 'skogsaas.dashboards' });
-                    
-                    if(app !== undefined) {
-                        await app.put({ path: '/dashboards/' + dashboard.id, body: settings });
-                        success = true;
-                    }
-                } catch(e) {
-                    // Do nothing
-                }
-            }
-        }
-        */
     }
 
 </script>
 
-{#if $homey !== undefined}
-    <EditWidgetView item={editItem} bind:open={editOpen} on:item={(e) => setItemSettings(e.detail)} />
+    {#if $homey !== undefined}
+        <Drawer bind:open={widgetsOpen} position="left" size="15rem">
+            <div class="p-2">
+                <div class="w-full">
+                    <h1 class="w-full text-center">Widgets</h1>
+                    <IconButton 
+                        class="absolute top-1 -right-7"
+                        data={mdiChevronDoubleLeft} 
+                        size="48px" 
+                        on:click={() => widgetsOpen = false} 
+                    />
+                </div>
 
-    <div class="flex justify-center">
-        {#if $editing}
-            <div class="ml-4">
-                <Button on:click={() => addWidget()}>Add</Button>
-                <Button on:click={() => saveChanges()}>Save</Button>
-                <Button on:click={() => cancelChanges()}>Cancel</Button>
+                <Divider>
+                    <Divider.Label slot="label"></Divider.Label>
+                </Divider>
+
+                <div class="flex flex-row items-center m-2 hover:bg-primary-hover rounded-md" on:pointerdown|stopPropagation={e => addContainer()}>
+                    <Icon data={mdiAppsBox} size="48" />
+                    <span class="ml-4">Container</span>
+                </div>
+
+                <Divider>
+                    <Divider.Label slot="label"></Divider.Label>
+                </Divider>
+
+                {#each widgetTypes as widget}
+                    <div class="flex flex-row items-center m-2 hover:bg-primary-hover rounded-md" on:pointerdown|stopPropagation={e => addWidget(widget, e.detail)}>
+                        <Icon data={widget.icon} size="48" />
+                        <span class="ml-4">{widget.label}</span>
+                    </div>
+                {/each}
+            </div>
+        </Drawer>
+
+        {#if !widgetsOpen}
+            <div class="fixed z-10" style="top:calc(100vh/2 - 48px/2);left:0px;">
+                <IconButton 
+                    data={mdiWidgets} 
+                    size="48px" 
+                    on:click={() => widgetsOpen = true} 
+                />
             </div>
         {/if}
-    </div>
-        
-    <Grid 
-        fastStart
-        cols={breakpointColumns} 
-        gap={$grid.gaps} 
-        rowHeight={50} 
-        bind:items={items}
-        on:mount={(e) => grid.updateSize(e.detail)}
-        on:resize={(e) => grid.updateSize(e.detail)}
-        let:item 
-        let:dataItem
-        let:movePointerDown
-        let:resizePointerDown
-    >
-        <Widget 
-            settings={dataItem.card}
-            fixed={item.fixed ?? false}
-            on:fixed={(e) => setItemFixed(dataItem.id, e.detail)}
-            on:edit={() => editWidget(dataItem)}
-            on:delete={() => removeItem(dataItem.id)}
-            on:click={() => viewWidget(dataItem)}
-            move={movePointerDown}
-            resize={resizePointerDown}
-        />
-    </Grid>
 
-    <Portal>
-        {#if viewOpen}
-            <Modal handleClose={() => viewOpen = false}>
-                <Modal.Content slot="content">
-                    <Modal.Content.Body slot="body">
-                        <div class="relative w-full">
-                            <div class="absolute -top-4 -right-5 z-10">
-                                <IconButton data={mdiClose} on:click={() => viewOpen = false} />
-                            </div>
-                        </div>
-                        {#if viewItem !== undefined}
-                            {#each (viewItem.view?.length > 0 ? viewItem.view : viewItem.card) as settings(settings.id)}
-                                <svelte:component 
-                                    this={findWidget(settings.type)}
-                                    settings={settings}
-                                    context={viewContext}
-                                />
-                            {/each}
-                        {/if}
-                    </Modal.Content.Body>
-                </Modal.Content>
-            </Modal>
+        <Drawer bind:open={editOpen} position="right" size="20rem">
+            <div class="p-2">
+                <div class="w-full">
+                    <h1 class="w-full text-center">Settings</h1>
+                    <IconButton 
+                        class="absolute top-1 -left-7"
+                        data={mdiChevronDoubleRight} 
+                        size="48px" 
+                        on:click={() => editOpen = false} 
+                    />
+                </div>
+
+                <Divider>
+                    <Divider.Label slot="label"></Divider.Label>
+                </Divider>
+                    
+                {#if editItem !== undefined}
+                    <svelte:component 
+                        this={findEditor(editItem.type)}
+                        settings={editItem}
+                        on:settings={e => updateWidget(e.detail)}
+                    />
+                {:else}
+                    dashboard
+                {/if}
+            </div>
+        </Drawer>
+
+        {#if !editOpen}
+            <div class="fixed z-10" style="top:calc(100vh/2 - 48px/2);right:0px;">
+                <IconButton 
+                    data={mdiCog} 
+                    size="48px" 
+                    on:click={() => editOpen = true} 
+                />
+            </div>
         {/if}
-    </Portal>
-{/if}
+
+        {#if layout !== undefined && items !== undefined && widgets !== undefined}
+            <Grid
+                bind:items={items}
+                columns={layout.columns}
+                rowHeight={layout.rowHeight}
+                editable={true}
+                let:item
+                on:select={e => selectWidget(e.detail)}
+            >
+                <Widget setting={getWidget(item.id)} />
+            </Grid>
+        {/if}
+    {/if}
