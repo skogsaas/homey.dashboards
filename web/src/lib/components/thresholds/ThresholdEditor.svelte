@@ -1,9 +1,7 @@
 <script lang="ts">
     import { v4 as uuid } from 'uuid';
     import type { Threshold } from "$lib/types/Widgets";
-    import ColorPicker from "../ColorPicker.svelte";
-    import { Input } from "stwui";
-    import IconButton from "../IconButton.svelte";
+    import { Icon } from "stwui";
     import { mdiDelete, mdiPlus } from "../icons";
     import ThresholdLineEditor from "./ThresholdLineEditor.svelte";
 
@@ -70,13 +68,13 @@
     }
 </script>
 
-<div class="flex flex-row justify-between items-center my-2">
-    <IconButton data={mdiPlus} on:click={() => add()} />
+<button class="btn" on:click={() => add()}>
+    <Icon data={mdiPlus} />
     <span>Add threshold</span>
-</div>
+</button>
 
 {#each sorted as threshold, i(threshold.id)}
-    <div class="flex flex-row justify-between items-center my-2">
+    <div class="join w-full">
         <ThresholdLineEditor 
             value={threshold.value} 
             color={threshold.color} 
@@ -87,10 +85,11 @@
             {max}
             base={i === (sorted.length - 1)} 
         />
+
         {#if i !== (sorted.length - 1)}
-            <IconButton data={mdiDelete} on:click={() => remove(threshold)} />
-        {:else}
-            <div class="w-8 h-8"></div>
+            <button class="btn" on:click={() => remove(threshold)}>
+                <Icon data={mdiDelete} />
+            </button>
         {/if}
     </div>
 {/each}

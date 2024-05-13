@@ -96,7 +96,10 @@
             load = true;
         }
 
-        if(series === undefined || series.length != s.series?.length || JSON.stringify(series) !== JSON.stringify(s.series)) {
+        if(series === undefined || 
+            series.length != s.series?.length || 
+            JSON.stringify(series) !== JSON.stringify(s.series)
+        ) {
             if(s?.series !== undefined) {
                 series = [...s.series];
                 load = true;
@@ -125,6 +128,8 @@
         if(series === undefined || series.length === 0) {
             return;
         }
+
+        console.log(series, timeout); 
         
         // Create axes
         const units = series
@@ -346,13 +351,11 @@
 {#if series === undefined || series.length === 0}
     <span>Insights not configured</span>
 {:else}
-    <div class="w-full min-h-0" class:flex-1={context.mode !== 'view'} class:h-96={context.mode === 'view'}>
-        <Chart 
-            bind:chart 
-            type="line" 
-            {data} 
-            {options} 
-            {plugins}
-        />
-    </div>
+    <Chart 
+        bind:chart 
+        type="line" 
+        {data} 
+        {options} 
+        {plugins}
+    />
 {/if}

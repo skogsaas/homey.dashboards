@@ -5,28 +5,24 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { base } from '$app/paths';
+    import { sineIn } from 'svelte/easing';
 
     // Stores
-    import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys, variables } from '$lib/stores/homey';
+    import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys, variables, devicesLoading, variablesLoading, flowFoldersLoading, basicFlowsLoading, advancedFlowsLoading, insightsLoading, zonesLoading } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import { dashboard, editing } from '$lib/stores/dashboard';
     import { apiKey } from '$lib/stores/auth';
 
     // UI components
-    import Drawer from "$lib/components/Drawer.svelte";
     import AddDashboardDialog from '$lib/AddDashboardDialog.svelte';
     import IconButton from '$lib/components/IconButton.svelte';
 
     // Tailwind
-    import "../app.postcss";
-    import Progress from 'stwui/progress';
-    import Button from 'stwui/button';
-    import Dropdown from 'stwui/dropdown';
-    import List from 'stwui/list';
-    import Divider from 'stwui/divider';
-    import Toggle from 'stwui/toggle';
-    import Media from 'stwui/media';
+    import "../app.css";
     import Icon from 'stwui/icon';
+    
+    // Flowbite
+    import { Avatar, Drawer, Hr, Li, List, Spinner } from 'flowbite-svelte';
 
     import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant } from "$lib/components/icons";
 
@@ -57,7 +53,7 @@
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
     $: fullscreenSupported = document.fullscreenEnabled;
 
-    let menuOpen: boolean = false;
+    let menuHidden: boolean = true;
     let toolbarOpen: boolean = false;
     let dashboardMenuOpen: boolean = false;
     let addDashboardOpen: boolean = false;
@@ -68,7 +64,7 @@
       await loadData()
     });
 
-    async function reconnect() {      
+    async function onWindowVisibilityChange() {      
       if($homey !== undefined && heartbeat < (Date.now() - heartbeatInterval * 2)) {
         console.log('reconnecting');
         
@@ -86,11 +82,11 @@
       if($homey !== undefined) {
         await loadSession();
 
-        await loadDevices();
-        await loadVariables();
-        await loadFlows();
-        await loadZones();
-        await loadInsights();
+        loadDevices();
+        loadVariables();
+        loadFlows();
+        loadZones();
+        loadInsights();
       }
 
       loading = false;
@@ -150,78 +146,129 @@
       loading = false;
     }
 
-    async function loadDevices() {
+    function loadDevices() {
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.readonly') || $scopes.includes('homey.device.control')) {
-          await $homey.devices.connect();
-          const d = await $homey.devices.getDevices();
+          devicesLoading.set(true);
 
-          $homey.devices.on('device.update', (patch: any) => devices.onDevice(patch));
-          
-          Object.values(d).forEach(async (device) => {
-            await device.connect();
+          $homey.devices
+            .connect()
+            .then(() => {
+              $homey.devices
+                .getDevices()
+                .then(d => {
+                  $homey.devices.on('device.update', (patch: any) => devices.onUpdate(patch));
+                
+                  Object.values(d).forEach(async (device) => {
+                    device
+                      .connect()
+                      .then(() => {
+                        device.on('capability', (event: CapabilityEvent) => {
+                          const capability = device.capabilitiesObj[event.capabilityId];
 
-            device.on('capability', (event: CapabilityEvent) => {
-              const capability = device.capabilitiesObj[event.capabilityId];
+                          if(capability !== undefined) {
+                            capability.value = event.value;
+                            capability.lastUpdated = event.transactionTime; 
+                          }
+                        });
+                      });
+                  });
 
-              if(capability !== undefined) {
-                capability.value = event.value;
-                capability.lastUpdated = event.transactionTime; 
-              }
-            });
-          });
-
-          devices.set(d);
-        }
+                  devices.set(d);
+                })
+                .finally(() => devicesLoading.set(false));
+            }, 
+            // On error
+            () => devicesLoading.set(false));
+          }
       } catch(e) {
         error = 'Devices: ' + e;
+        devicesLoading.set(false);
       }
     }
 
-    async function loadVariables() {
+    function loadVariables() {
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.logic') || $scopes.includes('homey.logic.readonly')) {
-          await $homey.logic.connect();
-          const v = await $homey.logic.getVariables();
+          variablesLoading.set(true);
 
-          $homey.logic.on('variable.update', (event: VariableEvent) => variables.onUpdate(event));
-
-          variables.set(v);
+          $homey.logic
+            .connect()
+            .then(() => {
+              $homey.logic
+                .getVariables()
+                .then(v => {
+                  $homey.logic.on('variable.update', (event: VariableEvent) => variables.onUpdate(event));
+                  variables.set(v);
+                })
+                .finally(() => variablesLoading.set(false));;
+            }, 
+            // On error
+            () => devicesLoading.set(false));
         }
       } catch(e) {
         error = 'Variables: ' + e;
+        variablesLoading.set(false);
       }
     }
 
-    async function loadFlows() {
+    function loadFlows() {
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.flow') || $scopes.includes('homey.flow.readonly') || $scopes.includes('homey.flow.start')) {
-          await $homey.flow.connect();
-          const folders = await $homey.flow.getFlowFolders();
-          const basic = await $homey.flow.getFlows();
-          const advanced = await $homey.flow.getAdvancedFlows();
+          flowFoldersLoading.set(true);
+          basicFlowsLoading.set(true);
+          advancedFlowsLoading.set(true);
 
-          flowFolders.set(folders);
-          basicFlows.set(basic);
-          advancedFlows.set(advanced);
+          $homey.flow.connect().then(() => {
+            $homey.flow
+              .getFlowFolders()
+              .then(folders => { flowFolders.set(folders); })
+              .finally(() => flowFoldersLoading.set(false));
+            $homey.flow
+              .getFlows()
+              .then(flows => { basicFlows.set(flows); })
+              .finally(() => () => basicFlowsLoading.set(false));
+            $homey.flow
+              .getAdvancedFlows()
+              .then(flows => { advancedFlows.set(flows); })
+              .finally(() => advancedFlowsLoading.set(false));
 
-          $homey.flow.on('flow.create', (e: BasicFlow) => basicFlows.onCreate(e));
-          $homey.flow.on('flow.delete', (e: BasicFlow) => basicFlows.onDelete(e));
-          $homey.flow.on('advancedflow.create', (e: AdvancedFlow) => advancedFlows.onCreate(e));
-          $homey.flow.on('advancedflow.delete', (e: AdvancedFlow) => advancedFlows.onDelete(e));
+            $homey.flow.on('flow.create', (e: BasicFlow) => basicFlows.onCreate(e));
+            $homey.flow.on('flow.delete', (e: BasicFlow) => basicFlows.onDelete(e));
+            $homey.flow.on('advancedflow.create', (e: AdvancedFlow) => advancedFlows.onCreate(e));
+            $homey.flow.on('advancedflow.delete', (e: AdvancedFlow) => advancedFlows.onDelete(e));
+          }, () => {
+            // On error
+            flowFoldersLoading.set(false);
+            basicFlowsLoading.set(false);
+            advancedFlowsLoading.set(false);
+          });
         }
       } catch(e) {
         error = 'Flows: ' + e;
+
+        // On error
+        flowFoldersLoading.set(false);
+        basicFlowsLoading.set(false);
+        advancedFlowsLoading.set(false);
       }
     }
 
-    async function loadInsights() {
+    function loadInsights() {
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.insights') || $scopes.includes('homey.insights.readonly')) {
-          await $homey.insights.connect();
-          const logs = await $homey.insights.getLogs();
+          insightsLoading.set(true);
 
-          insights.set(logs);
+          $homey.insights
+            .connect()
+            .then(() => {
+              $homey.insights
+                .getLogs()
+                .then(logs => { insights.set(logs); })
+                .finally(() => insightsLoading.set(false));
+            }, 
+            // On error
+            () => insightsLoading.set(false));
 
           /*
           $homey.insights.on('log.create', (e: Log) => insights.onCreate(e));
@@ -230,18 +277,23 @@
           */
         }
       } catch(e) {
-        error = 'Flows: ' + e;
+        error = 'Insights: ' + e;
+        insightsLoading.set(false);
       }
     }
 
-    async function loadZones() {
+    function loadZones() {
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.zone') || $scopes.includes('homey.zone.readonly')) {
-          await $homey.zones.connect();
-          const z = await $homey.zones.getZones();
+          zonesLoading.set(true);
 
-          zones.set(z);
-
+          $homey.zones
+            .connect()
+            .then(() => {
+              $homey.zones.getZones().then(z => { zones.set(z); });
+            })
+            .finally(() => zonesLoading.set(false));
+          
           /*
           $homey.zones.on('zone.create', (e: Zone) => zones.onCreate(e));
           $homey.zones.on('zone.delete', (e: Zone) => zones.onDelete(e));
@@ -250,12 +302,13 @@
         }
       } catch(e) {
         error = 'Zones: ' + e;
+        zonesLoading.set(false);
       }
     }
 
     function toggleEdit() {
       editing.toggle();
-      menuOpen = false;
+      menuHidden = true;
     }
 
     async function addDashboard(title: string) : Promise<void> {
@@ -272,18 +325,18 @@
     }
 
     function openDashboard(dash: Dashboard) : Promise<void> {
-      menuOpen = false;
+      menuHidden = true;
       dashboardMenuOpen = false;
       return goto(base + '/board/?id=' + dash.id)
     }
 
     function openDashboardSettings(dash: Dashboard) : Promise<void> {
-      menuOpen = false;
+      menuHidden = true;
       return goto(base + '/board/settings/?id=' + dash.id)
     }
 
     function openAddDashboard() {
-      menuOpen = false;
+      menuHidden = true;
       addDashboardOpen = true;
     }
 
@@ -295,7 +348,7 @@
 
       // Navigate to home-screen after switching
       await goto(base + '/');
-      menuOpen = false;
+      menuHidden = true;
     }
 
     async function logout() {
@@ -321,107 +374,118 @@
   <title>{$dashboard !== undefined ? $dashboard.title : 'Dashboard'}</title>
 </svelte:head>
 
-<svelte:window on:visibilitychange={e => reconnect()} />
+<svelte:window on:visibilitychange={e => onWindowVisibilityChange()} />
 
 <div 
-  class="w-full h-full text-content overflow-y-scroll bg-fixed bg-no-repeat bg-cover" 
+  class="w-full h-full text-content bg-fixed bg-no-repeat bg-cover" 
   style={$dashboard?.backgroundImage && $dashboard.backgroundImage.length > 0 ? `background-image: url(${$dashboard.backgroundImage})` : ''} 
 >
   {#if loading}
-    <div class="w-full">
-        <Progress size="xs" indeterminate value={0} />
+    <div class="w-full mt-8 text-center">
+      <span class="loading loading-infinity w-40 text-primary"></span>
     </div>
   {:else if $homey !== undefined}
-    {#if menuOpen == false && toolbarOpen == false}
-      <IconButton data={mdiMenu} on:click={() => menuOpen = true} class="absolute left-0 top-0 z-10 text-primary-content bg-primary rounded-none rounded-br-3xl" size="32px" />
+    {#if menuHidden == true && toolbarOpen == false}
+      <IconButton data={mdiMenu} on:click={() => menuHidden = false} class="absolute left-0 top-0 z-10 text-primary-content bg-primary rounded-none rounded-br-3xl" size="32px" />
     {/if}
 
     <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
 
-    <Drawer bind:open={menuOpen} position="left" size="xs" backdrop={true}>
+    <Drawer transitionType="fly" transitionParams={{ x: -320, duration: 200, easing: sineIn }} bind:hidden={menuHidden} id="main">
       {#if $user !== undefined}
-        <Media>
-          <Media.Avatar src={$user.avatar.small} />
-          <Media.Content>
-              <Media.Content.Title>{$user.firstname}</Media.Content.Title>
-              <Media.Content.Description>{$user.email}</Media.Content.Description>
-          </Media.Content>
-        </Media>
+        <div class="flex items-center cursor-pointer">
+          <div class="avatar">
+            <div class="w-24 rounded-full">
+              <img src={$user.avatar.small} alt={$user.fullname} />
+            </div>
+          </div>
+          <div class="space-y-1 font-medium">
+            <div>{$user.firstname}</div>
+            <div class="text-sm">{$user.email}</div>
+          </div>
+        </div>
 
         {#if $user.homeys.length > 1}
-          <Divider>
-            <Divider.Label slot="label">Homeys</Divider.Label>
-          </Divider>
-          <List>
+          <div class="divider">Homeys</div>
+
+          <ul class="menu w-full">
             {#each $user.homeys as h}
-              <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => selectHomey(h)}>
-                <List.Item.Leading slot="leading">
-                  <List.Item.Leading.Icon slot="icon" data={mdiDeathStarVariant} />
-                </List.Item.Leading>
-                <List.Item.Content slot="content">
-                  <List.Item.Content.Title slot="title">{h.name}</List.Item.Content.Title>
-                </List.Item.Content>
-              </List.Item>
+              <li on:click={() => selectHomey(h)}>
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <Icon class="w-8 h-8 rounded-full" data={mdiDeathStarVariant} />
+                  </div>
+                  <div class="flex-1 min-w-0 ml-2">
+                    <p class="text-sm font-medium">{h.name}</p>
+                    <p class="text-sm capitalize">{h.modelName}</p>
+                  </div>
+                </div>
+              </li>
             {/each}
-          </List>
+          </ul>
         {/if}
       {/if}
 
-      <Divider>
-        <Divider.Label slot="label">Dashboards</Divider.Label>
-      </Divider>
-      <List>
+      <div class="divider">Dashboards</div>
+
+      <ul class="menu w-full">
         {#each dashboards as d}
-          <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openDashboard(d)}>
-            <List.Item.Leading slot="leading">
-              <List.Item.Leading.Icon slot="icon" data={mdiViewDashboard} />
-            </List.Item.Leading>
-            <List.Item.Content slot="content">
-              <List.Item.Content.Title slot="title">{d.title}</List.Item.Content.Title>
-            </List.Item.Content>
-          </List.Item>
+          <li on:click={() => openDashboard(d)}>
+            <div class="flex items-center ">
+              <div class="flex-shrink-0">
+                <Icon class="w-8 h-8 rounded-full" data={mdiViewDashboard} />
+              </div>
+              <div class="flex-1 min-w-0 ml-2">
+                <p class="text-sm font-medium">{d.title}</p>
+                <p class="text-sm capitalize">{d.source}</p>
+              </div>
+            </div>
+          </li>
         {/each}
-      </List>
+      </ul>
 
-      <Divider>
-        <Divider.Label slot="label">Tools</Divider.Label>
-      </Divider>
+      <div class="divider">Tools</div>
 
-      <List>
+      <ul class="menu w-full">
           {#if $dashboard !== undefined}
-            <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => toggleEdit()}>
-              <List.Item.Leading slot="leading">
-                <List.Item.Leading.Icon slot="icon" data={mdiViewDashboardEdit} />
-              </List.Item.Leading>
-              <List.Item.Content slot="content">
-                <List.Item.Content.Title slot="title">Edit widgets</List.Item.Content.Title>
-              </List.Item.Content>
-            </List.Item>
+            <li on:click={() => toggleEdit()}>
+              <div class="flex items-center ">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full" data={mdiViewDashboardEdit} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Edit dashboard</p>
+                </div>
+              </div>
+            </li>
 
-            <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openDashboardSettings($dashboard)}>
-              <List.Item.Leading slot="leading">
-                <List.Item.Leading.Icon slot="icon" data={mdiCog} />
-              </List.Item.Leading>
-              <List.Item.Content slot="content">
-                <List.Item.Content.Title slot="title">Dashboard settings</List.Item.Content.Title>
-              </List.Item.Content>
-            </List.Item>
+            <li on:click={() => openDashboardSettings($dashboard)}>
+              <div class="flex items-center ">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full" data={mdiCog} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Dashboard settings</p>
+                </div>
+              </div>
+            </li>
           {/if}
 
-          <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openAddDashboard()}>
-            <List.Item.Leading slot="leading">
-              <List.Item.Leading.Icon slot="icon" data={mdiPlus} />
-            </List.Item.Leading>
-            <List.Item.Content slot="content">
-              <List.Item.Content.Title slot="title">Add local dashboard</List.Item.Content.Title>
-            </List.Item.Content>
-          </List.Item>
-      </List>
+          <li on:click={() => openAddDashboard()}>
+            <div class="flex items-center ">
+              <div class="flex-shrink-0">
+                <Icon class="w-8 h-8 rounded-full" data={mdiPlus} />
+              </div>
+              <div class="flex-1 min-w-0 ml-2">
+                <p class="text-sm font-medium">Add local dashboard</p>
+              </div>
+            </div>
+          </li>
+        </ul>
 
-      <Divider>
-        <Divider.Label slot="label"></Divider.Label>
-      </Divider>
+      <div class="divider"></div>
 
+      <!--
       <Toggle
         name="toolbarOpen"
         bind:on={toolbarOpen}
@@ -444,47 +508,8 @@
       <Button on:click={() => logout()} class="mt-4">
         Sign out
       </Button>
+      -->
     </Drawer>
-
-    {#if toolbarOpen}
-      <header class="w-full sticky z-0 drop-shadow-lg p-4 bg-primary flex flex-row">
-        <Button on:click={() => menuOpen = true}>
-          <Icon slot="icon" data={mdiMenu} />
-        </Button>
-        
-        <Dropdown bind:visible={dashboardMenuOpen}>
-          <Button slot="trigger" on:click={() => dashboardMenuOpen = !dashboardMenuOpen}>
-            <Button.Icon slot="icon" data={mdiViewDashboard} />
-          </Button>
-          <Dropdown.Items slot="items">
-            {#each dashboards as d}
-              {#if $dashboard === undefined || $dashboard.id !== d.id}
-                <Dropdown.Items.Item on:click={() => openDashboard(d)} label={d.title} />
-              {/if}
-            {/each}
-          </Dropdown.Items>
-        </Dropdown>
-        
-        {#if $dashboard !== undefined}
-          <Button on:click={() => goto(base + '/board/?id=' + $dashboard.id)}>{$dashboard.title}</Button>
-        {/if}
-
-        <div class="flex flex-grow justify-end">
-          <Button on:click={() => (addDashboardOpen = true)}>
-            <Button.Icon slot="icon" data={mdiPlus} />
-          </Button>
-
-          {#if $dashboard !== undefined}
-            <Button on:click={() => toggleEdit()}>
-              <Button.Icon slot="icon" data={mdiViewDashboardEdit} />
-            </Button>
-            <Button on:click={() => goto(base + '/board/settings/?id=' + $dashboard.id)}>
-              <Button.Icon slot="icon" data={mdiCog} />
-            </Button>
-          {/if}
-        </div>
-      </header>
-    {/if}
     
     <slot></slot>
   {:else}

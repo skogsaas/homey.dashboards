@@ -57,14 +57,25 @@
     }
 </script>
 
-<div class="mt-2">
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Capability</span>
+    </div>
     <CapabilityPicker bind:capabilityUri={capabilityUri} on:capability={(c) => (capability = c.detail)} />
-</div>
+</label>
 
 {#if capability}
-    <Input name="title" bind:value={title} placeholder={capability.title} class="mt-2" />
+    <label class="form-control w-full">
+        <div class="label">
+            <span class="label-text">Title</span>
+        </div>
+        <input type="text" class="input w-full" placeholder={capability.title} bind:value={title} />
+    </label>
 {/if}
 
-<div class="mt-2">
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Icon</span>
+    </div>
     <IconPicker bind:iconId={iconId} />
-</div>
+</label>

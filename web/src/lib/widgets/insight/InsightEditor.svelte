@@ -12,6 +12,7 @@
     import InsightPicker from '$lib/components/InsightPicker.svelte';
     import InsightEditorSeries from './InsightEditorSeries.svelte';
     import { mdiDelete } from '$lib/components/icons';
+    import { Icon } from 'stwui';
     
     const dispatch = createEventDispatcher();
 
@@ -21,21 +22,21 @@
     }
 
     const resolutions: Option[] = [
-        {value: 'lastHour', label: 'Last hour'},
-        {value: 'last6Hours', label: 'Last 6 hours'},
-        {value: 'last24Hours', label: 'Last 24 hours'},
-        {value: 'last7Days', label: 'Last 7 days'},
-        {value: 'last14Days', label: 'Last 14 days'},
-        {value: 'last31Days', label: 'Last 31 days'},
-        {value: 'today', label: 'Today'},
-        {value: 'thisWeek', label: 'This week'},
-        {value: 'thisMonth', label: 'This month'},
-        {value: 'thisYear', label: 'This year'},
-        {value: 'yesterday', label: 'Yesterday'},
-        {value: 'lastWeek', label: 'Last week'},
-        {value: 'lastMonth', label: 'Last month'},
-        {value: 'lastYear', label: 'Last year'},
-        {value: 'last2Years', label: 'Last 2 years'}
+        { value: 'lastHour', label: 'Last hour' },
+        { value: 'last6Hours', label: 'Last 6 hours' },
+        { value: 'last24Hours', label: 'Last 24 hours' },
+        { value: 'last7Days', label: 'Last 7 days' },
+        { value: 'last14Days', label: 'Last 14 days' },
+        { value: 'last31Days', label: 'Last 31 days' },
+        { value: 'today', label: 'Today' },
+        { value: 'thisWeek', label: 'This week' },
+        { value: 'thisMonth', label: 'This month' },
+        { value: 'thisYear', label: 'This year' },
+        { value: 'yesterday', label: 'Yesterday' },
+        { value: 'lastWeek', label: 'Last week' },
+        { value: 'lastMonth', label: 'Last month' },
+        { value: 'lastYear', label: 'Last year' },
+        { value: 'last2Years', label: 'Last 2 years' }
     ];
 
     export let settings: InsightSettings_v5;
@@ -63,18 +64,20 @@
     }
 
     function onLog(logId: string) {
-        const updatedSeries = [...series, { insightId: logId }];
+        series = [...series, { insightId: logId }];
 
         selectedLogId = undefined;
 
-        dispatch('settings', { ...settings, series: updatedSeries });
+        dispatch('settings', { ...settings, series });
     }
 
     function onSeries(index: number, s: Series_v5) {
         const updatedSeries = [...series];
-        updatedSeries[index] = s;
+        updatedSeries[index] = { ...s };
 
-        dispatch('settings', { ...settings, series: updatedSeries });
+        series = updatedSeries;
+
+        dispatch('settings', { ...settings, series });
     }
 
     function getLogName(logId: string | undefined) {
@@ -107,37 +110,33 @@
     }
 
     function removeInsight(index: number) {
-        const updatedSeries = [...series.filter((s, i) => i !== index)];
+        series = [...series.filter((s, i) => i !== index)];
 
-        dispatch('settings', { ...settings, series: updatedSeries });
+        dispatch('settings', { ...settings, series });
     }
 </script>
 
-<InsightPicker bind:logId={selectedLogId} on:logId={(e) => onLog(e.detail)} logs={Object.values($insights)} placeholder="Add insight" />
+<InsightPicker bind:logId={selectedLogId} on:logId={(e) => onLog(e.detail)} logs={Object.values($insights)} />
 
-<Select bind:value={resolution} placeholder="Resolution" name="resolution" class="mt-4">
-    <Select.Options slot="options" class="max-h-96 overflow-auto">
-        {#each resolutions as option}
-            <Select.Options.Option {option} />
-        {/each}
-    </Select.Options>
-</Select>
-
-<Accordion class="mt-4">
-    {#each series as s, i}
-        <Accordion.Item open={openInsightId === s.insightId} class="overflow-visible">
-            <Accordion.Item.Title slot="title" on:click={() => openInsightId !== s.insightId ? (openInsightId = s.insightId) : (openInsightId = undefined)}>
-                <div>
-                    <Button class="mr-4" on:click={() => removeInsight(i)}>
-                        <Button.Icon slot="icon" data={mdiDelete} />
-                    </Button>
-                    <span>{getLogName(s.insightId)}</span>
-                </div>
-            </Accordion.Item.Title>
-            <Accordion.Item.Content slot="content" class="p-4">
-                <InsightEditorSeries series={s} index={i} on:series={(e) => onSeries(i, e.detail)}/>
-            </Accordion.Item.Content>
-        </Accordion.Item>
+<select bind:value={resolution} class="select w-full mt-4">
+    {#each resolutions as option}
+        <option value={option}>{option.label}</option>
     {/each}
-</Accordion>
+</select>
 
+<div class="mt-4">
+    {#each series as s, i}
+        <div class="collapse bg-base-200">
+            <input type="radio" name="insights" checked={openInsightId === s.insightId} /> 
+            <div class="collapse-title text-lg font-medium flex justify-between">
+                <button class="btn btn-circle" on:click={() => removeInsight(i)}>
+                    <Icon data={mdiDelete} />
+                </button>
+                <span class="my-auto">{getLogName(s.insightId)}</span>
+            </div>
+            <div class="collapse-content p-0"> 
+                <InsightEditorSeries series={s} index={i} on:series={(e) => onSeries(i, e.detail)}/>
+            </div>
+        </div>
+    {/each}
+</div>

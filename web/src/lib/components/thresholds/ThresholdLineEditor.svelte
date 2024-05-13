@@ -13,7 +13,7 @@
     export let max: number;
 
     let _color: string;
-    let _value: string;
+    let _value: number;
 
     let error: string | undefined = undefined;
 
@@ -25,37 +25,35 @@
 
     function onChanges(c: string, v: number) {
         if(c !== _color) _color = c;
-
-        if(v.toString() !== _value) _value = v.toString();
+        if(v !== _value) _value = v;
     }
 
     function onColor(c: string) {
         dispatch('color', c);
     }
 
-    function onValue(v: string) {
-        const num: number = Number.parseFloat(v)
+    function onValue(v: number) {
 
-        if(Number.isNaN(num)) {
+        if(Number.isNaN(v)) {
             error = v + ' is not a valid number';
-        } else if (num < min) {
+        } else if (v < min) {
             error = 'Must be greater than ' + min;
-        } else if (num > max) {
+        } else if (v > max) {
             error = 'Must be less or equal to ' + max;
         } else {
             error = undefined;
-            dispatch('value', num);
+            dispatch('value', v);
         }
     }
 
 </script>
 
-<div class="flex flex-row justify-between my-2 flex-grow mr-2 h-11 items-center">    
+<div class="join w-full flex">    
     <ColorPicker bind:value={_color} mode={colorMode} />
     
     {#if !base}
-        <Input name="value" bind:value={_value} error={error} class="mt-0" />
+        <input class="input join-item" type="number" bind:value={_value} />
     {:else}
-        <Input name="value" value="base" readonly />
+        <input class="input join-item" type="text" name="value" value="base" readonly />
     {/if}
 </div>

@@ -3,19 +3,12 @@
 
     import { createEventDispatcher } from "svelte";
 
-    import Portal from 'stwui/portal';
-    import Modal from 'stwui/modal';
-    import Input from 'stwui/input';
-    import Button from 'stwui/button';
-    import List from "stwui/list";
-
     import { flowFolders } from "$lib/stores/homey";
-    import IconButton from "./IconButton.svelte";
-    import { mdiClose, mdiDelete } from "./icons";
+    import { mdiClose, mdiMagnify } from "./icons";
+    import { Icon } from "stwui";
 
     export let flowId: string | undefined;
     export let flows: Flow[] = [];
-    export let placeholder: string = 'Select flow';
 
     const dispatch = createEventDispatcher();
 
@@ -25,7 +18,8 @@
         searchString: string;
     }
 
-    let open: boolean = false;
+    let modal: HTMLDialogElement;
+
     let search: string = '';
     let filtered: Item[] = [];
     let selected: Item | undefined;
@@ -54,10 +48,10 @@
         }
     }
 
-    function onFlow(flow: Flow) {
-        flowId = flow.id;
-        open = false;
+    function onItem(item: Item) {
+        flowId = item.flow.id;
         
+        modal.close();
         dispatch('flowId', flowId);
     }
 
@@ -72,51 +66,49 @@
     }
 </script>
 
-<Button on:click={() => open = true} class="w-full justify-start border border-border">
-    {#if selected !== undefined}
-        <div class="flex justify-between w-full">
-            <span>{selected.folders} - {selected.flow.name}</span>
-            <IconButton data={mdiDelete} size="14px" on:click={() => flowId = undefined} />
-        </div>
-    {:else if flowId !== undefined}
-        Flow not found
+<div class="join w-full flex">
+    {#if selected}        
+        <input 
+            readonly 
+            type="text" 
+            class="input input-bordered join-item flex-grow" 
+            placeholder="Flow" 
+            value={selected.folders + '-' + selected.flow.name} 
+        />
     {:else}
-        {placeholder}
+        <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
+            <Icon data={mdiMagnify} />
+        </button>
+        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Flow"/>
     {/if}
-</Button>
+</div>
 
-<Portal>
-    {#if open}
-        <Modal handleClose={() => open = false}>
-            <Modal.Content slot="content">
-                <Modal.Content.Body slot="body" class="h-full flex flex-col">
-                    <div class="relative w-full">
-                        <div class="absolute -top-4 -right-5 z-10">
-                            <IconButton data={mdiClose} on:click={() => open = false} />
-                        </div>
+<dialog bind:this={modal} class="modal">
+    <div class="modal-box flex flex-col">
+        <div class="flex-shrink-0 mb-2">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+                    <Icon data={mdiClose} />
+                </button>
+            </form>
+            
+            <input type="text" class="input w-full input-primary" bind:value={search} name="search" placeholder="Search" />
+        </div>
+        
+        <div class="flex-grow overflow-auto">
+            {#each filtered as item}
+                <button class="btn btn-ghost w-full" on:click={() => onItem(item)}>
+                    <h3 class="w-full flex justify-start">
+                        {item.folders}
+                    </h3>
+    
+                    <div class="w-full flex justify-between">
+                        <span>{item.flow.name}</span>
                     </div>
-                    
-                    <div>
-                        <Input bind:value={search} name="search" placeholder="Search" />
-                    </div>
-                    <div class="flex-grow overflow-auto">
-                        <List>
-                            {#each filtered as item}
-                                <List.Item class="cursor-pointer" on:click={() => onFlow(item.flow)}>
-                                    <List.Item.Content slot="content">
-                                        <List.Item.Content.Title slot="title" class="flex">
-                                            {item.folders}
-                                        </List.Item.Content.Title>
-                                        <List.Item.Content.Description slot="description">
-                                            {item.flow.name}
-                                        </List.Item.Content.Description>
-                                    </List.Item.Content>
-                                </List.Item>
-                            {/each}
-                        </List>
-                    </div>
-                </Modal.Content.Body>
-            </Modal.Content>
-        </Modal>
-    {/if}
-</Portal>
+                </button>
+
+                <div class="divider divider-neutral my-1"></div>
+            {/each}
+        </div>
+    </div>
+</dialog>

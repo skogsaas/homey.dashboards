@@ -1,124 +1,105 @@
 <script lang="ts">
-    import GridShadow from "./GridShadow.svelte";
-    import GridElement from "./GridElement.svelte";
-    import type { GridLayoutItem_v1 } from "$lib/types/Grid";
-    import { CalculatePosition } from "./GridUtils";
+    import type { GridItemLayout_v1, GridItem_v2, GridLayout_v2 } from "$lib/types/Grid";
     import { createEventDispatcher } from "svelte";
-    import GridContainer from "./GridContainer.svelte";
+    import { grid, gridZone } from "./gridAction";
+    import type { WidgetSettings } from "$lib/types/Widgets";
 
-    export let items: GridLayoutItem_v1[];
+    export let layouts: GridLayout_v2[];
+    export let items: GridItem_v2[];
+    export let editable: boolean | undefined;
 
-    export let columns: number;
-    export let rowHeight: number;
-    export let editable: boolean;
+    let element: HTMLElement;
+    let layout: GridLayout_v2 | undefined;
+    let layoutIndex: number = 0;
+    let itemLayouts: GridItemLayout_v1[] = [];
+
+    $: getLayout(layouts, items, element);
+
+    $: columns = layout?.columns ?? 1;
+    $: rowHeight = layout?.rowHeight ?? 25;
 
     const dispatch = createEventDispatcher();
 
-    let width: number;
+    function updateItems(_items: GridItem_v2[]) {
+        items = _items;
+        dispatch('items', items);
+    }
 
-    let offsetX: number;
-    let offsetY: number;
-    let shadowX: number;
-    let shadowY: number;
-    let shadowH: number;
-    let shadowW: number;
+    function updateSettings(settings: WidgetSettings) {
+        const item = items.find(i => i.id === settings.id);
 
-    let mode: 'position'|'width'|'height' = 'position';
-    let selected: any | undefined;
-    let dragging: boolean = false;
+        if(item !== undefined) {
+            item.settings = settings;
+        }
 
-    function select(item: any) {
-        if(dragging) {
+        dispatch('items', items);
+    }
+
+    function onSelected(e: any) {
+        dispatch('selected', e);
+    }
+
+    function onMoving(e: any) {
+        dispatch('moving', e);
+    }
+
+    function getLayout(_layouts: GridLayout_v2[], _items: GridItem_v2[], _element?: HTMLElement) {
+        if(_element === undefined) {
             return;
         }
-        
-        if(selected === item) {
-            selected = undefined;
-        } else {
-            selected = item;
+
+        if(_layouts.length == 0) {
+            layoutIndex = 0;
+            layout = { minWidth: 0, maxWidth: undefined, columns: 1, rowHeight: 25 };
+            itemLayouts = _items.map(item => item.layouts[layoutIndex]);
+
+            return;
         }
 
-        dispatch('select', selected?.id);
-    }
-    
-    function pointerdown(item: any, e: any) {
-        offsetY = e.clientY - item.y * rowHeight;
-        offsetX = e.clientX - item.x * width / columns;
-
-        shadowX = item.x;
-        shadowY = item.y;
-        shadowH = item.h;
-        shadowW = item.w;
-        
-        dragging = true;
+        const rect = _element.getBoundingClientRect();
+        layoutIndex = zoneLayoutIndex(_layouts, rect);
+        layout = _layouts[layoutIndex];
+        itemLayouts = _items.map(item => item.layouts[layoutIndex]);
     }
 
-    function pointerup(item: any, e: any) {
-        if(item.x !== shadowX || item.y !== shadowY || item.w !== shadowW || item.h !== shadowH) {
-            const index = items.findIndex(i => i.id === item.id);
-            const copy = [...items];
+    function zoneLayoutIndex(_layouts: GridLayout_v2[], rect: DOMRect) : number {
+        const width = rect.width;
+        const index = _layouts.findLastIndex(l => l.minWidth < width);
 
-            selected = { ...item, x: shadowX, y: shadowY, w: shadowW, h: shadowH };
-            copy[index] = selected;
-
-            items = copy;
+        if(index === -1) {
+            return layouts.length - 1;
         }
 
-        dragging = false;
-    }
-
-    function pointermove(item: any, e: any) {
-        if(mode === 'position') {
-            const shadow = CalculatePosition(columns, width, rowHeight, e.clientX - offsetX, e.clientY - offsetY);
-
-            shadowY = shadow.y;
-            shadowX = shadow.x;
-        } else if(mode === 'width') {
-            shadowW = Math.round(columns / width * (e.clientX - (item.x * width / columns)));
-        } else if(mode === 'height') {
-            shadowH = Math.round((e.clientY - (rowHeight * item.y)) / rowHeight);
-        }
+        return index;
     }
 
 </script>
 
-<div 
-    class="w-full h-full relative" 
-    bind:clientWidth={width}
-    on:pointerdown={() => select(undefined)}
->
-    {#each items as item(item)}
-        <GridElement
-            {columns}
-            {rowHeight}
-            {editable}
-            id={item.id}
-            x={item.x}
-            y={item.y}
-            h={item.h}
-            w={item.w}
-            focus={item === selected}
-            highlighted={dragging}
-            
-
-            on:select={e => select(item)}
-            on:mode={e => mode = e.detail}
-            on:down={e => pointerdown(item, e.detail)}
-            on:up={e => pointerup(item, e.detail)}
-            on:move={e => pointermove(item, e.detail)}
-        >
-            <slot {item} />
-        </GridElement>
-    {/each}
-
-    {#if dragging}
-        <GridShadow
-            columns={columns}
-            rowHeight={rowHeight}
-            x={shadowX}
-            y={shadowY}
-            h={shadowH}
-            w={shadowW}
-        />
+<div bind:this={element} class="w-full h-full">
+    {#if layout !== undefined}
+        {#if editable}
+            <div
+                class="w-full h-full"
+                style="background-size: calc(100%/{columns}) {rowHeight}px; background-image: radial-gradient(circle, #000000 1px, rgba(0, 0, 0, 0) 1px); background-position: {100/(columns*2)}% -{rowHeight/2}px;"
+                use:gridZone={{ items, layoutIndex, layout }}
+                on:items={e => updateItems(e.detail)}
+                on:selected={e => onSelected(e.detail)}
+                on:moving={e => onMoving(e.detail)}
+                on:settings={e => updateSettings(e.detail)}
+            >
+                {#each items as item(item.id)}
+                    <slot item={item.layouts[layoutIndex]} {editable} />
+                {/each}
+            </div>
+        {:else}
+            <div
+                class="w-full h-full"
+                use:grid={{ items, layoutIndex, layout }}
+            >
+                {#each items as item(item.id)}
+                    <slot item={item.layouts[layoutIndex]} {editable} />
+                {/each}
+            </div>
+        {/if}
     {/if}
 </div>

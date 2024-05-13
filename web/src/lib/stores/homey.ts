@@ -62,12 +62,12 @@ function createDevices() {
     return {
         subscribe,
         set,
-        onDevice: (patch: any) => update((existing: DeviceMap) => onDevice(existing, patch)),
+        onUpdate: (patch: any) => update((existing: DeviceMap) => onDeviceUpdate(existing, patch)),
         //onCapability: (deviceId: string, event: CapabilityEvent) => update((existing: DeviceMap) => onCapability(existing, deviceId, event))
     };
 }
 
-function onDevice(existing: DeviceMap, patch: any) : DeviceMap {
+function onDeviceUpdate(existing: DeviceMap, patch: any) : DeviceMap {
     const deviceId: string = patch.id;
 
     const copy = { ...existing };
@@ -149,13 +149,27 @@ export const homey = writable(undefined as (Homey | undefined));
 export const baseUrl = createBaseUrl();
 export const session = writable(undefined as (Session | undefined));
 export const scopes = derived(session, (s: Session) => s?.scopes ?? [], []);
+
 export const devices = createDevices();
+export const devicesLoading = writable(false);
+
 export const variables = createVariables();
+export const variablesLoading = writable(false);
+
 export const flowFolders = writable({} as FlowFolderMap);
+export const flowFoldersLoading = writable(false);
+
 export const basicFlows = createBasicFlows();
+export const basicFlowsLoading = writable(false);
+
 export const advancedFlows = createAdvancedFlows();
+export const advancedFlowsLoading = writable(false);
+
 export const zones = createZones();
+export const zonesLoading = writable(false);
+
 export const insights = writable({} as (LogMap));
+export const insightsLoading = writable(false);
 
 export const dashboards = derived(
     devices, 
@@ -174,3 +188,4 @@ export const dashboards = derived(
             return existing;
         }, {} as DashboardMap), 
     {} as DashboardMap);
+export const dashboardsLoading = derived(devicesLoading, (loading: boolean) => loading);

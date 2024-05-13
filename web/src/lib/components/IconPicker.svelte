@@ -1,23 +1,19 @@
 <script lang="ts">
-    import Portal from 'stwui/portal';
-    import Modal from 'stwui/modal';
-    import Input from 'stwui/input';
-    import Button from 'stwui/button';
-    import List from 'stwui/list';
     import Icon from 'stwui/icon';
 
-    import { lookup, type IconMetadata, mdiDelete, mdiClose } from "./icons";
-    import IconButton from './IconButton.svelte';
+    import { lookup, type IconMetadata, mdiClose, mdiMagnify } from "./icons";
+    import { createEventDispatcher } from 'svelte';
 
     export let iconId: string | undefined;
-    export let placeholder: string = 'Select icon'; 
 
+    const dispatch = createEventDispatcher();
+    
     const limit = 50;
 
-    let open: boolean = false;
+    let modal: HTMLDialogElement;
+
     let search: string = '';
     let filtered: IconMetadata[];
-
     let selected: IconMetadata | undefined;
 
     $: filtered = onSearch(search);
@@ -55,65 +51,65 @@
         if(s?.id !== iconId) {
             iconId = s?.id;
         }
-
-        open = false;
     }
+
+    function onItem(item: IconMetadata) {
+        selected = item;
+        iconId = item.id;
+        
+        modal.close();
+        dispatch('iconId', selected.id);
+    }
+
 </script>
 
-<Button on:click={() => open = true} class="w-full justify-start border border-border">
-    <span class="mr-1">Icon:</span>
-
+<div class="join w-full flex">
     {#if selected}
-        <div class="flex justify-between w-full">
+        <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
             <Icon data={selected.icon} />
-            <IconButton data={mdiDelete} size="14px" on:click={() => iconId = undefined} />
-        </div>
-    {:else if iconId !== undefined}
-        Icon not found
+        </button>
+        
+        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Icon" value={selected.id}/>
     {:else}
-        {placeholder}
+        <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
+            <Icon data={mdiMagnify} />
+        </button>
+        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Icon"/>
     {/if}
-</Button>
+</div>
 
-<Portal>
-    {#if open}
-        <Modal handleClose={() => open = false}>
-            <Modal.Content slot="content">
-                <Modal.Content.Body slot="body" class="h-full flex flex-col">
-                    <div class="relative w-full">
-                        <div class="absolute -top-4 -right-5 z-10">
-                            <IconButton data={mdiClose} on:click={() => open = false} />
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <Input bind:value={search} name="search" placeholder="Search" />
-                    </div>
-                    
-                    {#if search.length === 0} 
-                        <div class="mt-2 mb-4">
-                            NOTE: There are {lookup.length} icons available. Only {limit} are listed until you enter a search string.
-                        </div>
-                    {/if}
+<dialog bind:this={modal} class="modal">
+    <div class="modal-box flex flex-col">
+        <div class="flex-shrink-0 mb-2">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+                    <Icon data={mdiClose} />
+                </button>
+            </form>
+            
+            <input type="text" class="input w-full input-primary" bind:value={search} name="search" placeholder="Search" />
 
-                    <div class="flex-grow overflow-auto">
-                        <List>
-                            {#each filtered as icon}
-                                <List.Item class="cursor-pointer" on:click={() => selected = icon}>
-                                    <List.Item.Content slot="content">
-                                        <List.Item.Content.Title slot="title" class="flex">
-                                            <Icon data={icon.icon} />
-                                        </List.Item.Content.Title>
-                                        <List.Item.Content.Description slot="description" class="w-full flex justify-between">
-                                            <span>{icon.id}</span>
-                                        </List.Item.Content.Description>
-                                    </List.Item.Content>
-                                </List.Item>
-                            {/each}
-                        </List>
+            {#if search.length === 0} 
+                <div class="mt-2 mb-4">
+                    NOTE: There are {lookup.length} icons available. Only {limit} are listed until you enter a search string.
+                </div>
+            {/if}
+        </div>
+        
+        <div class="flex-grow overflow-auto">
+            {#each filtered as icon}
+                <button class="btn btn-ghost w-full" on:click={() => onItem(icon)}>
+                    <h3 class="w-full flex justify-start">
+                        <Icon data={icon.icon} />
+                    </h3>
+    
+                    <div class="w-full flex justify-between">
+                        <span>{icon.id}</span>
                     </div>
-                </Modal.Content.Body>
-            </Modal.Content>
-        </Modal>
-    {/if}
-</Portal>
+                </button>
+
+                <div class="divider divider-neutral my-1"></div>
+            {/each}
+        </div>
+    </div>
+</dialog>

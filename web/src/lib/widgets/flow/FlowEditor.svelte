@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from 'svelte';
+    import { createEventDispatcher } from 'svelte';
     import { advancedFlows, basicFlows } from '$lib/stores/homey';
 
     import type { FlowSettings_v1 } from "./FlowSettings";
@@ -49,8 +49,16 @@
     }
 </script>
 
-<FlowPicker bind:flowId={flowId} flows={flows} />
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Flow</span>
+    </div>
+    <FlowPicker bind:flowId={flowId} flows={flows} />
+</label>
 
-<div class="mt-2">
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Icon</span>
+    </div>
     <IconPicker bind:iconId={iconId} />
-</div>
+</label>

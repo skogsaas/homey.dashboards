@@ -17,5 +17,4 @@ export interface Threshold {
     value: number;
 }
 
-export type WidgetIdMap = { [key: string]: { id: string }; }
 export type WidgetSettingsMap = { [key: string]: WidgetSettings; }

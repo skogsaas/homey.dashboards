@@ -6,9 +6,9 @@
 
     import { editing } from '$lib/stores/dashboard';
     
-    import IconButton from '$lib/components/IconButton.svelte';
     import { getIcon } from '$lib/components/icons/utils';
     import type { WidgetContext } from '$lib/types/Widgets';
+    import { Icon } from 'stwui';
 
     export let settings: FlowSettings_v1;
     export let context: WidgetContext;
@@ -33,8 +33,10 @@
         <span>Flow not found</span>
     {/if}
 {:else}
-    <div class="flex content-center h-full">
-        <IconButton data={getIcon(settings.iconId ?? 'play')} class="my-auto ml-1 bg-primary text-primary-content" on:click={() => triggerFlow()} size="60px" />
+    <div class="flex w-full h-full">
+        <button class="btn btn-circle my-auto btn-lg btn-success" on:click={() => triggerFlow()}>
+            <Icon data={getIcon(settings.iconId ?? 'play')} />
+        </button>
         
         <div class="my-auto ml-3 mr-1">{flow.name}</div>
     </div>

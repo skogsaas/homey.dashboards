@@ -344,7 +344,7 @@ export interface OAuthDevice {
     platform: string;
     publicKey: string;
     token: string;
-    updateD: string;
+    updated: string;
 }
 
 export interface OAuthHomey {

@@ -1,12 +1,16 @@
-import type { GridItem_v1, GridItem_v0 } from "$lib/types/Grid";
-import { findCreate, findMigration } from ".";
+import type { GridItem_v1, GridItem_v2 } from "$lib/types/Grid";
+import { findMigration } from ".";
 import type { CapabilitySettings_v3, CapabilitySettings_v4 } from "./capability/CapabilitySettings";
 import { v4 as uuid } from 'uuid';
 import type { DeviceSettings_v1 } from "./device/DeviceSettings";
 import type { SliderSettings_v1 } from "./slider/SliderSettings";
 import type { Dashboard_v1, Dashboard_v2 } from "$lib/types/Dashboard";
+import type { WidgetSettings } from "$lib/types/Widgets";
+import type { CardSettings_v1 } from "./card/CardSettings";
 
 export function migrate(dashboard: any) : any {
+    if(dashboard === undefined) return undefined;
+
     while(dashboard.version !== 2) {
         dashboard = migrateOnce(dashboard);
     }
@@ -24,65 +28,195 @@ export function migrateOnce(dashboard: any) : any {
 }
 
 function migrate_v1_v2(v1: Dashboard_v1) : Dashboard_v2 {
-    const items = v1.items.map(item => migrateItem(item));
-    const widgets = items.flatMap((item) => item.card).map(widget => migrateWidget(widget));
+    const items = v1.items.map(item => migrateGridItem_v1_v2(item));
 
     const dashboard: Dashboard_v2 = {
         id: v1.id,
         version: 2,
         source: v1.source,
         title: v1.title,
+        iconId: undefined,
         backgroundImage: v1.backgroundImage,
+        items: items,
         layouts: [
             {
-                breakpoint: 640,
+                minWidth: 640,
+                maxWidth: undefined,
                 columns: 6,
-                rowHeight: 50,
-                items: items.map(item => ({ id: item.id, x: item[6].x, y: item[6].y, h: item[6].h, w: item[6].w }))
+                rowHeight: 50
             },
             {
-                breakpoint: 768,
+                minWidth: 768,
+                maxWidth: undefined,
                 columns: 12,
-                rowHeight: 50,
-                items: items.map(item => ({ id: item.id, x: item[12].x, y: item[12].y, h: item[12].h, w: item[12].w }))
+                rowHeight: 50
             },
             {
-                breakpoint: 1024,
+                minWidth: 1024,
+                maxWidth: undefined,
                 columns: 18,
-                rowHeight: 50,
-                items: items.map(item => ({ id: item.id, x: item[18].x, y: item[18].y, h: item[18].h, w: item[18].w }))
+                rowHeight: 50
             },
             {
-                breakpoint: 1280,
+                minWidth: 1280,
+                maxWidth: undefined,
                 columns: 24,
-                rowHeight: 50,
-                items: items.map(item => ({ id: item.id, x: item[24].x, y: item[24].y, h: item[24].h, w: item[24].w }))
+                rowHeight: 50
             },
-        ],
-        widgets: widgets.reduce((obj: any, widget) => { obj[widget.id] = widget; return obj; }, {}),
+        ]
     }
 
     return dashboard;
 }
 
-function migrateItem(item: any) : GridItem_v1 {
-    while(item.version !== 1) {
-        item = migrateItemOnce(item);
+function migrateGridItem_v1_v2(v1: GridItem_v1) : GridItem_v2 {
+    function createCard(widgets: WidgetSettings[]) : CardSettings_v1 {
+        const id = uuid();
+
+        const count = widgets.length;
+        const ratio = 50;
+        const rowHeight = 32;
+        let offset1 = 0;
+        let offset2 = 0;
+        let offset3 = 0;
+        let offset4 = 0;
+
+        return { 
+            id: id, 
+            type: 'card', 
+            version: 1,
+            items: widgets.map((widget, index) => {
+                const y1 = offset1;
+                const y2 = offset2;
+                const y3 = offset3;
+                const y4 = offset4;
+
+                // Height of an element is by default 32 px.
+                let h1 = 1 * rowHeight;
+                let h2 = 1 * rowHeight;
+                let h3 = 1 * rowHeight;
+                let h4 = 1 * rowHeight;
+                
+                if(widget.type === 'image' || widget.type === 'insight' || widget.type === 'iframe') {
+                    // Expand to max height
+                    const remaining = count - (index + 1);
+
+                    h1 = v1[6].h * ratio - offset1 - remaining * rowHeight;
+                    h2 = v1[12].h * ratio - offset2 - remaining * rowHeight;
+                    h3 = v1[18].h * ratio - offset3 - remaining * rowHeight;
+                    h4 = v1[24].h * ratio - offset4 - remaining * rowHeight;
+                }
+                
+                offset1 += h1;
+                offset2 += h2;
+                offset3 += h3;
+                offset4 += h4;
+                
+                return { 
+                    id: widget.id,
+                    settings: widget,
+                    layouts:[
+                        { 
+                            id: widget.id, 
+                            x: 0,
+                            y: y1,
+                            w: 1,
+                            h: h1
+                        },
+                        { 
+                            id: widget.id, 
+                            x: 0,
+                            y: y2,
+                            w: 1,
+                            h: h2
+                        },
+                        { 
+                            id: widget.id, 
+                            x: 0,
+                            y: y3,
+                            w: 1,
+                            h: h3
+                        },
+                        { 
+                            id: widget.id, 
+                            x: 0,
+                            y: y4,
+                            w: 1,
+                            h: h4
+                        }
+                    ]
+                }
+            }),
+            layouts: [
+                {
+                    minWidth: 0,
+                    maxWidth: v1[6].w * ratio,
+                    columns: 1,
+                    rowHeight: 1
+                },
+                {
+                    minWidth: v1[6].w * ratio,
+                    maxWidth: v1[12].w * ratio,
+                    columns: 1,
+                    rowHeight: 1
+                },
+                {
+                    minWidth: v1[12].w * ratio,
+                    maxWidth: v1[18].w * ratio,
+                    columns: 1,
+                    rowHeight: 1
+                },
+                {
+                    minWidth: v1[24].w * ratio,
+                    maxWidth: undefined,
+                    columns: 1,
+                    rowHeight: 1
+                }
+            ],
+            padding: 0,
+            margin: 5
+        }
     }
 
-    return item;
+    return {
+        id: v1.id,
+        settings: createCard(v1.card), 
+        layouts: [
+            { 
+                id: v1.id, 
+                x: v1[6].x,
+                y: v1[6].y,
+                w: v1[6].w,
+                h: v1[6].h
+            },
+            { 
+                id: v1.id, 
+                x: v1[12].x,
+                y: v1[12].y,
+                w: v1[12].w,
+                h: v1[12].h
+            },
+            { 
+                id: v1.id, 
+                x: v1[18].x,
+                y: v1[18].y,
+                w: v1[18].w,
+                h: v1[18].h
+            },
+            { 
+                id: v1.id, 
+                x: v1[24].x,
+                y: v1[24].y,
+                w: v1[24].w,
+                h: v1[24].h
+            }
+        ]
+    };
 }
 
-function migrateItemOnce(item: any) : any {
-    switch(item.version) {
-        case 1: return item;
+function migrateGridItem_v0_v1(v0: any) : GridItem_v1 {
+    if(v0.version === 1) return v0 as GridItem_v1;
 
-        case undefined:
-        default: return migrateItem_v0_v1(item as GridItem_v0);
-    }
-}
-
-function migrateItem_v0_v1(v0: GridItem_v0) : GridItem_v1 {
     const item: GridItem_v1 = {
         ...v0,
         version: 1,

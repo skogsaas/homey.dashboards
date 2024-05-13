@@ -1,24 +1,25 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
-    
-    import { editing, dashboard } from '$lib/stores/dashboard';
-    
-    import Card from 'stwui/card';
-
     import { findWidget } from '$lib/widgets';
     import type { WidgetSettings } from '$lib/types/Widgets';
+    import type { GridItemLayout_v1 } from '$lib/types/Grid';
+    import { createEventDispatcher } from 'svelte';
+
+    export let item: GridItemLayout_v1;
+    export let settings: WidgetSettings;
+    export let editable: boolean;
 
     const dispatch = createEventDispatcher();
 
-    export let setting: WidgetSettings;
-
-    $: context = { editing: false, mode: 'card' };
+    function updateSettings(_settings: WidgetSettings) {
+        settings = _settings;
+        dispatch('settings', settings);
+    }
 </script>
 
-<Card on:click class="h-full w-full overflow-hidden flex flex-col">
-    <svelte:component 
-        this={findWidget(setting.type)}
-        settings={setting}
-        {context}
-    />
-</Card>
+<svelte:component 
+    this={findWidget(settings.type)}
+    settings={settings}
+    on:settings={e => updateSettings(e.detail)}
+    {editable}
+    {item}
+/>

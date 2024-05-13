@@ -9,12 +9,11 @@
     
     import Icon from 'stwui/icon';
 
-    import type { VariableSettings_v2 } from './VariableSettings';
+    import type { VariableSettings_v3 } from './VariableSettings';
     import { getIcon } from '$lib/components/icons/utils';
     import type { WidgetContext } from '$lib/types/Widgets';
     
-    export let settings: VariableSettings_v2;
-    export let context: WidgetContext;
+    export let settings: VariableSettings_v3;
 
     let variableId: string = '';
     let variable: Variable | undefined;
@@ -24,29 +23,27 @@
     $: variable = $variables[variableId];
     $: controllable = $scopes.includes('homey') || $scopes.includes('homey.logic');
     
-    function onSettings(s: VariableSettings_v2) {
+    function onSettings(s: VariableSettings_v3) {
         variableId = s.variableId ?? '';
     }
 </script>
 
 {#if variable !== undefined}
     <div class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer">
-        {#if context.mode === 'card'}
-            {#if settings.iconId !== undefined}
-                <Icon data={getIcon(settings.iconId)} class="mr-1" />
-            {/if}
-
-            <div class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap flex-grow">
-                {settings.title ?? variable.name}
-            </div>
+        {#if settings.iconId !== undefined}
+            <Icon data={getIcon(settings.iconId)} class="mr-1" />
         {/if}
 
+        <div class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap flex-grow">
+            {settings.title ?? variable.name}
+        </div>
+
         {#if variable.type === 'number'}
-            <NumberVariable {settings} {variable} {controllable} mode={context.mode} />
+            <NumberVariable {settings} {variable} {controllable} mode={'card'} />
         {:else if variable.type === 'boolean'}
-            <BooleanVariable {settings} {variable} {controllable} mode={context.mode} />
+            <BooleanVariable {settings} {variable} {controllable} mode={'card'} />
         {:else} 
-            <Textvariable {settings} {variable} {controllable} mode={context.mode} />
+            <Textvariable {settings} {variable} {controllable} mode={'card'} />
         {/if}
     </div>
 {:else}

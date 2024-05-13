@@ -2,6 +2,12 @@ import type { ComponentType } from 'svelte';
 
 import { v4 as uuid } from 'uuid';
 
+import CardWidget from './card/CardWidget.svelte';
+import CardEditor from './card/CardEditor.svelte';
+
+import CanvasWidget from './canvas/CanvasWidget.svelte';
+import CanvasEditor from './canvas/CanvasEditor.svelte';
+
 import CapabilityEditor from "./capability/CapabilityEditor.svelte";
 import CapabilityWidget from "./capability/CapabilityWidget.svelte";
 import { 
@@ -53,7 +59,7 @@ import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
 import type { WidgetSettings } from '$lib/types/Widgets';
 
 // Icons
-import { mdiArrowLeftRight, mdiChartLine, mdiImage, mdiImageFrame, mdiMeterElectric, mdiPlay, mdiTextBoxEdit, mdiTune, mdiVariable, mdiViewDashboard } from "$lib/components/icons";
+import { mdiArrowLeftRight, mdiChartLine, mdiCreditCard, mdiImage, mdiImageFrame, mdiMeterElectric, mdiPencilBox, mdiPlay, mdiTextBoxEdit, mdiTune, mdiVariable, mdiViewDashboard } from "$lib/components/icons";
 
 export interface WidgetInfo {
     type: string;
@@ -68,6 +74,28 @@ export interface WidgetInfo {
 }
 
 export const widgets: WidgetInfo[] = [
+    {
+        type: 'card', 
+        label: 'Card',
+        icon: mdiCreditCard,
+        widget: CardWidget, 
+        editor: CardEditor,
+        view: undefined,
+        scopes: [],
+        create: () => ({ id: uuid(), type: 'card', version: 1 }),
+        migration: (e: WidgetSettings) => e
+    },
+    {
+        type: 'canvas', 
+        label: 'Canvas',
+        icon: mdiPencilBox,
+        widget: CanvasWidget, 
+        editor: CanvasEditor,
+        view: undefined,
+        scopes: [],
+        create: () => ({ id: uuid(), type: 'canvas', version: 1 }),
+        migration: (e: WidgetSettings) => e
+    },
     {
         type: 'capability', 
         label: 'Capability',

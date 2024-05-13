@@ -13,10 +13,8 @@
     import Picker from './components/Picker.svelte';
     import type { CapabilitySettings_v5 } from './CapabilitySettings';
     import { getIcon } from '$lib/components/icons/utils';
-    import type { WidgetContext } from '$lib/types/Widgets';
     
     export let settings: CapabilitySettings_v5;
-    export let context: WidgetContext;
 
     let deviceId: string = '';
     let capabilityId: string = '';
@@ -99,15 +97,13 @@
 
 {#if device !== undefined && capability !== undefined}
     <div class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer">
-        {#if context.mode === 'card'}
-            {#if settings.iconId !== undefined}
-                <Icon data={getIcon(settings.iconId)} class="mr-1" />
-            {/if}
-        
-            <div class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap flex-grow">
-                {settings.title ?? capability.title}
-            </div>
+        {#if settings.iconId !== undefined}
+            <Icon data={getIcon(settings.iconId)} class="mr-1" />
         {/if}
+    
+        <div class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap flex-grow">
+            {settings.title ?? capability.title}
+        </div>
         
         <svelte:component 
             this={getComponent(capability)} 
@@ -115,7 +111,7 @@
             {device}
             {capability} 
             {controllable}
-            mode={context.mode}
+            mode='card'
         />
     </div>
 {:else}
