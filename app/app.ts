@@ -2,6 +2,7 @@ import Homey from 'homey';
 
 import * as Sentry from "@sentry/node"
 import { DashboardDriver } from './drivers/dashboard/driver'
+import { Readable } from 'stream';
 
 export class DashboardApp extends Homey.App {
   private dashboards!: DashboardDriver;
@@ -64,19 +65,40 @@ export class DashboardApp extends Homey.App {
     const webhook = await this.homey.cloud.createWebhook(id, secret, data);
 
     webhook.on('message', args => {
-      this.log('Webhook', args);
-
       const operation = args.query.operation;
 
-      if(operation === 'save_dashboard') {
-        const dashboardId = args.query.dashboardId;
-        const settings = JSON.parse(args.body);
+      switch(operation) {
+        case 'save_dashboard': 
+          this.saveDashboard(args);
+          break;
+        
+        case 'active_dashboard':
+          // TODO: Implement dashboard is active or inactive
+          break;
 
-        this.setDashboardSettings(dashboardId, settings);
-      } else if(operation === 'active_dashboard') {
-        // TODO: Implement dashboard is active or inactive
+        case 'save_image':
+          this.saveImage(args);
+          break;
+
+        case 'delete_image':
+          break;
       }
     });
+  }
+
+  private async saveDashboard(args: any) : Promise<void> {
+    const dashboardId = args.query.dashboardId;
+    const settings = JSON.parse(args.body);
+
+    await this.setDashboardSettings(dashboardId, settings);
+  }
+
+  private async saveImage(args: any) : Promise<void> {
+    const buffer = Buffer.from(args.body, 'base64');
+    const stream = Readable.from(buffer);
+
+    const image = await this.homey.images.createImage();
+    image.setStream((s: any) => stream.pipe(s));
   }
 
   private getDashboardDriver() : DashboardDriver {
