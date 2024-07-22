@@ -14,9 +14,10 @@
     import { onDestroy, } from 'svelte';
     import { dateFnsLocale } from '$lib/stores/i18n';
     import type { Threshold, WidgetContext } from '$lib/types/Widgets';
+    import type { GridStackWidget } from 'gridstack';
     
-    export let settings: InsightSettings_v5;
     export let context: WidgetContext;
+    export let settings: InsightSettings_v5;
 
     let resolution: string;
     let series: Series_v5[];
@@ -89,6 +90,7 @@
     })
 
     async function onSettings(s: InsightSettings_v5) {
+        console.log(s);
         let load: boolean = false;
 
         if(resolution === undefined || resolution !== s.resolution) {
@@ -128,8 +130,6 @@
         if(series === undefined || series.length === 0) {
             return;
         }
-
-        console.log(series, timeout); 
         
         // Create axes
         const units = series

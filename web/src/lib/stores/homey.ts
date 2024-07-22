@@ -22,8 +22,9 @@ import type {
     ZoneMap 
 } from '$lib/types/Homey';
 import type { DashboardMap } from '$lib/types/Dashboard';
-import type Dashboard from '$lib/types/Dashboard';
+import type { Dashboard_v2 } from '$lib/types/Dashboard';
 import { driverId } from '$lib/constants';
+import type { TemplateMap } from '$lib/types/Template';
 
 function createHomeys() {
     const { subscribe, set, update } = writable({} as HomeyMap);
@@ -176,11 +177,10 @@ export const dashboards = derived(
     (d: DeviceMap) => Object.values(d)
         .filter(e => e.driverId === driverId)
         .reduce((existing: DashboardMap, dev: DeviceObj) => {
-            let dashboard: Dashboard = {
+            let dashboard: Dashboard_v2 = {
                 id: dev.data.id, // The custom device.data.id is used instead of the device.id, as the device id is not accessible for the installable app.
                 source: 'homey',
-                title: dev.name,
-                items: []
+                title: dev.name
             };
 
             existing[dashboard.id] = { ...dashboard, ...dev.settings };
@@ -189,3 +189,6 @@ export const dashboards = derived(
         }, {} as DashboardMap), 
     {} as DashboardMap);
 export const dashboardsLoading = derived(devicesLoading, (loading: boolean) => loading);
+
+export const templates = writable({} as TemplateMap);
+export const templatesLoading = derived(devicesLoading, (loading: boolean) => loading);

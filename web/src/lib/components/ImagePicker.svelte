@@ -10,7 +10,6 @@
         reader.onload = (readerEvent: any) => {
             var dataUrl = readerEvent.target.result;
             avatar = avatar;
-            console.log(readerEvent);
 
             var base64 = dataUrl.replace(/^data:image\/?[A-z]*;base64,/);
         };

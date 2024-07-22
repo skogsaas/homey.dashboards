@@ -1,15 +1,15 @@
 <script lang="ts">
     import { editing } from '$lib/stores/dashboard';
-    import { devices, homey, scopes } from '$lib/stores/homey';
+    import { devices, scopes } from '$lib/stores/homey';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
     import type { WidgetContext } from '$lib/types/Widgets';
+    import type { GridStackWidget } from 'gridstack';
 
     import type { SliderSettings_v2 } from './SliderSettings';
 
-    import Slider from 'stwui/slider';
-    
-    export let settings: SliderSettings_v2;
+    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
+    export let settings: SliderSettings_v2;
 
     let deviceId: string = '';
     let capabilityId: string = '';
@@ -106,8 +106,9 @@
 
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div class="w-full h-full" on:click|stopPropagation>
-                <Slider 
-                    class="w-full"
+                <input
+                    type="range"
+                    class="range"
                     bind:value={value}
                     min={capability.min} 
                     max={capability.max} 

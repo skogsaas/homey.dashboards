@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { Input } from "stwui";
     import ColorPicker from "../ColorPicker.svelte";
 
     import { createEventDispatcher } from "svelte";
@@ -49,7 +48,7 @@
 </script>
 
 <div class="join w-full flex">    
-    <ColorPicker bind:value={_color} mode={colorMode} />
+    <ColorPicker bind:value={_color} mode={colorMode} class="join-item border-solid w-10" />
     
     {#if !base}
         <input class="input join-item" type="number" bind:value={_value} />

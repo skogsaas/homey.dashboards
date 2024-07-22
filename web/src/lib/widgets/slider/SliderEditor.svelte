@@ -1,18 +1,10 @@
 <script lang="ts">
-    import { onMount, createEventDispatcher } from 'svelte';
-
-    import { devices, homey } from '$lib/stores/homey';
-
-    // UI elements
-    import DevicePicker from '$lib/components/DevicePicker.svelte';
-
-    // Tailwind
-    import Input from 'stwui/input';
-    import Toggle from 'stwui/toggle';
+    import { createEventDispatcher } from 'svelte';
 
     import type { SliderSettings_v2 } from "./SliderSettings";
     import type { CapabilityObj } from '$lib/types/Homey';
     import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
+    import TextPicker from '$lib/components/TextPicker.svelte';
 
     const dispatch = createEventDispatcher();
     
@@ -66,21 +58,15 @@
     }
 </script>
 
-<div class="mt-2">
-    <CapabilityPicker bind:capabilityUri={capabilityUri} on:capability={(c) => (capability = c.detail)} {capabilityFilter} />
-</div>
+<CapabilityPicker bind:capabilityUri={capabilityUri} on:capability={(c) => (capability = c.detail)} {capabilityFilter} />
 
 {#if capability}
-    <Input name="title" bind:value={title} placeholder={capability.title} class="mt-2" />
+    <TextPicker label="Title" placeholder={capability.title} bind:value={title} />
 
-    <div class="pt-4">
-        <Toggle
-            name="hideMinMax"
-            bind:on={hideMinMax}
-        >
-            <Toggle.ContentRight slot="content-right">
-                <Toggle.ContentRight.Label slot="label">Hide min max</Toggle.ContentRight.Label>
-            </Toggle.ContentRight>
-        </Toggle>
+    <div class="form-control w-full">
+        <label class="label cursor-pointer">
+            <span class="label-text">Hide min/max</span> 
+            <input type="checkbox" class="toggle" bind:checked={hideMinMax} />
+        </label>
     </div>
 {/if}

@@ -1,15 +1,15 @@
 <script lang="ts">
-    import Icon from 'stwui/icon';
+    import Icon from '$lib/components/Icon.svelte'
 
     import { lookup, type IconMetadata, mdiClose, mdiMagnify } from "./icons";
     import { createEventDispatcher } from 'svelte';
+    import VirtualList from './VirtualList.svelte';
 
     export let iconId: string | undefined;
+    export let name: string = 'Icon';
 
     const dispatch = createEventDispatcher();
     
-    const limit = 50;
-
     let modal: HTMLDialogElement;
 
     let search: string = '';
@@ -26,7 +26,7 @@
 
     function onSearch(s: string) {
         if(s.length === 0) {
-            return lookup.slice(0, limit);
+            return lookup;
         } else {
             const result: IconMetadata[] = [];
             const normalized = s.toLowerCase();
@@ -36,10 +36,6 @@
                 
                 if(item.id.includes(normalized)) {
                     result.push(item);
-
-                    if(s.length < 3 && result.length === limit) {
-                        break;
-                    }
                 }
             }
 
@@ -63,20 +59,21 @@
 
 </script>
 
-<div class="join w-full flex">
-    {#if selected}
-        <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
-            <Icon data={selected.icon} />
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">{name}</span>
+    </div>
+    <div class="join flex items-center">
+        <input type="text" class="input input-bordered grow join-item" bind:value={iconId} placeholder="Icon"/>
+        <button class="btn btn-outline btn-primary join-item" on:click={() => modal.showModal()}>
+            {#if selected !== undefined}
+                <Icon data={selected.icon} />
+            {:else}
+                <Icon data={mdiMagnify} />
+            {/if}
         </button>
-        
-        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Icon" value={selected.id}/>
-    {:else}
-        <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
-            <Icon data={mdiMagnify} />
-        </button>
-        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Icon"/>
-    {/if}
-</div>
+    </div>
+</label>
 
 <dialog bind:this={modal} class="modal">
     <div class="modal-box flex flex-col">
@@ -88,28 +85,22 @@
             </form>
             
             <input type="text" class="input w-full input-primary" bind:value={search} name="search" placeholder="Search" />
-
-            {#if search.length === 0} 
-                <div class="mt-2 mb-4">
-                    NOTE: There are {lookup.length} icons available. Only {limit} are listed until you enter a search string.
-                </div>
-            {/if}
         </div>
         
         <div class="flex-grow overflow-auto">
-            {#each filtered as icon}
-                <button class="btn btn-ghost w-full" on:click={() => onItem(icon)}>
+            <VirtualList items={filtered} height="50vh" let:item>
+                <button class="btn btn-ghost w-full" on:click={() => onItem(item)}>
                     <h3 class="w-full flex justify-start">
-                        <Icon data={icon.icon} />
+                        <Icon data={item.icon} />
                     </h3>
     
                     <div class="w-full flex justify-between">
-                        <span>{icon.id}</span>
+                        <span>{item.id}</span>
                     </div>
                 </button>
 
                 <div class="divider divider-neutral my-1"></div>
-            {/each}
+            </VirtualList>
         </div>
     </div>
 </dialog>

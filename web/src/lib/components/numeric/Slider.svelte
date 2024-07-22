@@ -1,6 +1,4 @@
 <script lang="ts">
-    import { Slider } from 'stwui';
-
     export let value: number;
     export let disabled: boolean;
 
@@ -19,8 +17,9 @@
     }
 </script>
 
-<Slider
-    name="slider"
+<input
+    type="range"
+    class="range"
     {min}
     {max}
     {step}

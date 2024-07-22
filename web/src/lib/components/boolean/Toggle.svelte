@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Icon } from 'stwui'
+    import Icon from '$lib/components/Icon.svelte'
     import { getIcon } from '../icons/utils';
 
     export let value: boolean;

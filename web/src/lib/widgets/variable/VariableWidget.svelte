@@ -7,12 +7,15 @@
     import BooleanVariable from './components/BooleanVariable.svelte'
     import Textvariable from './components/TextVariable.svelte'
     
-    import Icon from 'stwui/icon';
+    import Icon from '$lib/components/Icon.svelte'
 
     import type { VariableSettings_v3 } from './VariableSettings';
     import { getIcon } from '$lib/components/icons/utils';
     import type { WidgetContext } from '$lib/types/Widgets';
+    import type { GridStackWidget } from 'gridstack';
     
+    export let gridItem: GridStackWidget;
+    export let context: WidgetContext;
     export let settings: VariableSettings_v3;
 
     let variableId: string = '';

@@ -3,7 +3,7 @@
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
     import { formatDistance } from 'date-fns'
 
-    import Icon from 'stwui/icon';
+    import Icon from '$lib/components/Icon.svelte'
     import type { CapabilitySettings_v5 } from '../CapabilitySettings';
     import { getIcon } from '$lib/components/icons/utils';
 

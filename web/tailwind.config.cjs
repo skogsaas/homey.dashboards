@@ -4,6 +4,7 @@ const config = {
 		'./node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}'
 	],
 	plugins: [
+		require("@tailwindcss/typography"),
 		require('daisyui')
 	]
 };

@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import Icon from 'stwui/icon';
+import Icon from '$lib/components/Icon.svelte'
     import { createEventDispatcher } from 'svelte';
 
 export let data: string | undefined;

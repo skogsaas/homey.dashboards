@@ -1,20 +1,22 @@
 <script lang="ts">
-    import type { Flow } from "$lib/types/Homey";
+    import type { Flow, FlowFolder } from "$lib/types/Homey";
 
     import { createEventDispatcher } from "svelte";
 
-    import { flowFolders } from "$lib/stores/homey";
-    import { mdiClose, mdiMagnify } from "./icons";
-    import { Icon } from "stwui";
+    import { homey, flowFolders } from "$lib/stores/homey";
+    import { mdiClose, mdiFolder, mdiMagnify } from "./icons";
+    import Icon from '$lib/components/Icon.svelte'
+    import VirtualList from "./VirtualList.svelte";
 
     export let flowId: string | undefined;
     export let flows: Flow[] = [];
+    export let name: string = 'Flow';
 
     const dispatch = createEventDispatcher();
 
     interface Item {
         flow: Flow;
-        folders: string;
+        folders: FlowFolder[];
         searchString: string;
     }
 
@@ -27,7 +29,7 @@
     $: sorted = (flows ?? [])
         .map(flow => {
             const folders = getFolders(flow.folder);
-            return { flow, folders, searchString: (`${folders} - ${flow.name}`).toLowerCase() };
+            return { flow, folders, searchString: (folders.map(f => f.name).join('/') + ' - ' + flow.name).toLowerCase() };
         })
         .sort((a, b) => {
             if(a.searchString === b.searchString) return 0;
@@ -42,9 +44,9 @@
         const normalized = value.toLowerCase();
 
         if(value.length > 0) {
-            filtered = sorted.filter(d => d.searchString.includes(normalized));
+            filtered = s.filter(d => d.searchString.includes(normalized));
         } else {
-            filtered = sorted;
+            filtered = s;
         }
     }
 
@@ -55,33 +57,37 @@
         dispatch('flowId', flowId);
     }
 
-    function getFolders(folderId: string) : string {
+    function getFolders(folderId: string) : FlowFolder[] {
         const folder = $flowFolders[folderId];
 
         if(folder?.parent !== undefined && folder.parent !== null) {
-            return getFolders(folder.parent) + '/' + folder.name;
+            return [folder, ...getFolders(folder.parent)];
         }
         
-        return folder?.name ?? '';
+        return folder !== undefined ? [folder] : [];
     }
 </script>
 
-<div class="join w-full flex">
-    {#if selected}        
-        <input 
-            readonly 
-            type="text" 
-            class="input input-bordered join-item flex-grow" 
-            placeholder="Flow" 
-            value={selected.folders + '-' + selected.flow.name} 
-        />
-    {:else}
-        <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">{name}</span>
+    </div>
+    <div class="join flex items-center">
+        <input type="text" class="input input-bordered grow join-item" bind:value={flowId} placeholder="Flow"/>
+        <button class="btn btn-outline btn-primary join-item" on:click={() => modal.showModal()}>
             <Icon data={mdiMagnify} />
         </button>
-        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Flow"/>
-    {/if}
-</div>
+    </div>
+    <div class="label whitespace-nowrap overflow-ellipsis">
+        <span class="label-text"></span>
+
+        {#if selected !== undefined && selected.folders.length > 0}
+            <span class="label-text-alt">{selected.folders.map(f => f.name).join('/')} - {selected.flow.name}</span>
+        {:else if selected !== undefined}
+            <span class="label-text-alt">{selected.flow.name}</span>
+        {/if}
+    </div>
+</label>
 
 <dialog bind:this={modal} class="modal">
     <div class="modal-box flex flex-col">
@@ -96,19 +102,27 @@
         </div>
         
         <div class="flex-grow overflow-auto">
-            {#each filtered as item}
-                <button class="btn btn-ghost w-full" on:click={() => onItem(item)}>
-                    <h3 class="w-full flex justify-start">
-                        {item.folders}
-                    </h3>
-    
-                    <div class="w-full flex justify-between">
-                        <span>{item.flow.name}</span>
-                    </div>
-                </button>
+            <ul class="menu bg-base-200 rounded-box">
+                <VirtualList items={filtered} height="50vh" let:item>
+                    <li>
+                        <a on:click={() => onItem(item)}>
+                            {#if item.folders.length == 0}
+                                <span></span>
+                            {/if}
 
-                <div class="divider divider-neutral my-1"></div>
-            {/each}
+                            {#each item.folders as folder}
+                                <span>
+                                    <Icon data={mdiFolder} />
+                                    {folder.name}
+                                </span>
+                            {/each}
+                            
+                            <span></span>
+                            {item.flow.name}
+                        </a>
+                    </li>
+                </VirtualList>
+            </ul>
         </div>
     </div>
 </dialog>

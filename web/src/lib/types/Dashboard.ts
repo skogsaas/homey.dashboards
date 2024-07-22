@@ -1,5 +1,6 @@
-import type { GridItem_v1, GridItem_v2, GridLayout_v1, GridLayout_v2 } from "./Grid";
-import type { WidgetSettingsMap } from "./Widgets";
+import type { GridItem_v1, GridItem_v2, GridOptions_v1 } from "./Grid";
+import type { Style_v1 } from "./Styling";
+import type { WidgetSettings_v1 } from "./Widgets";
 
 export interface Dashboard_v2 {
     id: string;
@@ -7,11 +8,12 @@ export interface Dashboard_v2 {
     source: 'homey'|'localstorage';
     title: string;
 
-    layouts: GridLayout_v2[];
-    items: GridItem_v2[];
+    root: WidgetSettings_v1 | undefined;
 
-    iconId: string | undefined;
-    backgroundImage: string | undefined;
+    iconId?: string;
+    backgroundImage?: string;
+
+    style?: Style_v1;
 }
 
 export interface Dashboard_v1 {

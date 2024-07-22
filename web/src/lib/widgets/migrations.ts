@@ -1,12 +1,14 @@
-import type { GridItem_v1, GridItem_v2 } from "$lib/types/Grid";
+import type { GridItem_v1, GridItem_v2, GridOptions_v1 } from "$lib/types/Grid";
 import { findMigration } from ".";
 import type { CapabilitySettings_v3, CapabilitySettings_v4 } from "./capability/CapabilitySettings";
 import { v4 as uuid } from 'uuid';
 import type { DeviceSettings_v1 } from "./device/DeviceSettings";
 import type { SliderSettings_v1 } from "./slider/SliderSettings";
 import type { Dashboard_v1, Dashboard_v2 } from "$lib/types/Dashboard";
-import type { WidgetSettings } from "$lib/types/Widgets";
-import type { CardSettings_v1 } from "./card/CardSettings";
+import type { WidgetSettings_v1 } from "$lib/types/Widgets";
+import type { CardSettings_v1 } from '$lib/widgets/card/CardSettings';
+import GridInfo from '$lib/widgets/grid'
+import type { GridSettings_v1 } from "./grid/GridSettings";
 
 export function migrate(dashboard: any) : any {
     if(dashboard === undefined) return undefined;
@@ -28,7 +30,26 @@ export function migrateOnce(dashboard: any) : any {
 }
 
 function migrate_v1_v2(v1: Dashboard_v1) : Dashboard_v2 {
-    const items = v1.items.map(item => migrateGridItem_v1_v2(item));
+    const items = (v1.items ?? []).map(item => migrateGridItem_v1_v2(item));
+    const options: GridOptions_v1 = { 
+        cellHeight: 50,
+        columnOpts: { 
+            layout: 'scale',
+            columnMax: 24,
+            breakpoints: [
+                { c: 3, w: 768 },
+                { c: 6, w: 1024 },
+                { c: 12, w: 1280 },
+                { c: 24, w: undefined }
+            ]
+        },
+        float: true,
+        margin: 10
+    };
+
+    const grid = GridInfo.create() as GridSettings_v1;
+    grid.items = items;
+    grid.options = options;
 
     const dashboard: Dashboard_v2 = {
         id: v1.id,
@@ -37,180 +58,33 @@ function migrate_v1_v2(v1: Dashboard_v1) : Dashboard_v2 {
         title: v1.title,
         iconId: undefined,
         backgroundImage: v1.backgroundImage,
-        items: items,
-        layouts: [
-            {
-                minWidth: 640,
-                maxWidth: undefined,
-                columns: 6,
-                rowHeight: 50
-            },
-            {
-                minWidth: 768,
-                maxWidth: undefined,
-                columns: 12,
-                rowHeight: 50
-            },
-            {
-                minWidth: 1024,
-                maxWidth: undefined,
-                columns: 18,
-                rowHeight: 50
-            },
-            {
-                minWidth: 1280,
-                maxWidth: undefined,
-                columns: 24,
-                rowHeight: 50
-            },
-        ]
+        style: undefined,
+        root: grid
     }
 
     return dashboard;
 }
 
 function migrateGridItem_v1_v2(v1: GridItem_v1) : GridItem_v2 {
-    function createCard(widgets: WidgetSettings[]) : CardSettings_v1 {
-        const id = uuid();
-
-        const count = widgets.length;
-        const ratio = 50;
-        const rowHeight = 32;
-        let offset1 = 0;
-        let offset2 = 0;
-        let offset3 = 0;
-        let offset4 = 0;
-
-        return { 
-            id: id, 
+    function createCard(widgets: WidgetSettings_v1[]) : CardSettings_v1 {
+        return {
+            id: uuid(),
             type: 'card', 
             version: 1,
-            items: widgets.map((widget, index) => {
-                const y1 = offset1;
-                const y2 = offset2;
-                const y3 = offset3;
-                const y4 = offset4;
-
-                // Height of an element is by default 32 px.
-                let h1 = 1 * rowHeight;
-                let h2 = 1 * rowHeight;
-                let h3 = 1 * rowHeight;
-                let h4 = 1 * rowHeight;
-                
-                if(widget.type === 'image' || widget.type === 'insight' || widget.type === 'iframe') {
-                    // Expand to max height
-                    const remaining = count - (index + 1);
-
-                    h1 = v1[6].h * ratio - offset1 - remaining * rowHeight;
-                    h2 = v1[12].h * ratio - offset2 - remaining * rowHeight;
-                    h3 = v1[18].h * ratio - offset3 - remaining * rowHeight;
-                    h4 = v1[24].h * ratio - offset4 - remaining * rowHeight;
-                }
-                
-                offset1 += h1;
-                offset2 += h2;
-                offset3 += h3;
-                offset4 += h4;
-                
-                return { 
-                    id: widget.id,
-                    settings: widget,
-                    layouts:[
-                        { 
-                            id: widget.id, 
-                            x: 0,
-                            y: y1,
-                            w: 1,
-                            h: h1
-                        },
-                        { 
-                            id: widget.id, 
-                            x: 0,
-                            y: y2,
-                            w: 1,
-                            h: h2
-                        },
-                        { 
-                            id: widget.id, 
-                            x: 0,
-                            y: y3,
-                            w: 1,
-                            h: h3
-                        },
-                        { 
-                            id: widget.id, 
-                            x: 0,
-                            y: y4,
-                            w: 1,
-                            h: h4
-                        }
-                    ]
-                }
-            }),
-            layouts: [
-                {
-                    minWidth: 0,
-                    maxWidth: v1[6].w * ratio,
-                    columns: 1,
-                    rowHeight: 1
-                },
-                {
-                    minWidth: v1[6].w * ratio,
-                    maxWidth: v1[12].w * ratio,
-                    columns: 1,
-                    rowHeight: 1
-                },
-                {
-                    minWidth: v1[12].w * ratio,
-                    maxWidth: v1[18].w * ratio,
-                    columns: 1,
-                    rowHeight: 1
-                },
-                {
-                    minWidth: v1[24].w * ratio,
-                    maxWidth: undefined,
-                    columns: 1,
-                    rowHeight: 1
-                }
-            ],
-            padding: 0,
-            margin: 5
+            items: widgets,
+            padding: 'p-0'
         }
     }
 
     return {
         id: v1.id,
         settings: createCard(v1.card), 
-        layouts: [
-            { 
-                id: v1.id, 
-                x: v1[6].x,
-                y: v1[6].y,
-                w: v1[6].w,
-                h: v1[6].h
-            },
-            { 
-                id: v1.id, 
-                x: v1[12].x,
-                y: v1[12].y,
-                w: v1[12].w,
-                h: v1[12].h
-            },
-            { 
-                id: v1.id, 
-                x: v1[18].x,
-                y: v1[18].y,
-                w: v1[18].w,
-                h: v1[18].h
-            },
-            { 
-                id: v1.id, 
-                x: v1[24].x,
-                y: v1[24].y,
-                w: v1[24].w,
-                h: v1[24].h
-            }
-        ]
+        position: {
+            x: v1[24].x,
+            y: v1[24].y,
+            w: v1[24].w,
+            h: v1[24].h
+        }
     };
 }
 

@@ -4,14 +4,16 @@
     import { dashboards as homeyDashboards } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
 
-    import Icon from 'stwui/icon';
+    import Icon from '$lib/components/Icon.svelte'
 
     import type DashboardLinkSettings from './DashboardLinkSettings';
     import { getIcon } from '$lib/components/icons/utils';
     import type { WidgetContext } from '$lib/types/Widgets';
+    import type { GridStackWidget } from 'gridstack';
 
-    export let settings: DashboardLinkSettings;
+    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
+    export let settings: DashboardLinkSettings;
 
     $: dashboardId = settings?.dashboardId;
     $: dashboards = { ...$homeyDashboards, ...$localDashboards };

@@ -3,13 +3,15 @@
 
     import { createEventDispatcher } from "svelte";
 
-    import Icon from 'stwui/icon';
+    import Icon from '$lib/components/Icon.svelte'
+    import VirtualList from "./VirtualList.svelte";
 
     import { devices, homey } from "$lib/stores/homey";
     import { mdiClose, mdiMagnify } from "./icons";
 
     export let capabilityUri: string | undefined;
-    export let placeholder: string = 'Select capability';
+    export let name: string = 'Capability';
+    export let placeholder: string = 'Capability';
     export let deviceFilter: ((device: DeviceObj) => boolean) | undefined = undefined;
     export let capabilityFilter: ((capability: CapabilityObj) => boolean) | undefined = undefined;
 
@@ -75,24 +77,32 @@
     }
 </script>
 
-<div class="join w-full flex">
-    {#if selected}
-        {#if selected.capability.iconObj?.url}
-            {#await $homey.baseUrl then url}
-                <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
-                    <img src={url + selected.capability.iconObj?.url} alt={selected.title} class="h-6 w-6 dark:invert" />
-                </button>
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">{name}</span>
+    </div>
+    <div class="join flex items-center">
+        <input type="text" class="input input-bordered grow join-item" bind:value={capabilityUri} placeholder={placeholder} />
+        <button class="btn btn-outline btn-primary join-item" on:click={() => modal.showModal()}>
+            {#await $homey.baseUrl}
+                <Icon data={mdiMagnify} />
+            {:then url}
+                {#if selected !== undefined && selected.capability?.iconObj?.url}
+                    <img src={url + selected.capability.iconObj.url} alt={selected.capability.title} class="h-6 w-6 mr-2 dark:invert inline" />
+                {:else}
+                    <Icon data={mdiMagnify} />
+                {/if}
             {/await}
-        {/if}
-        
-        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Capability" value={selected.title}/>
-    {:else}
-        <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
-            <Icon data={mdiMagnify} />
         </button>
-        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Capability"/>
-    {/if}
-</div>
+    </div>
+    <div class="label whitespace-nowrap overflow-ellipsis">
+        <span class="label-text"></span>
+        
+        {#if selected !== undefined}
+            <span class="label-text-alt">{selected.title}</span>
+        {/if}
+    </div>
+</label>
 
 <dialog bind:this={modal} class="modal">
     <div class="modal-box flex flex-col">
@@ -107,7 +117,7 @@
         </div>
         
         <div class="flex-grow overflow-auto">
-            {#each filtered as item}
+            <VirtualList items={filtered} height="50vh" let:item>
                 <button class="btn btn-ghost w-full" on:click={() => onItem(item)}>
                     <h3 class="w-full flex justify-start">
                         {#await $homey.baseUrl then url}
@@ -125,7 +135,7 @@
                 </button>
 
                 <div class="divider divider-neutral my-1"></div>
-            {/each}
+            </VirtualList>
         </div>
     </div>
 </dialog>

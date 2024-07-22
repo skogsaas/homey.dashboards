@@ -6,9 +6,8 @@
     import Toggle from '$lib/components/boolean/Toggle.svelte';
     import { createEventDispatcher } from 'svelte';
     import type { CapabilitySettings_v5 } from '../CapabilitySettings';
-    import { Icon } from 'stwui';
+    import Icon from '$lib/components/Icon.svelte'
     import { getIcon } from '$lib/components/icons/utils';
-    import { mdiLightbulb } from '$lib/components/icons';
 
     const dispatcher = createEventDispatcher();
 

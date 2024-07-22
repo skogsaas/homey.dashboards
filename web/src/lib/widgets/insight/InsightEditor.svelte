@@ -5,14 +5,10 @@
     import type { InsightSettings_v5 } from "./InsightSettings";
     import type { Series_v5 } from './InsightSettings';
 
-    import Button from 'stwui/button';
-    import Select from 'stwui/select';
-    import Accordion from 'stwui/accordion'
-
     import InsightPicker from '$lib/components/InsightPicker.svelte';
     import InsightEditorSeries from './InsightEditorSeries.svelte';
     import { mdiDelete } from '$lib/components/icons';
-    import { Icon } from 'stwui';
+    import Icon from '$lib/components/Icon.svelte'
     
     const dispatch = createEventDispatcher();
 
@@ -36,13 +32,13 @@
         { value: 'lastWeek', label: 'Last week' },
         { value: 'lastMonth', label: 'Last month' },
         { value: 'lastYear', label: 'Last year' },
-        { value: 'last2Years', label: 'Last 2 years' }
+        { value: 'last2Years', label: 'Last 2 years' },
     ];
 
     export let settings: InsightSettings_v5;
 
     let openInsightId: string | undefined;
-    let resolution: Option;
+    let resolution: string;
     let series: Series_v5[] = [];
 
     let selectedLogId: string | undefined;
@@ -51,16 +47,16 @@
     $: onResolution(resolution);
 
     function onSettings(s: InsightSettings_v5) {
-        resolution = resolutions.find(r => r.value === (settings.resolution ?? 'today'))!;
+        resolution = settings.resolution ?? 'today';
         series = [...settings?.series ?? []];
     };
 
-    function onResolution(option: Option) {
-        if(option.value === settings.resolution) {
+    function onResolution(_resolution: string) {
+        if(_resolution === settings.resolution) {
             return;
         }
 
-        dispatch('settings', { ...settings, resolution: option.value });
+        dispatch('settings', { ...settings, resolution: _resolution });
     }
 
     function onLog(logId: string) {
@@ -117,6 +113,29 @@
 </script>
 
 <InsightPicker bind:logId={selectedLogId} on:logId={(e) => onLog(e.detail)} logs={Object.values($insights)} />
+
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Timespan</span>
+    </div>
+    <select class="select" bind:value={resolution}>
+        <option value="lastHour">Last hour</option>
+        <option value="last6Hours">Last 6 hours</option>
+        <option value="last24Hours">Last 24 hours</option>
+        <option value="last7Days">Last 7 days</option>
+        <option value="last14Days">Last 14 days</option>
+        <option value="last31Days">Last 31 days</option>
+        <option value="today">Today</option>
+        <option value="thisWeek">This week</option>
+        <option value="thisMonth">This month</option>
+        <option value="thisYear">This year</option>
+        <option value="yesterday">Yesterday</option>
+        <option value="lastWeek">Last week</option>
+        <option value="lastMonth">Last month</option>
+        <option value="lastYear">Last year</option>
+        <option value="last2Years">Last 2 years</option>
+    </select>
+</label>
 
 <select bind:value={resolution} class="select w-full mt-4">
     {#each resolutions as option}

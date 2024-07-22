@@ -1,51 +1,26 @@
-import type { WidgetSettings } from "./Widgets";
+import type { Responsive, GridStackPosition } from "gridstack";
+import type { WidgetSettings_v1 } from "./Widgets";
 
-export interface GridLayout_v2 {
-    minWidth: number;
-    maxWidth: number | undefined;
-    columns: number;
-    rowHeight: number;
+export interface GridOptions_v1 {
+    cellHeight?: number;
+    column?: number;
+    columnOpts?: Responsive;
+    float?: boolean;
+    margin?: number;
 }
 
 export interface GridItem_v2 {
     id: string;
-    settings: WidgetSettings;
-    layouts: GridItemLayout_v1[];
-}
-
-export interface GridItemLayout_v1 {
-    id: string;
-    x: number; 
-    y: number; 
-    w: number; 
-    h: number;
-    fixed?: boolean;
-}
-
-export interface GridLayout_v1 {
-    breakpoint: number;
-    columns: number;
-    rowHeight: number;
-
-    items: GridLayoutItem_v1[];
-}
-
-export interface GridLayoutItem_v1 {
-    id: string;
-    x: number; 
-    y: number; 
-    w: number; 
-    h: number;
-    container?: boolean;
-    children?: GridLayoutItem_v1[];
+    settings: WidgetSettings_v1;
+    position: GridStackPosition;
 }
 
 export interface GridItem_v1 {
     id: string;
     version: number;
     
-    card: WidgetSettings[];
-    view: WidgetSettings[];
+    card: WidgetSettings_v1[];
+    view: WidgetSettings_v1[];
     
     [key: number]: GridBreakpointItem;
 }
@@ -53,7 +28,7 @@ export interface GridItem_v1 {
 export interface GridItem_v0 {
     id: string;
     version: number;
-    settings: WidgetSettings;
+    settings: WidgetSettings_v1;
     
     [key: number]: GridBreakpointItem;
 }

@@ -5,11 +5,13 @@
     import type { DeviceObj } from '$lib/types/Homey';
     import { getIcon } from '$lib/components/icons/utils';
 
-    import Icon from 'stwui/icon';
+    import Icon from '$lib/components/Icon.svelte'
     import type { WidgetContext } from '$lib/types/Widgets';
+    import type { GridStackWidget } from 'gridstack';
 
-    export let settings: DeviceSettings_v1;
+    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
+    export let settings: DeviceSettings_v1;
 
     let device: DeviceObj;
     $: device = $devices[settings.deviceId ?? ''];

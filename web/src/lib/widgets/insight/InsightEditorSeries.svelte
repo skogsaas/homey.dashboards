@@ -2,76 +2,37 @@
     import { createEventDispatcher } from 'svelte';
     import { v4 as uuid } from 'uuid';
 
-    import Toggle from 'stwui/toggle';
-
     import { colors } from './colors';
     
     import type { Series_v5 } from './InsightSettings';
     import ThresholdEditor from '$lib/components/thresholds/ThresholdEditor.svelte';
     import type { Threshold } from '$lib/types/Widgets';
+    import TextPicker from '$lib/components/TextPicker.svelte';
     
     export let series: Series_v5;
     export let index: number;
 
     const dispatch = createEventDispatcher();
 
-    interface Option {
-        value: any;
-        label: string;
-    }
-
-    const aggregations: Option[] = [
-        {value: 'none', label: 'No aggregation'},
-        {value: 'min', label: 'Min'},
-        {value: 'max', label: 'Max'},
-        {value: 'sum', label: 'Sum'},
-        {value: 'avg', label: 'Avg'},
-        {value: 'first', label: 'First'},
-        {value: 'last', label: 'Last'}
-    ];
-
-    const sampleRates: Option[] = [
-        {value: 10, label: '10 seconds'},
-        {value: 20, label: '20 seconds'},
-        {value: 30, label: '30 seconds'},
-        {value: 60, label: '1 min'},
-        {value: 300, label: '5 min'},
-        {value: 600, label: '10 min'},
-        {value: 900, label: '15 min'},
-        {value: 1200, label: '20 min'},
-        {value: 1800, label: '30 min'},
-        {value: 3600, label: '1 hour'},
-        {value: 7200, label: '2 hours'},
-        {value: 10800, label: '3 hours'},
-        {value: 21600, label: '6 hours'},
-        {value: 43200, label: '12 hours'},
-        {value: 86400, label: '24 hours'}
-    ];
-
-    const types: Option[] = [
-        {value:'line', label: 'Line'},
-        {value:'bar', label: 'Bar'},
-    ];
-
     let insightId: string | undefined;
     let title: string | undefined;
-    let type: Option;
+    let type: string;
     let border: Threshold[];
     let background: Threshold[];
     let fill: boolean;
-    let aggregation: Option;
-    let sampleRate: Option;
+    let aggregation: string;
+    let sampleRate: number;
 
     $: onSeries(series);
-    $: onChange(insightId, title, type?.value ?? 'line', border, background, fill, aggregation?.value ?? 'none', sampleRate?.value ?? 60);
+    $: onChange(insightId, title, type ?? 'line', border, background, fill, aggregation ?? 'none', sampleRate ?? 60);
     
     function onSeries(s: Series_v5) {
         insightId = series.insightId;
         title = series.title;
-        type = types.find(t => t.value === (series.type ?? 'line'))!;
+        type = series.type ?? 'line';
         fill = series.fill ?? false;
-        aggregation = aggregations.find(a => a.value === (series?.aggregation ?? 'none'))!;
-        sampleRate = sampleRates.find(r => r.value === (series?.sampleRate ?? 60))!;
+        aggregation = series?.aggregation ?? 'none';
+        sampleRate = series?.sampleRate ?? 60;
         border = s.border ?? [{ id: uuid(), color: colors[index % colors.length], value: Number.MIN_SAFE_INTEGER }];
         background = s.background ?? [{ id: uuid(), color: colors[index % colors.length], value: Number.MIN_SAFE_INTEGER }];
     };
@@ -113,40 +74,67 @@
 
 </script>
 
-<div class="m-2">
-    <input class="input w-full" bind:value={title} placeholder="Title" />
+<TextPicker label="Title" placeholder="Title" bind:value={title} />
 
-    <select class="select w-full mt-4" bind:value={type} placeholder="Type">
-        {#each types as option}
-            <option value={option}>{option.label}</option>
-        {/each}
-    </select>
-
-    <div class="divider">Aggregation</div>
-    <select class="select w-full" bind:value={aggregation} placeholder="Aggregation">
-        {#each aggregations as option}
-            <option value={option}>{option.label}</option>
-        {/each}
-    </select>
-
-    {#if aggregation !== undefined && aggregation.value !== 'none'}
-        <select class="select w-full mt-4" bind:value={sampleRate} placeholder="Sample rate">
-            {#each sampleRates as option}
-                <option value={option}>{option.label}</option>
-            {/each}
-        </select>
-    {/if}
-
-    <div class="divider">{type.label + ' color'}</div>
-    <ThresholdEditor bind:thresholds={border} colorMode="rgba" />
-    
-    <div class="divider">Background color</div>
-    <ThresholdEditor bind:thresholds={background} colorMode="rgba" />
-
-    <div class="form-control mt-4">
-        <label class="label cursor-pointer">
-            <span class="label-text">Fill background</span> 
-            <input type="checkbox" class="toggle" bind:checked={fill} />
-        </label>
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Series type</span>
     </div>
+    <select class="select" bind:value={type}>
+        <option value="line">Line</option>
+        <option value="bar">Bar</option>
+    </select>
+</label>
+
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Aggregation</span>
+    </div>
+    <select class="select w-full" bind:value={aggregation} placeholder="Aggregation">
+        <option value="none">No aggregation</option>
+        <option value="min">Min</option>
+        <option value="max">Max</option>
+        <option value="sum">Sum</option>
+        <option value="avg">Avg</option>
+        <option value="first">First</option>
+        <option value="last">Las</option>
+    </select>
+</label>
+
+{#if aggregation !== 'none'}
+    <label class="form-control w-full">
+        <div class="label">
+            <span class="label-text">Aggregation</span>
+        </div>
+        <select class="select w-full mt-4" bind:value={sampleRate} placeholder="Sample rate">
+            <option value=10>10 seconds</option>
+            <option value=20>20 seconds</option>
+            <option value=30>30 seconds</option>
+            <option value=60>1 min</option>
+            <option value=300>5 min</option>
+            <option value=600>10 min</option>
+            <option value=900>15 min</option>
+            <option value=1200>20 min</option>
+            <option value=1800>30 min</option>
+            <option value=3600>1 hour</option>
+            <option value=7200>2 hours</option>
+            <option value=10800>3 hours</option>
+            <option value=21600>6 hours</option>
+            <option value=43200>12 hours</option>
+            <option value=86400>24 hours</option>
+        </select>
+    </label>
+{/if}
+
+<div class="divider">{type + ' color'}</div>
+<ThresholdEditor bind:thresholds={border} colorMode="rgba" />
+
+<div class="divider">Background color</div>
+<ThresholdEditor bind:thresholds={background} colorMode="rgba" />
+
+<div class="form-control mt-4">
+    <label class="label cursor-pointer">
+        <span class="label-text">Fill background</span> 
+        <input type="checkbox" class="toggle" bind:checked={fill} />
+    </label>
 </div>

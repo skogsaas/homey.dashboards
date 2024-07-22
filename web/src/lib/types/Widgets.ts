@@ -1,14 +1,38 @@
-export interface WidgetSettings {
+import type { ComponentType } from 'svelte';
+
+export interface WidgetSettings_v1 {
     id: string;
     type: string;
     version: number;
 }
 
 export interface WidgetContext {
-    mode: 'card'|'view';
-    editing: boolean;
-    select: ((id: string) => void);
-    update: ((settings: WidgetSettings) => void)
+    editable: boolean;
+    readonly: boolean;
+    breadcrumbs: WidgetBreadcrumb[];
+    select: (items: WidgetBreadcrumb[]) => void;
+}
+
+export interface WidgetBreadcrumb {
+    settings: WidgetSettings_v1;
+    update: (settings: WidgetSettings_v1) => void
+}
+
+export interface WidgetCategory {
+    id: string;
+    label: string;
+}
+
+export interface WidgetInfo {
+    type: string;
+    label: string;
+    icon: string;
+    category: 'layout' | 'logic' | 'component';
+    widget: ComponentType;
+    editor: ComponentType;
+    scopes: { oneOf: string[] }[];
+    create: () => WidgetSettings_v1;
+    migration: (e: WidgetSettings_v1) => WidgetSettings_v1;
 }
 
 export interface Threshold {
@@ -16,5 +40,3 @@ export interface Threshold {
     color: string;
     value: number;
 }
-
-export type WidgetSettingsMap = { [key: string]: WidgetSettings; }

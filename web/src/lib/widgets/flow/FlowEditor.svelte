@@ -7,6 +7,7 @@
 
     import FlowPicker from '$lib/components/FlowPicker.svelte';
     import IconPicker from '$lib/components/IconPicker.svelte';
+    import TextPicker from '$lib/components/TextPicker.svelte';
 
     export let settings: FlowSettings_v1;
 
@@ -14,6 +15,7 @@
 
     let flowId: string | undefined;
     let iconId: string | undefined;
+    let title: string | undefined;
 
     $: flows = (Object.values($basicFlows) as Flow[])
         .concat(Object.values($advancedFlows) as Flow[])
@@ -23,6 +25,7 @@
             if(a.name < b.name) return -1;
             return 1;
         });
+    $: flow = flows.find(f => f.id === flowId) ?? undefined;
 
     $: onSettings(settings);
     $: onFlow(flowId);
@@ -49,16 +52,11 @@
     }
 </script>
 
-<label class="form-control w-full">
-    <div class="label">
-        <span class="label-text">Flow</span>
-    </div>
-    <FlowPicker bind:flowId={flowId} flows={flows} />
-</label>
+<FlowPicker bind:flowId={flowId} flows={flows} />
 
-<label class="form-control w-full">
-    <div class="label">
-        <span class="label-text">Icon</span>
-    </div>
-    <IconPicker bind:iconId={iconId} />
-</label>
+{#if flow !== undefined}
+    <TextPicker bind:value={title} placeholder={flow.name} label="Title" />
+{/if}
+
+<IconPicker bind:iconId={iconId} />
+

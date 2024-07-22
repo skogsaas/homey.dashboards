@@ -13,8 +13,8 @@
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
 
     // Tailwind
-    import Icon from 'stwui/icon';
-    import { mdiAccount, mdiEmoticonSadOutline, mdiKey, mdiLock, mdiViewDashboard } from '$lib/components/icons';
+    import Icon from '$lib/components/Icon.svelte'
+    import { mdiAccount, mdiEmoticonSadOutline, mdiKey } from '$lib/components/icons';
     import { getIcon } from '$lib/components/icons/utils';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';

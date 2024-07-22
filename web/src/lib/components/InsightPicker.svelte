@@ -3,12 +3,14 @@
 
     import { createEventDispatcher } from "svelte";
 
-    import { devices } from "$lib/stores/homey";
-    import { mdiClose, mdiMagnify } from "./icons";
-    import { Icon } from "stwui";
+    import { homey, devices } from "$lib/stores/homey";
+    import { mdiChartLine, mdiClose, mdiMagnify } from "./icons";
+    import Icon from '$lib/components/Icon.svelte'
+    import VirtualList from "./VirtualList.svelte";
 
     export let logId: string | undefined;
     export let logs: Log[] = [];
+    export let name: string = 'Log'
 
     const dispatch = createEventDispatcher();
 
@@ -78,17 +80,28 @@
     }
 </script>
 
-<div class="join w-full flex">
-    <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
-        <Icon data={mdiMagnify} />
-    </button>
-
-    {#if selected}    
-        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Insights" value={getOwnerName(selected.ownerUri) + '-' + selected.title}/>
-    {:else}
-        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Insights"/>
-    {/if}
-</div>
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">{name}</span>
+    </div>
+    <div class="join flex items-center">
+        <input type="text" class="input input-bordered grow join-item" bind:value={logId} placeholder="Log"/>
+        <button class="btn btn-outline btn-primary join-item" on:click={() => modal.showModal()}>
+            {#if selected !== undefined}
+                <Icon data={mdiChartLine} />
+            {:else}
+                <Icon data={mdiMagnify} />
+            {/if}
+        </button>
+    </div>
+    <div class="label whitespace-nowrap overflow-ellipsis">
+        <span class="label-text"></span>
+        
+        {#if selected !== undefined}
+            <span class="label-text-alt">{getOwnerName(selected.ownerUri)} - {selected.title}</span>
+        {/if}
+    </div>
+</label>
 
 <dialog bind:this={modal} class="modal">
     <div class="modal-box flex flex-col">
@@ -103,7 +116,7 @@
         </div>
         
         <div class="flex-grow overflow-auto">
-            {#each filtered as item}
+            <VirtualList items={filtered} height="50vh" let:item>
                 <button class="btn btn-ghost w-full" on:click={() => onItem(item)}>
                     <h3 class="w-full flex justify-start">
                         {item.ownerName}
@@ -116,7 +129,7 @@
                 </button>
 
                 <div class="divider divider-neutral my-1"></div>
-            {/each}
+            </VirtualList>
         </div>
     </div>
 </dialog>

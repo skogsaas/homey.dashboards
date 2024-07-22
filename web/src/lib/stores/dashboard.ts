@@ -1,4 +1,4 @@
-import type Dashboard from '$lib/types/Dashboard';
+import type { Dashboard_v2 } from '$lib/types/Dashboard';
 import { writable } from 'svelte/store';
 
 function createEditing() {
@@ -12,4 +12,4 @@ function createEditing() {
 }
 
 export const editing = createEditing();
-export const dashboard = writable(undefined as (Dashboard | undefined));
+export const dashboard = writable(undefined as (Dashboard_v2 | undefined));

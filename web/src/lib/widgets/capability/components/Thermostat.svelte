@@ -5,9 +5,7 @@
     import { editing } from '$lib/stores/dashboard';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
-    import Icon from 'stwui/icon';
-    import Slider from 'stwui/slider';
-    import ButtonGroup from 'stwui/button-group';
+    import Icon from '$lib/components/Icon.svelte'
     import type { CapabilitySettings_v5 } from '../CapabilitySettings';
     
     const dispatcher = createEventDispatcher();
@@ -78,55 +76,4 @@
     }
 </script>
 
-{#if capability !== undefined}
-    {#if mode === 'card'}
-        <span class="whitespace-nowrap">{capability.value ?? '...'} {capability.units ?? ''}</span>
-    {:else}
-        <div class="flex flex-col w-full">
-            <div class="flex flex-row mx-auto">
-                {#if measureTemperature !== undefined}
-                    <div class="flex flex-col items-center">
-                        <h1>{measureTemperature.value ?? '...'} {measureTemperature?.units ?? ''}</h1>
-                        <span>Current temperature</span>
-                    </div>
-                {/if}
-                
-                {#if measureTemperature !== undefined && targetTemperature !== undefined}
-                    <Icon size="48px" data={mdiArrowRight} class="ml-4 mr-4" />
-                {/if}
-
-                {#if targetTemperature !== undefined}
-                    <div class="flex flex-col items-center">
-                        <h1>{targetValue ?? '...'} {targetTemperature?.units ?? ''}</h1>
-                        <span>Target temperature</span>
-                    </div>
-                {/if}
-            </div>
-
-            {#if thermostatMode !== undefined}
-                <ButtonGroup class="mx-auto mt-4 mb-4">
-                    {#each thermostatMode.values as value}
-                        <ButtonGroup.Button on:click={() => setMode(value.id)} active={thermostatMode.value === value.id} >
-                            {value.title}
-                        </ButtonGroup.Button>    
-                    {/each}
-                </ButtonGroup>
-            {/if}
-
-            {#if targetTemperature !== undefined}
-                <div class="flex flex-row mt-4">
-                    <span class="whitespace-nowrap mr-4">{targetTemperature.min} {targetTemperature.units ?? ''}</span>
-                    <Slider 
-                        class="w-full"
-                        bind:value={targetValue}
-                        min={targetTemperature.min} 
-                        max={targetTemperature.max} 
-                        step={targetTemperature.step}
-                        disabled={disabled} 
-                    />
-                    <span class="whitespace-nowrap ml-4">{targetTemperature.max} {targetTemperature.units ?? ''}</span>
-                </div>
-            {/if}
-        </div>
-    {/if}
-{/if}
+<span class="whitespace-nowrap">{capability.value ?? '...'} {capability.units ?? ''}</span>

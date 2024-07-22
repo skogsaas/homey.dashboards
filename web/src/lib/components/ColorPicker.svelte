@@ -1,8 +1,11 @@
 <script lang="ts">
     import TailwindColors from './TailwindColors.json'
-        
+    
     export let value: string | undefined;
     export let mode: 'rgb' | 'rgba' = 'rgb';
+    
+    let classes = 'btn btn-circle w-8';
+    export { classes as class };
     
     let modal: HTMLDialogElement;
     
@@ -54,7 +57,7 @@
 <button 
     on:click={() => modal.showModal()}
     style="background-color: {value}; opacity: {alpha * 100};"
-    class="join-item border-solid w-10"
+    class={classes}
     class:border-border={value === undefined}
     class:border-2={value === undefined}
 >

@@ -5,7 +5,6 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { base } from '$app/paths';
-    import { sineIn } from 'svelte/easing';
 
     // Stores
     import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys, variables, devicesLoading, variablesLoading, flowFoldersLoading, basicFlowsLoading, advancedFlowsLoading, insightsLoading, zonesLoading } from '$lib/stores/homey';
@@ -15,20 +14,16 @@
 
     // UI components
     import AddDashboardDialog from '$lib/AddDashboardDialog.svelte';
-    import IconButton from '$lib/components/IconButton.svelte';
+    import Icon from '$lib/components/Icon.svelte'
 
     // Tailwind
     import "../app.css";
-    import Icon from 'stwui/icon';
-    
-    // Flowbite
-    import { Avatar, Drawer, Hr, Li, List, Spinner } from 'flowbite-svelte';
 
     import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant } from "$lib/components/icons";
 
     // Types
     import type { AdvancedFlow, BasicFlow, CapabilityEvent, VariableEvent, Homey, OAuthHomey } from '$lib/types/Homey';
-    import type Dashboard from '$lib/types/Dashboard';
+    import type { Dashboard_v2 } from '$lib/types/Dashboard';
 
     import { clientId, clientSecret } from '$lib/constants';
 
@@ -53,7 +48,7 @@
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
     $: fullscreenSupported = document.fullscreenEnabled;
 
-    let menuHidden: boolean = true;
+    let menuOpen: boolean = false;
     let toolbarOpen: boolean = false;
     let dashboardMenuOpen: boolean = false;
     let addDashboardOpen: boolean = false;
@@ -68,7 +63,7 @@
       if($homey !== undefined && heartbeat < (Date.now() - heartbeatInterval * 2)) {
         console.log('reconnecting');
         
-        $homey.__io.io.engine.close();
+        //$homey.__io.io.engine.close();
         
         await loadData()
       }
@@ -308,15 +303,16 @@
 
     function toggleEdit() {
       editing.toggle();
-      menuHidden = true;
+      menuOpen = false;
     }
 
     async function addDashboard(title: string) : Promise<void> {
-      const d: Dashboard = {
+      const d: Dashboard_v2 = {
         id: uuid(),
+        version: 2,
         source: 'localstorage',
         title,
-        items: []
+        root: undefined
       };
 
       localDashboards.update(d);
@@ -324,19 +320,19 @@
       await goto(base + '/board/?id=' + d.id);
     }
 
-    function openDashboard(dash: Dashboard) : Promise<void> {
-      menuHidden = true;
+    function openDashboard(dash: Dashboard_v2) : Promise<void> {
+      menuOpen = true;
       dashboardMenuOpen = false;
       return goto(base + '/board/?id=' + dash.id)
     }
 
-    function openDashboardSettings(dash: Dashboard) : Promise<void> {
-      menuHidden = true;
+    function openDashboardSettings(dash: Dashboard_v2) : Promise<void> {
+      menuOpen = true;
       return goto(base + '/board/settings/?id=' + dash.id)
     }
 
     function openAddDashboard() {
-      menuHidden = true;
+      menuOpen = true;
       addDashboardOpen = true;
     }
 
@@ -348,7 +344,7 @@
 
       // Navigate to home-screen after switching
       await goto(base + '/');
-      menuHidden = true;
+      menuOpen = true;
     }
 
     async function logout() {
@@ -385,133 +381,118 @@
       <span class="loading loading-infinity w-40 text-primary"></span>
     </div>
   {:else if $homey !== undefined}
-    {#if menuHidden == true && toolbarOpen == false}
-      <IconButton data={mdiMenu} on:click={() => menuHidden = false} class="absolute left-0 top-0 z-10 text-primary-content bg-primary rounded-none rounded-br-3xl" size="32px" />
+    {#if menuOpen == false && toolbarOpen == false}
+      <button class="btn btn-circle fixed top-0 z-10" on:click={() => menuOpen = true}>
+        <Icon data={mdiMenu} />
+      </button>
     {/if}
 
     <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
 
-    <Drawer transitionType="fly" transitionParams={{ x: -320, duration: 200, easing: sineIn }} bind:hidden={menuHidden} id="main">
-      {#if $user !== undefined}
-        <div class="flex items-center cursor-pointer">
-          <div class="avatar">
-            <div class="w-24 rounded-full">
-              <img src={$user.avatar.small} alt={$user.fullname} />
-            </div>
-          </div>
-          <div class="space-y-1 font-medium">
-            <div>{$user.firstname}</div>
-            <div class="text-sm">{$user.email}</div>
-          </div>
-        </div>
+    <div class="drawer w-full">
+      <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
+      
+      <div class="drawer-content">
+        <slot></slot>
+      </div>
 
-        {#if $user.homeys.length > 1}
-          <div class="divider">Homeys</div>
+      <div class="drawer-side">
+        <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+
+        <div class="w-full max-w-xs min-h-full bg-base-200">
+          <!-- Support for multiple Homeys -->
+          {#if $user !== undefined}
+            <div class="flex items-center cursor-pointer">
+              <div class="avatar">
+                <img class="w-24 mask mask-circle" src={$user.avatar.small} alt={$user.fullname} />
+              </div>
+              <div class="space-y-1 font-medium">
+                <div>{$user.firstname}</div>
+                <div class="text-sm">{$user.email}</div>
+              </div>
+            </div>
+
+            {#if $user.homeys.length > 1}
+              <div class="divider">Homeys</div>
+
+              <ul class="menu w-full">
+                {#each $user.homeys as h}
+                  <li on:click={() => selectHomey(h)}>
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0">
+                        <Icon class="w-8 h-8 rounded-full invert" data={mdiDeathStarVariant} />
+                      </div>
+                      <div class="flex-1 min-w-0 ml-2">
+                        <p class="text-sm font-medium">{h.name}</p>
+                        <p class="text-sm capitalize">{h.modelName}</p>
+                      </div>
+                    </div>
+                  </li>
+                {/each}
+              </ul>
+            {/if}
+          {/if}
+
+          <!--  -->
+          <div class="divider">Dashboards</div>
 
           <ul class="menu w-full">
-            {#each $user.homeys as h}
-              <li on:click={() => selectHomey(h)}>
+            {#each dashboards as d}
+              <li on:click={() => openDashboard(d)}>
                 <div class="flex items-center">
                   <div class="flex-shrink-0">
-                    <Icon class="w-8 h-8 rounded-full" data={mdiDeathStarVariant} />
+                    <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboard} />
                   </div>
                   <div class="flex-1 min-w-0 ml-2">
-                    <p class="text-sm font-medium">{h.name}</p>
-                    <p class="text-sm capitalize">{h.modelName}</p>
+                    <p class="text-sm font-medium">{d.title}</p>
+                    <p class="text-sm capitalize">{d.source}</p>
                   </div>
                 </div>
               </li>
             {/each}
           </ul>
-        {/if}
-      {/if}
 
-      <div class="divider">Dashboards</div>
+          <div class="divider">Tools</div>
 
-      <ul class="menu w-full">
-        {#each dashboards as d}
-          <li on:click={() => openDashboard(d)}>
-            <div class="flex items-center ">
-              <div class="flex-shrink-0">
-                <Icon class="w-8 h-8 rounded-full" data={mdiViewDashboard} />
-              </div>
-              <div class="flex-1 min-w-0 ml-2">
-                <p class="text-sm font-medium">{d.title}</p>
-                <p class="text-sm capitalize">{d.source}</p>
-              </div>
-            </div>
-          </li>
-        {/each}
-      </ul>
+          <ul class="menu w-full">
+            {#if $dashboard !== undefined}
+              <li on:click={() => toggleEdit()}>
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboardEdit} />
+                  </div>
+                  <div class="flex-1 min-w-0 ml-2">
+                    <p class="text-sm font-medium">Edit dashboard</p>
+                  </div>
+                </div>
+              </li>
 
-      <div class="divider">Tools</div>
+              <li on:click={() => openDashboardSettings($dashboard)}>
+                <div class="flex items-center">
+                  <div class="flex-shrink-0">
+                    <Icon class="w-8 h-8 rounded-full invert" data={mdiCog} />
+                  </div>
+                  <div class="flex-1 min-w-0 ml-2">
+                    <p class="text-sm font-medium">Dashboard settings</p>
+                  </div>
+                </div>
+              </li>
+            {/if}
 
-      <ul class="menu w-full">
-          {#if $dashboard !== undefined}
-            <li on:click={() => toggleEdit()}>
-              <div class="flex items-center ">
+            <li on:click={() => openAddDashboard()}>
+              <div class="flex items-center">
                 <div class="flex-shrink-0">
-                  <Icon class="w-8 h-8 rounded-full" data={mdiViewDashboardEdit} />
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiPlus} />
                 </div>
                 <div class="flex-1 min-w-0 ml-2">
-                  <p class="text-sm font-medium">Edit dashboard</p>
+                  <p class="text-sm font-medium">Add local dashboard</p>
                 </div>
               </div>
             </li>
-
-            <li on:click={() => openDashboardSettings($dashboard)}>
-              <div class="flex items-center ">
-                <div class="flex-shrink-0">
-                  <Icon class="w-8 h-8 rounded-full" data={mdiCog} />
-                </div>
-                <div class="flex-1 min-w-0 ml-2">
-                  <p class="text-sm font-medium">Dashboard settings</p>
-                </div>
-              </div>
-            </li>
-          {/if}
-
-          <li on:click={() => openAddDashboard()}>
-            <div class="flex items-center ">
-              <div class="flex-shrink-0">
-                <Icon class="w-8 h-8 rounded-full" data={mdiPlus} />
-              </div>
-              <div class="flex-1 min-w-0 ml-2">
-                <p class="text-sm font-medium">Add local dashboard</p>
-              </div>
-            </div>
-          </li>
-        </ul>
-
-      <div class="divider"></div>
-
-      <!--
-      <Toggle
-        name="toolbarOpen"
-        bind:on={toolbarOpen}
-      >
-        <Toggle.ContentLeft slot="content-left" class="ml-3">
-          <Toggle.ContentLeft.Label slot="label">Toolbar open</Toggle.ContentLeft.Label>
-        </Toggle.ContentLeft>
-      </Toggle>
-
-      {#if fullscreenSupported}
-        <Button on:click={() => document.documentElement.requestFullscreen()} class="mt-4">
-          Enter fullscreen
-        </Button>
-      {/if}
-
-      <Divider>
-        <Divider.Label slot="label"></Divider.Label>
-      </Divider>
-
-      <Button on:click={() => logout()} class="mt-4">
-        Sign out
-      </Button>
-      -->
-    </Drawer>
-    
-    <slot></slot>
+          </ul>
+        </div>
+      </div>
+    </div>
   {:else}
     <slot></slot>
   {/if}

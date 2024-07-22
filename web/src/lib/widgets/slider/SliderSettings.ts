@@ -1,20 +1,20 @@
-import type { WidgetSettings } from "../../types/Widgets";
+import type { WidgetSettings_v1 } from "../../types/Widgets";
 import { v4 as uuid } from 'uuid';
 
-export interface SliderSettings_v2 extends WidgetSettings {
+export interface SliderSettings_v2 extends WidgetSettings_v1 {
     capabilityUri: string | undefined;
     title: string | undefined;
     hideMinMax: boolean | undefined;
 }
 
-export interface SliderSettings_v1 extends WidgetSettings {
+export interface SliderSettings_v1 extends WidgetSettings_v1 {
     deviceId: string | undefined;
     capabilityId: string | undefined;
     title: string | undefined;
     hideMinMax: boolean | undefined;
 }
 
-export function create() : WidgetSettings {
+export function create() : WidgetSettings_v1 {
     return { 
         id: uuid(), 
         type: 'slider', 

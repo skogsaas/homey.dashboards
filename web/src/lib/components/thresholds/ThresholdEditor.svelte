@@ -1,7 +1,7 @@
 <script lang="ts">
     import { v4 as uuid } from 'uuid';
     import type { Threshold } from "$lib/types/Widgets";
-    import { Icon } from "stwui";
+    import Icon from '$lib/components/Icon.svelte'
     import { mdiDelete, mdiPlus } from "../icons";
     import ThresholdLineEditor from "./ThresholdLineEditor.svelte";
 

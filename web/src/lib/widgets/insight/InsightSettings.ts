@@ -1,7 +1,7 @@
-import type { Threshold, WidgetSettings } from "../../types/Widgets";
+import type { Threshold, WidgetSettings_v1 } from "../../types/Widgets";
 import { v4 as uuid } from 'uuid';
 
-export interface InsightSettings_v5 extends WidgetSettings {
+export interface InsightSettings_v5 extends WidgetSettings_v1 {
     resolution: string | undefined;
     series: Series_v5[];
 }
@@ -14,7 +14,7 @@ export interface Series_v5 extends Series_v3 {
     background?: Threshold[];
 }
 
-export interface InsightSettings_v4 extends WidgetSettings {
+export interface InsightSettings_v4 extends WidgetSettings_v1 {
     resolution: string | undefined;
     series: Series_v4[];
 }
@@ -27,7 +27,7 @@ export interface Series_v4 extends Series_v3 {
     backgroundColor: string | undefined;
 }
 
-export interface InsightSettings_v3 extends WidgetSettings {
+export interface InsightSettings_v3 extends WidgetSettings_v1 {
     resolution: string | undefined;
     series: Series_v3[];
 }
@@ -38,20 +38,20 @@ export interface Series_v3 {
     sampleRate?: number;
 }
 
-export interface InsightSettings_v2 extends WidgetSettings {
+export interface InsightSettings_v2 extends WidgetSettings_v1 {
     insightId: string | undefined;
     resolution: string | undefined;
     aggregation: 'none' | 'min' | 'max' | 'sum' | 'avg' | 'first' | 'last';
     sampleRate: number | undefined;
 }
 
-export interface InsightSettings_v1 extends WidgetSettings {
+export interface InsightSettings_v1 extends WidgetSettings_v1 {
     deviceId: string | undefined;
     insightId: string | undefined;
     resolution: string | undefined;
 }
 
-export function create() : WidgetSettings {
+export function create() : WidgetSettings_v1 {
     return { 
         id: uuid(), 
         type: 'insight', 

@@ -7,11 +7,13 @@
     import { editing } from '$lib/stores/dashboard';
     
     import { getIcon } from '$lib/components/icons/utils';
+    import Icon from '$lib/components/Icon.svelte'
     import type { WidgetContext } from '$lib/types/Widgets';
-    import { Icon } from 'stwui';
+    import type { GridStackWidget } from 'gridstack';
 
-    export let settings: FlowSettings_v1;
+    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
+    export let settings: FlowSettings_v1;
 
     $: flow = settings?.flowId !== undefined ? $basicFlows[settings.flowId] as Flow ?? $advancedFlows[settings.flowId] as Flow : undefined;   
 

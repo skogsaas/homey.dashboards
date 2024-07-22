@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Input } from "stwui";
+    import Icon from '$lib/components/Icon.svelte'
 
     export let top: string = "0px";
     export let bottom: string = "0px";

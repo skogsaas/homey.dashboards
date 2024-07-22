@@ -1,18 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    // UI elements
-    import DevicePicker from '$lib/components/DevicePicker.svelte';
-
-    // Tailwind
-    import Input from "stwui/input";
-
-    import { devices } from '$lib/stores/homey';
-
     import type { CapabilityObj } from '$lib/types/Homey';
-    import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
     import type { CapabilitySettings_v5 } from './CapabilitySettings';
+    import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
     import IconPicker from '$lib/components/IconPicker.svelte';
+    import TextPicker from '$lib/components/TextPicker.svelte';
 
     const dispatch = createEventDispatcher();
     
@@ -57,25 +50,10 @@
     }
 </script>
 
-<label class="form-control w-full">
-    <div class="label">
-        <span class="label-text">Capability</span>
-    </div>
-    <CapabilityPicker bind:capabilityUri={capabilityUri} on:capability={(c) => (capability = c.detail)} />
-</label>
+<CapabilityPicker bind:capabilityUri={capabilityUri} on:capability={(c) => (capability = c.detail)} />
 
 {#if capability}
-    <label class="form-control w-full">
-        <div class="label">
-            <span class="label-text">Title</span>
-        </div>
-        <input type="text" class="input w-full" placeholder={capability.title} bind:value={title} />
-    </label>
+    <TextPicker bind:value={title} placeholder={capability.title} label="Title" />
 {/if}
 
-<label class="form-control w-full">
-    <div class="label">
-        <span class="label-text">Icon</span>
-    </div>
-    <IconPicker bind:iconId={iconId} />
-</label>
+<IconPicker bind:iconId={iconId} />

@@ -1,10 +1,13 @@
 <script lang="ts">
     import { editing } from '$lib/stores/dashboard';
+    import type { WidgetContext } from '$lib/types/Widgets';
+    import type { GridStackWidget } from 'gridstack';
 
     import type IframeSettings from './IframeSettings';
 
-    export let settings: IframeSettings;
+    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
+    export let settings: IframeSettings;
 
     $: style = getSize(settings);
     $: sandbox = getSandbox(settings);
