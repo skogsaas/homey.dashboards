@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { mdiTableColumn } from '$lib/components/icons';
+import { mdiGrid, mdiTableColumn } from '$lib/components/icons';
 import type { WidgetInfo, WidgetSettings_v1 } from "$lib/types/Widgets";
 
 import GridEditor from './GridEditor.svelte';
@@ -8,7 +8,7 @@ import GridWidget from './GridWidget.svelte';
 const info: WidgetInfo = {
     type: 'grid', 
     label: 'Grid',
-    icon: mdiTableColumn,
+    icon: mdiGrid,
     category: 'layout',
     widget: GridWidget, 
     editor: GridEditor,

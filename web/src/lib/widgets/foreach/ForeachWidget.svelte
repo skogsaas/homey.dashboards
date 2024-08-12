@@ -24,12 +24,10 @@
 
     $: onSettings(settings);
     $: renderSettings = onChildItems(child, items);
-    $: console.log(renderSettings);
     $: renderContext = { ...context, editable: false };
+    $: dropDisabled = children.length > 0; // Only allow a single item as child
 
     function onSettings(_settings: ForeachSettings_v1) {
-        console.log(_settings);
-
         items = [];
         child = _settings.item;
         children = child !== undefined ? [child] : [];
@@ -156,6 +154,7 @@
         items={children}
         on:items={e => onItems(e.detail)} 
         editable={context.editable}
+        {dropDisabled}
         class="w-full min-h-[50px]"
         let:item
     >

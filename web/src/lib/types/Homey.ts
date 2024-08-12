@@ -155,9 +155,9 @@ export interface DeviceObj extends Emitter {
     setCapabilityValue(opts: { capabilityId: string, deviceId: string, value: string|number|boolean, transactionId?: string, transactionTime?: number }) : Promise<any>;
 }
 
-export interface CapabilityObj {
+export interface CapabilityObj extends Emitter {
     id: string;
-    type: string;
+    type: 'boolean' | 'number' | 'string' | 'enum';
     iconObj: IconObj;
     title: string;
     getable: boolean;
@@ -237,7 +237,7 @@ export interface Variable extends Emitter {
     id: string;
     uri: string;
     name: string;
-    type: string;
+    type: 'boolean'|'number'|'string';
     value: string|boolean|number;
 }
 

@@ -372,128 +372,123 @@
 
 <svelte:window on:visibilitychange={e => onWindowVisibilityChange()} />
 
-<div 
-  class="w-full h-full text-content bg-fixed bg-no-repeat bg-cover" 
-  style={$dashboard?.backgroundImage && $dashboard.backgroundImage.length > 0 ? `background-image: url(${$dashboard.backgroundImage})` : ''} 
->
-  {#if loading}
-    <div class="w-full mt-8 text-center">
-      <span class="loading loading-infinity w-40 text-primary"></span>
+{#if loading}
+  <div class="w-full mt-8 text-center">
+    <span class="loading loading-infinity w-40 text-primary"></span>
+  </div>
+{:else if $homey !== undefined}
+  {#if menuOpen == false && toolbarOpen == false && $editing === false}
+    <button class="btn btn-circle fixed top-0 z-10" on:click={() => menuOpen = true}>
+      <Icon data={mdiMenu} />
+    </button>
+  {/if}
+
+  <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
+
+  <div class="drawer w-full h-full">
+    <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
+    
+    <div class="drawer-content">
+      <slot></slot>
     </div>
-  {:else if $homey !== undefined}
-    {#if menuOpen == false && toolbarOpen == false}
-      <button class="btn btn-circle fixed top-0 z-10" on:click={() => menuOpen = true}>
-        <Icon data={mdiMenu} />
-      </button>
-    {/if}
 
-    <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
+    <div class="drawer-side">
+      <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
-    <div class="drawer w-full">
-      <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
-      
-      <div class="drawer-content">
-        <slot></slot>
-      </div>
-
-      <div class="drawer-side">
-        <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-
-        <div class="w-full max-w-xs min-h-full bg-base-200">
-          <!-- Support for multiple Homeys -->
-          {#if $user !== undefined}
-            <div class="flex items-center cursor-pointer">
-              <div class="avatar">
-                <img class="w-24 mask mask-circle" src={$user.avatar.small} alt={$user.fullname} />
-              </div>
-              <div class="space-y-1 font-medium">
-                <div>{$user.firstname}</div>
-                <div class="text-sm">{$user.email}</div>
-              </div>
+      <div class="w-full max-w-xs min-h-full bg-base-200">
+        <!-- Support for multiple Homeys -->
+        {#if $user !== undefined}
+          <div class="flex items-center cursor-pointer">
+            <div class="avatar">
+              <img class="w-24 mask mask-circle" src={$user.avatar.small} alt={$user.fullname} />
             </div>
+            <div class="space-y-1 font-medium">
+              <div>{$user.firstname}</div>
+              <div class="text-sm">{$user.email}</div>
+            </div>
+          </div>
 
-            {#if $user.homeys.length > 1}
-              <div class="divider">Homeys</div>
+          {#if $user.homeys.length > 1}
+            <div class="divider">Homeys</div>
 
-              <ul class="menu w-full">
-                {#each $user.homeys as h}
-                  <li on:click={() => selectHomey(h)}>
-                    <div class="flex items-center">
-                      <div class="flex-shrink-0">
-                        <Icon class="w-8 h-8 rounded-full invert" data={mdiDeathStarVariant} />
-                      </div>
-                      <div class="flex-1 min-w-0 ml-2">
-                        <p class="text-sm font-medium">{h.name}</p>
-                        <p class="text-sm capitalize">{h.modelName}</p>
-                      </div>
+            <ul class="menu w-full">
+              {#each $user.homeys as h}
+                <li on:click={() => selectHomey(h)}>
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <Icon class="w-8 h-8 rounded-full invert" data={mdiDeathStarVariant} />
                     </div>
-                  </li>
-                {/each}
-              </ul>
-            {/if}
+                    <div class="flex-1 min-w-0 ml-2">
+                      <p class="text-sm font-medium">{h.name}</p>
+                      <p class="text-sm capitalize">{h.modelName}</p>
+                    </div>
+                  </div>
+                </li>
+              {/each}
+            </ul>
           {/if}
+        {/if}
 
-          <!--  -->
-          <div class="divider">Dashboards</div>
+        <!--  -->
+        <div class="divider">Dashboards</div>
 
-          <ul class="menu w-full">
-            {#each dashboards as d}
-              <li on:click={() => openDashboard(d)}>
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboard} />
-                  </div>
-                  <div class="flex-1 min-w-0 ml-2">
-                    <p class="text-sm font-medium">{d.title}</p>
-                    <p class="text-sm capitalize">{d.source}</p>
-                  </div>
-                </div>
-              </li>
-            {/each}
-          </ul>
-
-          <div class="divider">Tools</div>
-
-          <ul class="menu w-full">
-            {#if $dashboard !== undefined}
-              <li on:click={() => toggleEdit()}>
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboardEdit} />
-                  </div>
-                  <div class="flex-1 min-w-0 ml-2">
-                    <p class="text-sm font-medium">Edit dashboard</p>
-                  </div>
-                </div>
-              </li>
-
-              <li on:click={() => openDashboardSettings($dashboard)}>
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <Icon class="w-8 h-8 rounded-full invert" data={mdiCog} />
-                  </div>
-                  <div class="flex-1 min-w-0 ml-2">
-                    <p class="text-sm font-medium">Dashboard settings</p>
-                  </div>
-                </div>
-              </li>
-            {/if}
-
-            <li on:click={() => openAddDashboard()}>
+        <ul class="menu w-full">
+          {#each dashboards as d}
+            <li on:click={() => openDashboard(d)}>
               <div class="flex items-center">
                 <div class="flex-shrink-0">
-                  <Icon class="w-8 h-8 rounded-full invert" data={mdiPlus} />
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboard} />
                 </div>
                 <div class="flex-1 min-w-0 ml-2">
-                  <p class="text-sm font-medium">Add local dashboard</p>
+                  <p class="text-sm font-medium">{d.title}</p>
+                  <p class="text-sm capitalize">{d.source}</p>
                 </div>
               </div>
             </li>
-          </ul>
-        </div>
+          {/each}
+        </ul>
+
+        <div class="divider">Tools</div>
+
+        <ul class="menu w-full">
+          {#if $dashboard !== undefined}
+            <li on:click={() => toggleEdit()}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboardEdit} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Edit dashboard</p>
+                </div>
+              </div>
+            </li>
+
+            <li on:click={() => openDashboardSettings($dashboard)}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiCog} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Dashboard settings</p>
+                </div>
+              </div>
+            </li>
+          {/if}
+
+          <li on:click={() => openAddDashboard()}>
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <Icon class="w-8 h-8 rounded-full invert" data={mdiPlus} />
+              </div>
+              <div class="flex-1 min-w-0 ml-2">
+                <p class="text-sm font-medium">Add local dashboard</p>
+              </div>
+            </div>
+          </li>
+        </ul>
       </div>
     </div>
-  {:else}
-    <slot></slot>
-  {/if}
-</div>
+  </div>
+{:else}
+  <slot></slot>
+{/if}

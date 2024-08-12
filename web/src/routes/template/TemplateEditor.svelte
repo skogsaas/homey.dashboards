@@ -108,7 +108,7 @@
                 </select>
             </label>
 
-            <div role="alert" class="alert my-2">
+            <div role="alert" class="alert mt-2">
                 <Icon data={mdiInformation} />
                 <span>This argument can be referenced in any child widget settings by writing: <code>${'{'}template.{a.id}{'}'}</code></span>
             </div>

@@ -61,6 +61,14 @@
         return info?.title ?? 'Unkown';
     }
 
+    function considerDndWidgets(_category: number, _items: any[], trigger: string) {
+        handleDndWidgets(_category, _items, trigger, false);
+    }
+
+    function finalizeDndWidgets(_category: number, _items: any[], trigger: string) {
+        handleDndWidgets(_category, _items, trigger, true);
+    }
+
     function handleDndWidgets(_category: number, _items: any[], trigger: string, finalize: boolean) {
         // Figure out which item is being removed. After that, recreate it and add it to the items list.
         const index = widgetItems[_category].findIndex(i => !_items.some(w => w.id === i.id));
@@ -77,6 +85,14 @@
         } else if (finalize) {
             dispatch('dragging', false);
         }
+    }
+
+    function considerDndTemplates(_items: any[], trigger: string) {
+        handleDndTemplates(_items, trigger, false);
+    }
+
+    function finalizeDndTemplates(_items: any[], trigger: string) {
+        handleDndTemplates(_items, trigger, true);
     }
 
     function handleDndTemplates(_items: any[], trigger: string, finalize: boolean) {
@@ -98,36 +114,41 @@
     }
 </script>
 
-<div class="w-full h-full p-2">
-    <h2 class="text-lg">Templates</h2>
-    <div
-        class="w-full p-2"
-        use:dndzone={{ items: templateItems, flipDurationMs, centreDraggedOnCursor: true, dropFromOthersDisabled: true}}
-        on:consider={e => handleDndTemplates(e.detail.items, e.detail.info.trigger, false)}
-        on:finalize={e => handleDndTemplates(e.detail.items, e.detail.info.trigger, true)}
-    >
-        {#each templateItems as item(item.id)}
-            <div class="flex flex-row py-1">
-                <Icon data={mdiPlay} />
-                <span>{getTemplateLabel(item.templateId)}</span>
-            </div>
-        {/each}
-    </div>
+<div class="w-full h-full">
+    <h2 class="text-xl">Templates</h2>
 
-    <div class="divider"></div>
+    {#if templateItems.length > 0}
+        <div
+            class="w-full p-2"
+            use:dndzone={{ items: templateItems, flipDurationMs, centreDraggedOnCursor: true, dropFromOthersDisabled: true}}
+            on:consider={e => considerDndTemplates(e.detail.items, e.detail.info.trigger)}
+            on:finalize={e => finalizeDndTemplates(e.detail.items, e.detail.info.trigger)}
+        >
+            {#each templateItems as item(item.id)}
+                <div class="flex flex-row py-1">
+                    <Icon data={mdiPlay} />
+                    <span>{getTemplateLabel(item.templateId)}</span>
+                </div>
+            {/each}
+        </div>
+    {:else}
+        <div class="w-full p-2">
+            <span class="text-warning italic">No templates found.</span>
+        </div>
+    {/if}
 
     {#each widgetItems as items, index}
-        <h2 class="text-lg">{categories[index].label}</h2>
+        <h2 class="text-xl">{categories[index].label}</h2>
         <div
             class="w-full p-2"
             use:dndzone={{ items, flipDurationMs, centreDraggedOnCursor: true, dropFromOthersDisabled: true}}
-            on:consider={e => handleDndWidgets(index, e.detail.items, e.detail.info.trigger, false)}
-            on:finalize={e => handleDndWidgets(index, e.detail.items, e.detail.info.trigger, true)}
+            on:consider={e => considerDndWidgets(index, e.detail.items, e.detail.info.trigger)}
+            on:finalize={e => finalizeDndWidgets(index, e.detail.items, e.detail.info.trigger)}
         >
             {#each items as item(item.id)}
                 <div class="flex flex-row py-1">
                     <Icon data={getWidgetIcon(item.type)} />
-                    <span>{getWidgetLabel(item.type)}</span>
+                    <span class="ml-2">{getWidgetLabel(item.type)}</span>
                 </div>
             {/each}
         </div>

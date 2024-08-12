@@ -1,9 +1,10 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import {dndzone} from "svelte-dnd-action";
+    import {dndzone, dragHandleZone} from "svelte-dnd-action";
     
     export let editable: boolean;
     export let items: any[] | undefined;
+    export let dropDisabled: boolean = false;
     
     let classes: string = '';
     export { classes as class };
@@ -13,6 +14,9 @@
 
     let inner: any[];
     let modifying: boolean = false;
+
+    const dropTargetClasses = ['border-secondary', 'border-2'];
+    const dropTargetStyle = {};
 
     $: onItems(items);
 
@@ -34,13 +38,19 @@
     function handleDndFinalize(_items: any[], info: any) {
         modifying = false;
 
+        /*
+        if(info.trigger === 'droppedOutsideOfAny') {
+            _items = _items.filter(i => i.id !== info.id);
+        }
+        */
+
         if(info.trigger === 'droppedIntoAnother' && items !== undefined) {
             for (let index = 0; index < _items.length; index++) {
                 const item = _items[index] as any;
                 const existing = items!.find(i => i.id === item.id) as any | undefined;
 
                 if(existing !== undefined) {
-                    // Copy app properties from existing item into current item
+                    // Copy all properties from existing item into current item
                     for(var key in existing) {
                         item[key] = existing[key];
                     }
@@ -57,7 +67,7 @@
 {#if editable}
     <div
         class={classes}
-        use:dndzone={{ items: inner, flipDurationMs, morphDisabled: true }}
+        use:dragHandleZone={{ items: inner, flipDurationMs, morphDisabled: false, centreDraggedOnCursor: true, dropFromOthersDisabled: dropDisabled, dropTargetStyle, dropTargetClasses }}
         on:consider={e => handleDndConsider(e.detail.items, e.detail.info)}
         on:finalize={e => handleDndFinalize(e.detail.items, e.detail.info)}
     >

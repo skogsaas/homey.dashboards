@@ -40,7 +40,7 @@
     items={settings.items} 
     on:items={e => onItems(e.detail)}
     editable={context.editable}
-    classes="w-full min-h-[50px]" 
+    class="w-full min-h-[50px]" 
     let:item
 >
     <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />
