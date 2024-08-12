@@ -17,8 +17,10 @@ import SectionsInfo from '$lib/widgets/sections';
 import SliderInfo from './slider';
 import StackInfo from '$lib/widgets/stack';
 import StatisticInfo from './statistic';
+import SwitchInfo from './switch';
 import TemplateInfo from './template';
 import TextInfo from './text';
+import ToggleInfo from './toggle';
 import UnknownInfo from './unknown';
 import VariableInfo from './variable';
 
@@ -39,8 +41,10 @@ export const widgets: WidgetInfo[] = [
     SliderInfo,
     StackInfo,
     StatisticInfo,
+    SwitchInfo,
     TemplateInfo,
     TextInfo,
+    ToggleInfo,
     VariableInfo,
 ];
 
