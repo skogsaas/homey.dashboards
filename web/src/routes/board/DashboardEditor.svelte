@@ -33,9 +33,4 @@
     }
 </script>
 
-<label class="form-control w-full">
-    <div class="label">
-        <span class="label-text">Icon</span>
-    </div>
-    <IconPicker bind:iconId={iconId} />
-</label>
+<IconPicker bind:iconId={iconId} />

@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { mdiTableColumn } from '$lib/components/icons';
+import { mdiMenu, mdiTableColumn } from '$lib/components/icons';
 import type { WidgetInfo, WidgetSettings_v1 } from "$lib/types/Widgets";
 
 import StackEditor from './StackEditor.svelte';
@@ -8,7 +8,7 @@ import StackWidget from './StackWidget.svelte';
 const info: WidgetInfo = {
     type: 'stack', 
     label: 'Stack',
-    icon: mdiTableColumn,
+    icon: mdiMenu,
     category: 'layout',
     widget: StackWidget, 
     editor: StackEditor,

@@ -3,7 +3,7 @@ import type { WidgetSettings_v1 } from "./Widgets";
 export interface Template_v1 {
     id: string;
     title: string;
-    root: WidgetSettings_v1;
+    root: WidgetSettings_v1 | undefined;
     arguments: TemplateArgument_v1[];
 }
 
