@@ -12,7 +12,7 @@
 
     // UI elements
     import WidgetEditor from '$lib/components/WidgetEditor.svelte';
-    import DashboardEditor from '$lib/widgets/DashboardEditor.svelte';
+    import DashboardEditor from './DashboardEditor.svelte';
     import Widget from '$lib/widgets/Widget.svelte';
     import { mdiViewDashboard } from '$lib/components/icons';
 
