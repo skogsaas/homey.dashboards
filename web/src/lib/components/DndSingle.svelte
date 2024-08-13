@@ -12,7 +12,7 @@
 
     let items: any[];
     $: items = item ? [item] : [];
-    $: dropDisabled = item !== undefined;
+    $: dropDisabled = items.length > 0;
 
     function onItems(_items: any[]) {
         if(_items.length > 0) {

@@ -17,6 +17,8 @@
     export let settingsIcon: string;
     export let settingsTitle: string;
 
+    let preview: boolean = false;
+
     let drawerOpen: boolean = false;
     let drawerContent: string = 'settings';
     
@@ -25,7 +27,7 @@
 
     let context: WidgetContext;
     $: context = { 
-        editable: true, 
+        editable: !preview, 
         readonly: false, 
         breadcrumbs: [],
         select: onBreadrumbs
@@ -40,6 +42,10 @@
 
         drawerContent = 'settings';
         drawerOpen = true;
+    }
+
+    function onPreview(_preview: boolean) {
+        preview = _preview;
     }
 
     function onBreadrumbs(_breadcrumbs: WidgetBreadcrumb[]) {
@@ -99,6 +105,11 @@
             </div>
 
             <div class="navbar-end">
+                <div class="join mr-2">
+                    <button class="btn join-item" class:btn-secondary={preview} on:click={() => onPreview(true)}>Preview</button>
+                    <button class="btn join-item" class:btn-secondary={!preview} on:click={() => onPreview(false)}>Editing</button>
+                </div>
+
                 <button class="btn btn-square btn-primary" on:click={() => save()} >
                     <Icon data={mdiFloppy} />
                     Save
@@ -140,7 +151,7 @@
         <div class="flex flex-row justify-center" on:click={() => onBreadrumbs([])}>
             <div class="w-full">
                 <DndSingle editable={context.editable} item={root} on:item={e => onRoot(e.detail)} let:item>
-                    <Widget settings={item} {context} />
+                    <Widget settings={item} {context} on:settings={e => onRoot(e.detail)} />
                 </DndSingle>
             </div>
         </div>
