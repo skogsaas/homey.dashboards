@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { ToggleSettings_v1 } from './ToggleSettings';
     import type { WidgetContext } from '$lib/types/Widgets';
-    import type { CapabilityObj, DeviceObj, Emitter, Variable } from '$lib/types/Homey';
+    import type { CapabilityEvent, CapabilityObj, DeviceObj, Emitter, Variable } from '$lib/types/Homey';
 
     import { devices, variables, homey } from '$lib/stores/homey';
     
@@ -101,7 +101,7 @@
         if(capability === undefined) return;
 
         label = capability.title;
-        iconUrl = capability.iconObj.url;
+        iconUrl = capability.iconObj?.url;
         iconId = settings.iconId;
         readonly = !capability.setable;
         
@@ -114,10 +114,12 @@
             readonly = true;
         }
 
-        capability.on('update', onCapability);
+        device.on('capability', (e: any) => onCapability(capabilityId, e));
     }
 
-    function onCapability() {
+    function onCapability(capabilityId: string, event: CapabilityEvent) {
+        if(event.capabilityId !== capabilityId) return;
+
         if(capability === undefined) return;
 
         if(capability.type === 'boolean') {

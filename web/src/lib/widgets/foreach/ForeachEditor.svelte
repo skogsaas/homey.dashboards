@@ -8,6 +8,8 @@
     import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
     import DevicePicker from '$lib/components/DevicePicker.svelte';
     import IconPicker from '$lib/components/IconPicker.svelte';
+    import { mdiInformation } from '$lib/components/icons';
+    import Icon from '$lib/components/Icon.svelte';
     
     export let settings: ForeachSettings_v1;
 
@@ -108,3 +110,8 @@
 {:else if inType === 'folder'}
     <p>Flow folder picker not implemented!</p>
 {/if}
+
+<div role="alert" class="alert mt-2">
+    <Icon data={mdiInformation} />
+    <span>All properties are available in the form: <code>${'{'}{settings.id.substring(0, 8)}{'.[property]}'}</code>.</span>
+</div>

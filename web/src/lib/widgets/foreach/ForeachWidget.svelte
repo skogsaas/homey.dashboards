@@ -123,12 +123,18 @@
             let copy = obj as string;
 
             // Replace any template arguments being used.
-            const variableRegex = /\$\{([^}]+)\}/g;
+            const variableRegex = /\$\{([^}]+)\.([^}]+)\}/g;
             const matches: string[][] = [...copy.matchAll(variableRegex)];
+
+            // Require the variable to be in the form ${slug.property}
+            const idSlug = settings.id.substring(0, 8);
 
             for(const match of matches) {
                 const fullMatch = match[0];
-                const itemKey = match[1];
+                const slug = match[1];
+                const itemKey = match[2];
+
+                if(slug !== idSlug) continue;
 
                 if(Object.hasOwn(item, itemKey)) {
                     const itemValue = item[itemKey];

@@ -57,12 +57,15 @@
             let copy = obj as string;
 
             // Replace any template arguments being used.
-            const variableRegex = /\$\{([^}]+)\}/;
+            const variableRegex = /\$\{([^}]+)\.([^}]+)\}/g;
             const matches: string[][] = [...copy.matchAll(variableRegex)];
 
             for(const match of matches) {
                 const fullMatch = match[0];
-                const argId = match[1];
+                const slug = match[1];
+                const argId = match[2];
+
+                if(slug !== 'template') continue;
 
                 const templateArg = template.arguments.find(a => a.id === argId);
                 const settingsArg = _settings.arguments.find(a => a.argId === argId);
