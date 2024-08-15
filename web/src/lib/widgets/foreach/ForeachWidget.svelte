@@ -81,8 +81,6 @@
         children = [child];
         settings = { ...settings, item: child };
 
-        console.log(children);
-
         dispatch('settings', settings);
     }
 

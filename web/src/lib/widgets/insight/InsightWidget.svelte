@@ -90,7 +90,6 @@
     })
 
     async function onSettings(s: InsightSettings_v5) {
-        console.log(s);
         let load: boolean = false;
 
         if(resolution === undefined || resolution !== s.resolution) {

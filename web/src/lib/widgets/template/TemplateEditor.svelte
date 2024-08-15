@@ -65,8 +65,8 @@
     {:else if templateArg.type === 'boolean'}
         <BooleanPicker 
             label={templateArg.label ?? templateArg.id}
-            value={getValue(templateArg.id) ?? templateArg.default} 
-            on:value={e => setValue(templateArg.id, e.detail)} 
+            checked={getValue(templateArg.id) ?? templateArg.default} 
+            on:checked={e => setValue(templateArg.id, e.detail)} 
         />
     {:else if templateArg.type === 'capabilityId'}
         <CapabilityPicker 
