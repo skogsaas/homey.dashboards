@@ -1,10 +1,10 @@
 <script lang="ts">
     import type {
         GridItemHTMLElement,
-        GridStack,
         GridStackNode,
         GridStackOptions
     } from "gridstack";
+    import { GridStack } from "gridstack"
 
     import "gridstack/dist/gridstack-extra.min.css";
     import "gridstack/dist/gridstack.min.css";
@@ -35,7 +35,6 @@
 
     const gridPromise = new Promise(resolve => {
         onMount(async () => {
-            const { GridStack } = await import("gridStack");
             grid = GridStack.init(gridStackOptions, gridEl);
 
             GridStack.setupDragIn('.grid-stack-toolbar-item', { appendTo: 'body', helper: 'clone' });
