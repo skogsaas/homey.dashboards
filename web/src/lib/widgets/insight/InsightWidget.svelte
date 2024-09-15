@@ -350,6 +350,7 @@
 {#if series === undefined || series.length === 0}
     <span>Insights not configured</span>
 {:else}
+<div style="height: {settings.height ?? 200}px;">
     <Chart 
         bind:chart 
         type="line" 
@@ -357,4 +358,5 @@
         {options} 
         {plugins}
     />
+</div>
 {/if}

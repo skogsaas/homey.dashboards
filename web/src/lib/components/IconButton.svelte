@@ -1,10 +1,9 @@
 <script lang="ts">
 
 import Icon from '$lib/components/Icon.svelte'
-    import { createEventDispatcher } from 'svelte';
+import { createEventDispatcher } from 'svelte';
 
 export let data: string | undefined;
-export let color: string = 'currentColor';
 export let size: string = '24px';
 
 const dispatcher = createEventDispatcher();
@@ -20,5 +19,5 @@ $: finalClass = 'btn group inline-flex justify-center outline-none border-none i
     class={finalClass}
     style="width:{size}px; height:{size}px;"
 >
-    <Icon size={size} data={data} color={color} />
+    <Icon data={data} />
 </button>

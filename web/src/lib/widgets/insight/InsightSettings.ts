@@ -3,6 +3,7 @@ import { v4 as uuid } from 'uuid';
 
 export interface InsightSettings_v5 extends WidgetSettings_v1 {
     resolution: string | undefined;
+    height: number | undefined;
     series: Series_v5[];
 }
 

@@ -3,7 +3,7 @@
 
     import { createEventDispatcher } from "svelte";
 
-    import { homey, devices } from "$lib/stores/homey";
+    import { devices } from "$lib/stores/homey";
     import { mdiChartLine, mdiClose, mdiMagnify } from "./icons";
     import Icon from '$lib/components/Icon.svelte'
     import VirtualList from "./VirtualList.svelte";

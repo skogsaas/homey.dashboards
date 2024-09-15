@@ -21,8 +21,8 @@ import type {
     Zone, 
     ZoneMap 
 } from '$lib/types/Homey';
-import type { DashboardMap } from '$lib/types/Dashboard';
-import type { Dashboard_v2 } from '$lib/types/Dashboard';
+import type { Dashboard_v1, DashboardMap, Store_v1, StoreMap, Template_v1 } from '$lib/types/Store';
+import type { Dashboard_v2 } from '$lib/types/Store';
 import { driverId } from '$lib/constants';
 import type { TemplateMap } from '$lib/types/Template';
 
@@ -146,7 +146,7 @@ function createZones() {
 
 export const user = writable(undefined as (OAuthUser | undefined));
 export const homeys = createHomeys();
-export const homey = writable(undefined as (Homey | undefined));
+export const homey = writable<Homey|undefined>(undefined as (Homey | undefined));
 export const baseUrl = createBaseUrl();
 export const session = writable(undefined as (Session | undefined));
 export const scopes = derived(session, (s: Session) => s?.scopes ?? [], []);
@@ -172,23 +172,53 @@ export const zonesLoading = writable(false);
 export const insights = writable({} as (LogMap));
 export const insightsLoading = writable(false);
 
-export const dashboards = derived(
+export const stores = derived(
     devices, 
-    (d: DeviceMap) => Object.values(d)
+    (device: DeviceMap) => Object.values(device)
         .filter(e => e.driverId === driverId)
-        .reduce((existing: DashboardMap, dev: DeviceObj) => {
-            let dashboard: Dashboard_v2 = {
-                id: dev.data.id, // The custom device.data.id is used instead of the device.id, as the device id is not accessible for the installable app.
-                source: 'homey',
-                title: dev.name
-            };
+        .reduce((existing: StoreMap, dev: DeviceObj) => {
+            const settings = dev.settings;
+            let store: Store_v1 = {
+                id: dev.id,
+                version: 1,
+                title: dev.name,
+                dashboards: [],
+                templates: []
+            }
 
-            existing[dashboard.id] = { ...dashboard, ...dev.settings };
+            if(settings.hasOwnProperty('items')) { // Dashboard_v1
+                store.dashboards.push({ id: dev.data.id, title: dev.name, ...dev.settings });
+            } else if(settings.hasOwnProperty('root')) { // Dashboard_v2
+                store.dashboards.push({ id: dev.data.id, title: dev.name, ...dev.settings });
+            } else if(settings.version !== undefined && settings.version === 1) {
+                store = { ...store, ...settings };
+            }
 
+            existing[store.id] = store;
+
+            return existing;
+        }, {} as StoreMap), 
+    {} as StoreMap);
+export const storesLoading = derived(devicesLoading, (loading: boolean) => loading);
+
+export const dashboards = derived(
+    stores, 
+    (store: StoreMap) => Object.values(store)
+        .flatMap(store => store.dashboards)
+        .reduce((existing: DashboardMap, dashboard: Dashboard_v2) => {
+            existing[dashboard.id] = dashboard;
             return existing;
         }, {} as DashboardMap), 
     {} as DashboardMap);
 export const dashboardsLoading = derived(devicesLoading, (loading: boolean) => loading);
 
-export const templates = writable({} as TemplateMap);
+export const templates = derived(
+    stores, 
+    (store: StoreMap) => Object.values(store)
+        .flatMap(store => store.templates)
+        .reduce((existing: TemplateMap, template: Template_v1) => {
+            existing[template.id] = template;
+            return existing;
+        }, {} as TemplateMap), 
+    {} as TemplateMap);
 export const templatesLoading = derived(devicesLoading, (loading: boolean) => loading);

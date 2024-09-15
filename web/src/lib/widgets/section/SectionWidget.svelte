@@ -55,7 +55,7 @@
             items={settings.items} 
             on:items={e => onItems(e.detail)}
             editable={context.editable}
-            class="w-full min-h-[50px]" 
+            class="w-full {context.editable ? 'min-h-[50px]' : ''}" 
             let:item
         >
             <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />

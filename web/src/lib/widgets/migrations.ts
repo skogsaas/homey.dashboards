@@ -4,7 +4,7 @@ import type { CapabilitySettings_v3, CapabilitySettings_v4 } from "./capability/
 import { v4 as uuid } from 'uuid';
 import type { DeviceSettings_v1 } from "./device/DeviceSettings";
 import type { SliderSettings_v1 } from "./slider/SliderSettings";
-import type { Dashboard_v1, Dashboard_v2 } from "$lib/types/Dashboard";
+import type { Dashboard_v1, Dashboard_v2 } from "$lib/types/Store";
 import type { WidgetSettings_v1 } from "$lib/types/Widgets";
 import type { CardSettings_v1 } from '$lib/widgets/card/CardSettings';
 import GridInfo from '$lib/widgets/grid'
@@ -54,7 +54,6 @@ function migrate_v1_v2(v1: Dashboard_v1) : Dashboard_v2 {
     const dashboard: Dashboard_v2 = {
         id: v1.id,
         version: 2,
-        source: v1.source,
         title: v1.title,
         iconId: undefined,
         backgroundImage: v1.backgroundImage,

@@ -10,7 +10,6 @@
     import { mdiArrowLeft, mdiClose, mdiMagnify } from "../icons";
     import type { Item } from "./types";
     import ItemSection from "./ItemSection.svelte";
-    import { getIcon } from "../icons/utils";
     import ItemElement from "./ItemElement.svelte";
 
     export let uri: string | undefined;

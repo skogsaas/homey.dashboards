@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
 
-    import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
     import type { CapabilitySettings_v5 } from '../CapabilitySettings';

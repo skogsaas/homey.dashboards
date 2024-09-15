@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     import type { WidgetContext } from '$lib/types/Widgets';
     import type { GridStackWidget } from 'gridstack';
 

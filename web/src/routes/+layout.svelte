@@ -9,27 +9,27 @@
     // Stores
     import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys, variables, devicesLoading, variablesLoading, flowFoldersLoading, basicFlowsLoading, advancedFlowsLoading, insightsLoading, zonesLoading } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
-    import { dashboard, editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     import { apiKey } from '$lib/stores/auth';
 
     // UI components
-    import AddDashboardDialog from '$lib/AddDashboardDialog.svelte';
     import Icon from '$lib/components/Icon.svelte'
 
     // Tailwind
     import "../app.css";
 
-    import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant } from "$lib/components/icons";
+    import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant, mdiLogout, mdiPostageStamp } from "$lib/components/icons";
 
     // Types
     import type { AdvancedFlow, BasicFlow, CapabilityEvent, VariableEvent, Homey, OAuthHomey } from '$lib/types/Homey';
-    import type { Dashboard_v2 } from '$lib/types/Dashboard';
+    import type { Dashboard_v2 } from '$lib/types/Store';
 
     import { clientId, clientSecret } from '$lib/constants';
 
     import { v4 as uuid } from 'uuid';
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
+    import { getIcon } from '$lib/components/icons/utils';
 
     let loading: boolean = true;
     let error: any | undefined = undefined;
@@ -132,7 +132,7 @@
 
     async function loadSession() {
       try {
-        const s = await $homey.sessions.getSessionMe();
+        const s = await $homey!.sessions.getSessionMe();
         session.set(s);
       } catch (e) {
         error = 'Session: ' + e;
@@ -146,13 +146,13 @@
         if($scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.readonly') || $scopes.includes('homey.device.control')) {
           devicesLoading.set(true);
 
-          $homey.devices
+          $homey!.devices
             .connect()
             .then(() => {
-              $homey.devices
+              $homey!.devices
                 .getDevices()
                 .then(d => {
-                  $homey.devices.on('device.update', (patch: any) => devices.onUpdate(patch));
+                  $homey!.devices.on('device.update', (patch: any) => devices.onUpdate(patch));
                 
                   Object.values(d).forEach(async (device) => {
                     device
@@ -187,13 +187,13 @@
         if($scopes.includes('homey') || $scopes.includes('homey.logic') || $scopes.includes('homey.logic.readonly')) {
           variablesLoading.set(true);
 
-          $homey.logic
+          $homey!.logic
             .connect()
             .then(() => {
-              $homey.logic
+              $homey!.logic
                 .getVariables()
                 .then(v => {
-                  $homey.logic.on('variable.update', (event: VariableEvent) => variables.onUpdate(event));
+                  $homey!.logic.on('variable.update', (event: VariableEvent) => variables.onUpdate(event));
                   variables.set(v);
                 })
                 .finally(() => variablesLoading.set(false));;
@@ -214,24 +214,24 @@
           basicFlowsLoading.set(true);
           advancedFlowsLoading.set(true);
 
-          $homey.flow.connect().then(() => {
-            $homey.flow
+          $homey!.flow.connect().then(() => {
+            $homey!.flow
               .getFlowFolders()
               .then(folders => { flowFolders.set(folders); })
               .finally(() => flowFoldersLoading.set(false));
-            $homey.flow
+            $homey!.flow
               .getFlows()
               .then(flows => { basicFlows.set(flows); })
               .finally(() => () => basicFlowsLoading.set(false));
-            $homey.flow
+            $homey!.flow
               .getAdvancedFlows()
               .then(flows => { advancedFlows.set(flows); })
               .finally(() => advancedFlowsLoading.set(false));
 
-            $homey.flow.on('flow.create', (e: BasicFlow) => basicFlows.onCreate(e));
-            $homey.flow.on('flow.delete', (e: BasicFlow) => basicFlows.onDelete(e));
-            $homey.flow.on('advancedflow.create', (e: AdvancedFlow) => advancedFlows.onCreate(e));
-            $homey.flow.on('advancedflow.delete', (e: AdvancedFlow) => advancedFlows.onDelete(e));
+            $homey!.flow.on('flow.create', (e: BasicFlow) => basicFlows.onCreate(e));
+            $homey!.flow.on('flow.delete', (e: BasicFlow) => basicFlows.onDelete(e));
+            $homey!.flow.on('advancedflow.create', (e: AdvancedFlow) => advancedFlows.onCreate(e));
+            $homey!.flow.on('advancedflow.delete', (e: AdvancedFlow) => advancedFlows.onDelete(e));
           }, () => {
             // On error
             flowFoldersLoading.set(false);
@@ -254,10 +254,10 @@
         if($scopes.includes('homey') || $scopes.includes('homey.insights') || $scopes.includes('homey.insights.readonly')) {
           insightsLoading.set(true);
 
-          $homey.insights
+          $homey!.insights
             .connect()
             .then(() => {
-              $homey.insights
+              $homey!.insights
                 .getLogs()
                 .then(logs => { insights.set(logs); })
                 .finally(() => insightsLoading.set(false));
@@ -282,10 +282,10 @@
         if($scopes.includes('homey') || $scopes.includes('homey.zone') || $scopes.includes('homey.zone.readonly')) {
           zonesLoading.set(true);
 
-          $homey.zones
+          $homey!.zones
             .connect()
             .then(() => {
-              $homey.zones.getZones().then(z => { zones.set(z); });
+              $homey!.zones.getZones().then(z => { zones.set(z); });
             })
             .finally(() => zonesLoading.set(false));
           
@@ -306,41 +306,16 @@
       menuOpen = false;
     }
 
-    async function addDashboard(title: string) : Promise<void> {
-      const d: Dashboard_v2 = {
-        id: uuid(),
-        version: 2,
-        source: 'localstorage',
-        title,
-        root: undefined
-      };
-
-      localDashboards.update(d);
-      
-      await goto(base + '/board/?id=' + d.id);
-    }
-
     function openDashboard(dash: Dashboard_v2) : Promise<void> {
-      menuOpen = true;
+      menuOpen = false;
       dashboardMenuOpen = false;
       return goto(base + '/board/?id=' + dash.id)
-    }
-
-    function openDashboardSettings(dash: Dashboard_v2) : Promise<void> {
-      menuOpen = true;
-      return goto(base + '/board/settings/?id=' + dash.id)
-    }
-
-    function openAddDashboard() {
-      menuOpen = true;
-      addDashboardOpen = true;
     }
 
     async function selectHomey(h: OAuthHomey) {
       const instance = await h.authenticate();
 
       homey.set(instance);
-      dashboard.set(undefined);
 
       // Navigate to home-screen after switching
       await goto(base + '/');
@@ -359,16 +334,12 @@
         await cloudApi.logout();
       }
 
-      $homey.set(undefined);
+      homey.set(undefined);
 
       return goto(base + '/');
     }
 
 </script>
-
-<svelte:head>
-  <title>{$dashboard !== undefined ? $dashboard.title : 'Dashboard'}</title>
-</svelte:head>
 
 <svelte:window on:visibilitychange={e => onWindowVisibilityChange()} />
 
@@ -383,8 +354,6 @@
     </button>
   {/if}
 
-  <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
-
   <div class="drawer w-full h-full">
     <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
     
@@ -395,93 +364,99 @@
     <div class="drawer-side">
       <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
+      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
       <div class="w-full max-w-xs min-h-full bg-base-200">
-        <!-- Support for multiple Homeys -->
-        {#if $user !== undefined}
-          <div class="flex items-center cursor-pointer">
-            <div class="avatar">
-              <img class="w-24 mask mask-circle" src={$user.avatar.small} alt={$user.fullname} />
-            </div>
-            <div class="space-y-1 font-medium">
-              <div>{$user.firstname}</div>
-              <div class="text-sm">{$user.email}</div>
-            </div>
-          </div>
+        <ul class="menu w-full">
+          <!-- Support for multiple Homeys -->
+          {#if $user !== undefined}
+            <li class="flex items-center cursor-pointer">
+              <div class="avatar">
+                <img class="w-24 mask mask-circle" src={$user.avatar.small} alt={$user.fullname} />
+              </div>
+              <div class="space-y-1 font-medium">
+                <div>{$user.firstname}</div>
+                <div class="text-sm">{$user.email}</div>
+              </div>
+            </li>
 
-          {#if $user.homeys.length > 1}
-            <div class="divider">Homeys</div>
+            {#if $user.homeys.length > 1}
+              <li>
+                <a>Homeys</a>
+                <ul>
+                  {#each $user.homeys as h}
+                    <li on:click={() => selectHomey(h)}>
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                          <Icon class="w-8 h-8 rounded-full invert" data={mdiDeathStarVariant} />
+                        </div>
+                        <div class="flex-1 min-w-0 ml-2">
+                          <p class="text-sm font-medium">{h.name}</p>
+                          <p class="text-sm capitalize">{h.modelName}</p>
+                        </div>
+                      </div>
+                    </li>
+                  {/each}
+                </ul>
+              </li>
+            {/if}
+          {/if}
 
-            <ul class="menu w-full">
-              {#each $user.homeys as h}
-                <li on:click={() => selectHomey(h)}>
+          <li on:click={_ => goto(base + '/board/')}>
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboard} />
+              </div>
+              <div class="flex-1 min-w-0 ml-2">
+                <p class="text-sm font-medium">Dashboards</p>
+              </div>
+            </div>
+            
+            <ul>
+              {#each dashboards as d}
+                <li on:click={() => openDashboard(d)}>
                   <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                      <Icon class="w-8 h-8 rounded-full invert" data={mdiDeathStarVariant} />
-                    </div>
+                    {#if d.iconId !== undefined}
+                      <Icon class="w-8 h-8 rounded-full invert" data={getIcon(d.iconId)} />
+                    {/if}
                     <div class="flex-1 min-w-0 ml-2">
-                      <p class="text-sm font-medium">{h.name}</p>
-                      <p class="text-sm capitalize">{h.modelName}</p>
+                      <p class="text-sm font-medium">{d.title}</p>
                     </div>
                   </div>
                 </li>
               {/each}
             </ul>
-          {/if}
-        {/if}
+          </li>
 
-        <!--  -->
-        <div class="divider">Dashboards</div>
-
-        <ul class="menu w-full">
-          {#each dashboards as d}
-            <li on:click={() => openDashboard(d)}>
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboard} />
-                </div>
-                <div class="flex-1 min-w-0 ml-2">
-                  <p class="text-sm font-medium">{d.title}</p>
-                  <p class="text-sm capitalize">{d.source}</p>
-                </div>
-              </div>
-            </li>
-          {/each}
-        </ul>
-
-        <div class="divider">Tools</div>
-
-        <ul class="menu w-full">
-          {#if $dashboard !== undefined}
-            <li on:click={() => toggleEdit()}>
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboardEdit} />
-                </div>
-                <div class="flex-1 min-w-0 ml-2">
-                  <p class="text-sm font-medium">Edit dashboard</p>
-                </div>
-              </div>
-            </li>
-
-            <li on:click={() => openDashboardSettings($dashboard)}>
-              <div class="flex items-center">
-                <div class="flex-shrink-0">
-                  <Icon class="w-8 h-8 rounded-full invert" data={mdiCog} />
-                </div>
-                <div class="flex-1 min-w-0 ml-2">
-                  <p class="text-sm font-medium">Dashboard settings</p>
-                </div>
-              </div>
-            </li>
-          {/if}
-
-          <li on:click={() => openAddDashboard()}>
+          <li on:click={_ => goto(base + '/template/')}>
             <div class="flex items-center">
               <div class="flex-shrink-0">
-                <Icon class="w-8 h-8 rounded-full invert" data={mdiPlus} />
+                <Icon class="w-8 h-8 rounded-full invert" data={mdiPostageStamp} />
               </div>
               <div class="flex-1 min-w-0 ml-2">
-                <p class="text-sm font-medium">Add local dashboard</p>
+                <p class="text-sm font-medium">Templates</p>
+              </div>
+            </div>
+          </li>
+
+          <li on:click={() => toggleEdit()}>
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboardEdit} />
+              </div>
+              <div class="flex-1 min-w-0 ml-2">
+                <p class="text-sm font-medium">Edit dashboard</p>
+              </div>
+            </div>
+          </li>
+
+          <li on:click={() => logout()}>
+            <div class="flex items-center">
+              <div class="flex-shrink-0">
+                <Icon class="w-8 h-8 rounded-full invert" data={mdiLogout} />
+              </div>
+              <div class="flex-1 min-w-0 ml-2">
+                <p class="text-sm font-medium">Logout</p>
               </div>
             </div>
           </li>

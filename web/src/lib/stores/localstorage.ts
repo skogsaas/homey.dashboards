@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { writable } from "svelte/store";
-import type { Dashboard_v1, DashboardMap } from "$lib/types/Dashboard";
+import type { Dashboard_v1, DashboardMap } from "$lib/types/Store";
 import type { Template_v1, TemplateMap } from '$lib/types/Template';
 
 

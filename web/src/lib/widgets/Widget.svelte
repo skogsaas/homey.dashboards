@@ -3,6 +3,8 @@
     import type { WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
     import { createEventDispatcher } from 'svelte';
     import { dragHandle } from 'svelte-dnd-action';
+    import Icon from '$lib/components/Icon.svelte';
+    import { mdiCursorMove } from '$lib/components/icons';
 
     export let settings: WidgetSettings_v1;
     export let context: WidgetContext;
@@ -24,7 +26,10 @@
 
 {#if context.editable}
     <fieldset on:click|stopPropagation={() => select()} class="border-dashed border-2 m-2 mt-0">
-        <legend use:dragHandle class="ml-2c cursor-grab">{findLabel(settings.type)}</legend>
+        <legend use:dragHandle class="ml-2 cursor-grab">
+            <Icon data={mdiCursorMove} class="inline-block w-5 h-5 dark:invert" />
+            {findLabel(settings.type)}
+        </legend>
         
         <svelte:component 
             this={findWidget(settings.type)}

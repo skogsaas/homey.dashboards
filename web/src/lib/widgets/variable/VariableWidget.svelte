@@ -12,9 +12,7 @@
     import type { VariableSettings_v3 } from './VariableSettings';
     import { getIcon } from '$lib/components/icons/utils';
     import type { WidgetContext } from '$lib/types/Widgets';
-    import type { GridStackWidget } from 'gridstack';
     
-    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
     export let settings: VariableSettings_v3;
 
@@ -34,7 +32,7 @@
 {#if variable !== undefined}
     <div class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer">
         {#if settings.iconId !== undefined}
-            <Icon data={getIcon(settings.iconId)} class="mr-1" />
+            <Icon data={getIcon(settings.iconId)} extraClass="mr-1" />
         {/if}
 
         <div class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap flex-grow">

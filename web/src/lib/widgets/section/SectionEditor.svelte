@@ -25,4 +25,4 @@
     }
 </script>
 
-<TextPicker label="Title" placeholder="" value={title} on:value={e => title = e.detail}/>
+<TextPicker label="Title" placeholder="" bind:value={title} />

@@ -10,7 +10,7 @@
 
     import { templates as homeyTemplates } from '$lib/stores/homey';
     import { templates as localtemplates } from '$lib/stores/localstorage';
-    import type { TemplateMap } from "$lib/types/Template";
+    import type { TemplateMap } from "$lib/types/Store";
     import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();

@@ -3,15 +3,15 @@
     import type { SwitchSettings_v1, SwitchCase_v1 } from "./SwitchSettings";
     import { v4 as uuid } from 'uuid';
 
-    import TextPicker from '$lib/components/TextPicker.svelte';
-    import NumberPicker from '$lib/components/NumberPicker.svelte';
-    import BooleanPicker from '$lib/components/BooleanPicker.svelte';
     import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
     import DevicePicker from '$lib/components/DevicePicker.svelte';
-    import IconPicker from '$lib/components/IconPicker.svelte';
     import VariablePicker from '$lib/components/VariablePicker.svelte';
     import Icon from '$lib/components/Icon.svelte';
     import { mdiInformation } from '$lib/components/icons';
+    import CapabilityCase from './cases/CapabilityCase.svelte';
+    import DeviceCase from './cases/DeviceCase.svelte';
+    import VariableCase from './cases/VariableCase.svelte';
+    import UserCase from './cases/UserCase.svelte';
     
     export let settings: SwitchSettings_v1;
 
@@ -71,6 +71,8 @@
 
     function updateCaseValue(index: number, value: any) {
         cases[index] = { ...cases[index], value };
+
+        console.log(value);
     }
 </script>
 
@@ -79,10 +81,10 @@
         <span class="label-text">Switch by</span>
     </div>
     <select class="select w-full mt-4" bind:value={switchType} placeholder="Switch by">
-        <option value="capability">Capability</option>
-        <option value="variable">Variable</option>
         <option value="device">Device</option>
-        <option value="user">User</option>
+        <option value="capability">Capability</option>
+        <option value="variable" disabled >⛔ Variable</option>
+        <option value="user" disabled>⛔ User</option>
     </select>
 </label>
 
@@ -95,23 +97,46 @@
                 <span class="label-text">Property</span>
             </div>
             <select class="select w-full" value={caseKey} on:change={e => (caseKey = e.currentTarget.value)} placeholder="property">
-                <option value="id">ID</option>
-                <option value="type">Type</option>
-                <option value="value">Value</option>
+                {#if caseKey === undefined}
+                    <option value={undefined}></option>
+                {/if}
+                <option value="id">id</option>
+                <option value="type">type</option>
+                <option value="gettable">gettable</option>
+                <option value="settable">settable</option>
+                <option value="value">value</option>
             </select>
         </label>
-        
-        {#if caseKey === 'id'}
-            <div role="alert" class="alert my-2">
-                <Icon data={mdiInformation} />
-                <span>A list of standard capability IDs can be found in the <a class="link" href="https://apps-sdk-v3.developer.homey.app/tutorial-device-capabilities.html">Homey SDK reference</a>.</span>
-            </div>
-        {/if}
     {/if}
 {:else if switchType === 'variable'}
     <VariablePicker bind:variableId={switchArg} />
 {:else if switchType === 'device'}
     <DevicePicker bind:deviceId={switchArg} />
+
+    {#if switchArg !== undefined}
+        <label class="form-control w-full">
+            <div class="label">
+                <span class="label-text">Property</span>
+            </div>
+            <select class="select w-full" value={caseKey} on:change={e => (caseKey = e.currentTarget.value)} placeholder="property">
+                <option value="class">class</option>
+                <option value="uiIndicator">uiIndicator</option>
+                <option value="available">available</option>
+                <option value="ready">ready</option>
+            </select>
+        </label>
+        
+        {#if caseKey === 'class' || caseKey === 'uiIndicator'}
+            <div role="alert" class="alert my-2">
+                <Icon data={mdiInformation} />
+                {#if caseKey === 'class'}
+                    <span>A list of standard class IDs can be found in the <a class="link" href="https://apps-sdk-v3.developer.homey.app/tutorial-device-classes.html">Homey SDK reference</a>.</span>
+                {:else}
+                    <span>A list of standard capability IDs can be found in the <a class="link" href="https://apps-sdk-v3.developer.homey.app/tutorial-device-capabilities.html">Homey SDK reference</a>.</span>
+                {/if}
+            </div>
+        {/if}
+    {/if}
 {:else if switchType === 'user'}
     <label class="form-control w-full">
         <div class="label">
@@ -125,7 +150,7 @@
 
 {#if caseKey !== undefined}
     <div class="flex justify-center my-1">
-        <button class="btn btn-ghost" on:click={() => addCase()}>Add case</button>
+        <button class="btn btn-primary mt-2" on:click={() => addCase()}>Add case</button>
     </div>
 
     {#each cases as c, index}
@@ -151,23 +176,14 @@
                     </select>
                 </label>
 
-                <TextPicker label="Value" placeholder="Value" value={c.value} on:value={e => updateCaseValue(index, e.detail)} />
-
-                {#if c.operator === 'equal' || c.operator === 'not-equal'}
-                    <div role="alert" class="alert my-2">
-                        <Icon data={mdiInformation} />
-                        <span>If the propety value type is expected to be <code>boolean</code>, use numeric values 1/0 for true/false.</span>
-                    </div>
-                {:else if c.operator === 'starts-with' || c.operator === 'ends-with' || c.operator === 'contains'}
-                    <div role="alert" class="alert my-2">
-                        <Icon data={mdiInformation} />
-                        <span>The <code>{c.operator}</code> operator only make sense if the property value type is <code>string</code>.</span>
-                    </div>
-                {:else if c.operator === 'less-than' || c.operator === 'greater-than'}
-                    <div role="alert" class="alert my-2">
-                        <Icon data={mdiInformation} />
-                        <span>The <code>{c.operator}</code> operator only make sense if the property value type is <code>number</code>.</span>
-                    </div>
+                {#if switchType === 'capability'}
+                    <CapabilityCase property={caseKey} operator={c.operator} value={c.value} on:value={e => updateCaseValue(index, e.detail)} />
+                {:else if switchType === 'device'}
+                    <DeviceCase property={caseKey} value={c.value} on:value={e => updateCaseValue(index, e.detail)} />
+                {:else if switchType === 'variable'}
+                    <VariableCase operator={c.operator} value={c.value} on:value={e => updateCaseValue(index, e.detail)} />
+                {:else if switchType === 'user'}
+                    <UserCase value={c.value} on:value={e => updateCaseValue(index, e.detail)} />
                 {/if}
             </div>
         </div>

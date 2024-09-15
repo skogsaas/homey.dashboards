@@ -1,9 +1,9 @@
-import { v4 as uuid } from 'uuid';
 import { mdiMeterElectric } from '$lib/components/icons';
-import type { WidgetInfo, WidgetSettings_v1 } from "$lib/types/Widgets";
+import type { WidgetInfo } from "$lib/types/Widgets";
 
 import DeviceEditor from './DeviceEditor.svelte';
 import DeviceWidget from './DeviceWidget.svelte';
+import { create, migrate } from './DeviceSettings';
 
 const info: WidgetInfo = {
     type: 'device', 
@@ -13,8 +13,8 @@ const info: WidgetInfo = {
     widget: DeviceWidget, 
     editor: DeviceEditor,
     scopes: [],
-    create: () => ({ id: uuid(), type: 'device', version: 1 }),
-    migration: (e: WidgetSettings_v1) => e
+    create: create,
+    migration: migrate
 };
 
 export default info;

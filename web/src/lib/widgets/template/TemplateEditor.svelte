@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import type { Template_v1 } from '$lib/types/Template';
+    import type { Template_v1 } from '$lib/types/Store';
     import type { TemplateSettings_v1, TemplateSettingsArgument_v1 } from "./TemplateSettings";
     import { templates } from '$lib/stores/homey';
 
@@ -68,16 +68,16 @@
             checked={getValue(templateArg.id) ?? templateArg.default} 
             on:checked={e => setValue(templateArg.id, e.detail)} 
         />
-    {:else if templateArg.type === 'capabilityId'}
+    {:else if templateArg.type === 'capabilityUri'}
         <CapabilityPicker 
             name={templateArg.label ?? templateArg.id}
             capabilityUri={getValue(templateArg.id) ?? templateArg.default}
             on:value={e => setValue(templateArg.id, e.detail)} 
         />
-    {:else if templateArg.type === 'deviceId'}
+    {:else if templateArg.type === 'deviceUri'}
         <DevicePicker 
             name={templateArg.label ?? templateArg.id}
-            deviceId={getValue(templateArg.id) ?? templateArg.default}
+            deviceUri={getValue(templateArg.id) ?? templateArg.default}
             on:value={e => setValue(templateArg.id, e.detail)} 
         />
     {:else if templateArg.type === 'imageId'}

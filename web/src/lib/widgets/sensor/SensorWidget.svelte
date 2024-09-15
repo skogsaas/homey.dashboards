@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { ToggleSettings_v1 } from './ToggleSettings';
+    import type { SensorSettings_v1 } from './SensorSettings';
     import type { WidgetContext } from '$lib/types/Widgets';
     import type { CapabilityEvent, CapabilityObj, DeviceObj, Variable } from '$lib/types/Homey';
 
@@ -7,7 +7,7 @@
     import Icon from '$lib/components/Icon.svelte';
     import { getIcon } from '$lib/components/icons/utils';
     
-    export let settings: ToggleSettings_v1;
+    export let settings: SensorSettings_v1;
     export let context: WidgetContext;
 
     let uri: string | undefined;
@@ -20,16 +20,14 @@
     let variable: Variable | undefined;
 
     let label: string | undefined;
-    let checked: boolean = false;
-    let readonly: boolean = false;
-
-    $: disabled = readonly || context.readonly || context.editable;
+    let value: any;
+    let type: 'boolean' | 'number' | 'string' | 'enum';
+    let unit: string | undefined;
 
     $: onSettings(settings);
     $: onUri(uri);
-    $: onChecked(checked);
 
-    function onSettings(_settings: ToggleSettings_v1) {
+    function onSettings(_settings: SensorSettings_v1) {
         if(_settings.uri !== uri) {
             uri = _settings.uri;
         }
@@ -65,18 +63,11 @@
         if(variable === undefined) return;
 
         label = variable.name;
+        value = variable.value;
+        type = variable.type;
+        unit = undefined;
         iconId = 'variable';
         iconUrl = undefined;
-        readonly = false;
-
-        if(variable.type === 'boolean') {
-            checked = variable.value as boolean;
-        } else if(variable.type === 'number') {
-            checked = !!(variable.value as number)
-        } else if(variable.type === 'string') {
-            checked = false;
-            readonly = true;
-        }
 
         variable.on('update', onVariable);
     }
@@ -84,13 +75,7 @@
     function onVariable() {
         if(variable === undefined) return;
 
-        if(variable.type === 'boolean') {
-            checked = variable.value as boolean;
-        } else if(variable.type === 'number') {
-            checked = !!(variable.value as number)
-        } else {
-            checked = false;
-        }
+        value = variable.value;
     }
 
     function getCapability(deviceId: string, capabilityId: string) {
@@ -103,19 +88,16 @@
         if(capability === undefined) return;
 
         label = capability.title;
+        value = capability.value;
+        type = capability.type;
+        unit = capability.units;
         iconUrl = capability.iconObj?.url;
         iconId = undefined;
-        readonly = !capability.setable;
-        
-        if(capability.type === 'boolean') {
-            checked = capability.value as boolean;
-        } else if(capability.type === 'number') {
-            checked = !!(capability.value as number)
-        } else {
-            checked = false;
-            readonly = true;
-        }
 
+        if(type === 'enum') {
+            value = capability.values.find(v => v.id === value)?.title ?? value
+        }
+        
         device.on('capability', (e: any) => onCapability(capabilityId, e));
     }
 
@@ -123,39 +105,17 @@
         if(event.capabilityId !== capabilityId) return;
 
         if(capability === undefined) return;
+        
+        value = capability.value;
 
-        if(capability.type === 'boolean') {
-            checked = capability.value as boolean;
-        } else if(capability.type === 'number') {
-            checked = !!(capability.value as number)
-        } else {
-            checked = false;
-            readonly = true;
-        }
-    }
-
-    async function onChecked(_value: boolean) {
-        if(device !== undefined && capability !== undefined) {
-            if(_value !== capability.value && !disabled) {
-                await device.setCapabilityValue({ 
-                    deviceId: device.id,
-                    capabilityId: capability.id,
-                    value: checked
-                });
-            }
-        } else if (variable !== undefined) {
-            if(_value !== variable.value && !disabled) {
-                await $homey.logic.updateVariable({
-                    id: variable.id,
-                    variable: { value: checked }
-                })
-            }
+        if(type === 'enum') {
+            value = capability.values.find(v => v.id === value)?.title ?? value
         }
     }
 
 </script>
 
-<label class="label cursor-pointer flex flex-row items-center gap-1">
+<div class="flex flex-row items-center gap-1">
     <span>
         {#if settings.iconId !== undefined || iconId !== undefined}
             <Icon data={getIcon(settings.iconId ?? iconId)} />
@@ -168,5 +128,11 @@
 
     <span class="flex-1 overflow-ellipsis">{settings.label ?? label ?? uri ?? 'Not configured'}</span>
 
-    <input type="checkbox" class="toggle" {disabled} bind:checked={checked} />
-</label>
+    <span>
+        {#if type === 'boolean'}
+            <span>{value ? 'Yes' : 'No'}</span>
+        {:else}
+            <span class="whitespace-nowrap">{value ?? '...'} {capability?.units ?? ''}</span>
+        {/if}
+    </span>
+</div>

@@ -41,7 +41,7 @@
         items={items}
         on:items={e => onItems(e.detail)} 
         editable={context.editable}
-        class="card-body w-full h-full min-h-[50px] {settings.padding ?? ''}"
+        class="card-body w-full h-full {context.editable ? 'min-h-[50px]' : ''} {settings.padding ?? ''}"
         let:item
     >
         <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />

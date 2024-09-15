@@ -10,10 +10,14 @@
     import IconPicker from '$lib/components/IconPicker.svelte';
     import { mdiInformation } from '$lib/components/icons';
     import Icon from '$lib/components/Icon.svelte';
+    import ZonePicker from '$lib/components/ZonePicker.svelte';
+    import RandomObjectDropdown from '$lib/components/RandomObjectDropdown.svelte';
     
     export let settings: ForeachSettings_v1;
 
     const dispatch = createEventDispatcher();
+
+    let slug: string;
 
     let eachType: 'capability' | 'device' | 'zone' | 'flow' | 'folder' | 'image' | undefined;
 
@@ -25,9 +29,12 @@
     let whereArg: string | undefined;
 
     $: onSettings(settings);
-    $: onChange(eachType, inType, inArg, whereKey, whereOp, whereArg);
+    $: onEachType(eachType);
+    $: onChange(slug, eachType, inType, inArg, whereKey, whereOp, whereArg);
 
     function onSettings(_settings: ForeachSettings_v1) {
+        slug = _settings.slug ?? _settings.id.substring(0, 8);
+
         eachType = _settings.each;
 
         inType = _settings.in;
@@ -39,6 +46,7 @@
     }
 
     function onChange(
+        _slug: any,
         _each: any,
         _in: any,
         _inArg: any,
@@ -46,7 +54,8 @@
         _whereOp: any,
         _whereArg: any
     ) {
-        if(_each !== settings.each ||
+        if(_slug !== settings.slug ||
+            _each !== settings.each ||
             _in !== settings.in ||
             _inArg !== settings.inArg ||
             _where !== settings.where ||
@@ -55,6 +64,7 @@
         ) {
             settings = {
                 ...settings,
+                slug: _slug,
                 each: _each,
                 in: _in,
                 inArg: _inArg,
@@ -63,8 +73,15 @@
                 whereArg: _whereArg
             };
 
+            console.log(settings);
+
             dispatch('settings', settings);
         }
+    }
+
+    function onEachType(_each: any) {
+        inType = undefined;
+        inArg = undefined;
     }
 </script>
 
@@ -73,12 +90,16 @@
         <span class="label-text">For each</span>
     </div>
     <select class="select w-full mt-4" bind:value={eachType} placeholder="For each">
+        {#if eachType === undefined}
+            <option value={undefined}></option>
+        {/if}
+
         <option value="capability">Capability</option>
         <option value="device">Device</option>
         <option value="zone">Zone</option>
-        <option value="flow">Flow</option>
-        <option value="folder">Flow folder</option>
-        <option value="image">Image</option>
+        <option value="flow" disabled>⛔ Flow</option>
+        <option value="folder" disabled>⛔ Flow folder</option>
+        <option value="image" disabled>⛔ Image</option>
     </select>
 </label>
 
@@ -88,6 +109,10 @@
             <span class="label-text">In</span>
         </div>
         <select class="select w-full mt-4" bind:value={inType} placeholder="In">
+            {#if inType === undefined}
+                <option value={undefined}></option>
+            {/if}
+
             {#if eachType === 'capability'}
                 <option value="device">Device</option>
             {/if}
@@ -104,14 +129,20 @@
 {/if}
 
 {#if inType === 'device'}
-    <DevicePicker bind:deviceId={inArg} />
+    <DevicePicker bind:deviceUri={inArg} />
 {:else if inType === 'zone'}
-    <p>Zone picker not implemented!</p>
+    <ZonePicker bind:zoneId={inArg} />
 {:else if inType === 'folder'}
     <p>Flow folder picker not implemented!</p>
 {/if}
 
+<TextPicker bind:value={slug} label="Slug" placeholder={slug} />
+
 <div role="alert" class="alert mt-2">
     <Icon data={mdiInformation} />
-    <span>All properties are available in the form: <code>${'{'}{settings.id.substring(0, 8)}{'.[property]}'}</code>.</span>
+    <p>
+        All properties are available in the form: <br /><code>${'{'}{slug}{'.[property]}'}</code>.
+        <br/>
+        <RandomObjectDropdown type={eachType} />
+    </p>
 </div>

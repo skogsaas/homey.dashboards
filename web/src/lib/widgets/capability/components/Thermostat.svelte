@@ -2,7 +2,7 @@
     import { createEventDispatcher, onMount } from 'svelte';
 
     import { mdiAlarm, mdiAlert, mdiArrowRight, mdiCheck } from '$lib/components/icons';
-    import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
     import Icon from '$lib/components/Icon.svelte'

@@ -6,30 +6,36 @@
     import { page } from '$app/stores';
 
     // Stores
-    import { dashboardsLoading, homey, dashboards as homeyDashboards } from '$lib/stores/homey';
+    import { dashboardsLoading, homey, dashboards as homeyDashboards, stores } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
-    import { editing, dashboard as currentDashboard } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
 
     // UI elements
     import WidgetEditor from '$lib/components/WidgetEditor.svelte';
     import DashboardEditor from './DashboardEditor.svelte';
     import Widget from '$lib/widgets/Widget.svelte';
-    import { mdiViewDashboard } from '$lib/components/icons';
+    import { mdiEmoticonSadOutline, mdiViewDashboard } from '$lib/components/icons';
+    import StoreDialog from '$lib/components/StoreDialog.svelte';
 
     // Types
     import type { WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
-    import type { DashboardMap, Dashboard_v2 } from '$lib/types/Dashboard';
+    import type { DashboardMap, Dashboard_v2, Store_v1 } from '$lib/types/Store';
 
     // Utils
     import { migrate as migrateDashboard } from '$lib/widgets/migrations';
+    import { saveDashboard } from '$lib/api/webhook';
+    import { v4 as uuid } from 'uuid';
+    import Icon from '$lib/components/Icon.svelte';
+    import DashboardListHero from '$lib/components/DashboardListHero.svelte';
     
-
     let dashboards: DashboardMap;
     let dashboard: Dashboard_v2 | undefined;
     let root: WidgetSettings_v1 | undefined;
 
+    let storeId: string | undefined;
+    let storeOpen: boolean = false;
+
     let migrated: boolean = false;
-    let preview: boolean = false;
     let context: WidgetContext;
 
     $: dashboardId = $page.url.searchParams.get('id');
@@ -58,15 +64,24 @@
 
             dashboard = d;
             root = d.root;
-
-            currentDashboard.set(d);
+            storeId = Object.values($stores).find(store => store.dashboards.some(dash => dash.id === dashboard?.id))?.id;
         }
     }
 
-    function onSave() {
+    async function onSave() {
         if(dashboard !== undefined) {
-            // TODO: Save
+            if(storeId !== undefined) {
+                await saveDashboard($homey!.id, storeId, dashboard);
+            } else {
+                // This is a new dashboard, need to select a store first.
+                storeOpen = true;
+            }
         }
+    }
+
+    async function onStoreSelect(_storeId: string) {
+        storeId = _storeId;
+        //await saveDashboard($homey!.id, storeId, dashboard!);
     }
 
     function onRoot(_root: WidgetSettings_v1 | undefined) {
@@ -75,7 +90,23 @@
         root = _root;
         dashboard = { ...dashboard, root };
     }
+
+    function create() {
+        dashboard = {
+            id: uuid(),
+            version: 2,
+            title: 'New dashboard',
+            root: undefined, 
+        }
+
+        root = dashboard.root;
+        editing.set(true);
+    }
 </script>
+
+<svelte:head>
+  <title>{dashboard !== undefined ? dashboard.title : 'Dashboard'}</title>
+</svelte:head>
 
 <div class="w-full h-full">
     {#if $homey === undefined || $dashboardsLoading}
@@ -90,8 +121,8 @@
                 </div>
             </div>
         </div>
-    {:else if $homey !== undefined && dashboard !== undefined}
-        {#if $editing}
+    {:else if $homey !== undefined}
+        {#if $editing && dashboard !== undefined}
             <WidgetEditor
                 title={dashboard?.title ?? 'Dashboard title'}
                 settingsTitle="Dashboard"
@@ -102,21 +133,39 @@
             >
                 <DashboardEditor bind:settings={dashboard} />
             </WidgetEditor>
+
+            <StoreDialog bind:open={storeOpen} on:storeId={e => onStoreSelect(e.detail)} />
+        {:else if root !== undefined}
+            <Widget settings={root} {context} />
         {:else}
-            {#if root !== undefined}
-                <Widget settings={root} {context} />
-            {:else}
-                <div class="flex justify-center">
-                    <div class="card w-full max-w-md mt-8 bg-base-300">
-                        <div class="card-body">
-                            <h1 class="card-title">👋 Hello there!</h1>
-                            <p class="py-1">This is a brand new dashboard with no items.</p>
+            <div class="flex min-h-screen justify-center">
+                <DashboardListHero>
+                    <div class="p-4">
+                        {#if dashboard !== undefined}
+                            <h1 class="text-5xl font-bold">🤷 Empty!</h1>
+                            <p class="py-6">This dashboard is empty.</p>
+
+                            <button class="btn btn-primary" on:click={() => (editing.set(true))}>Edit 🪚</button>
+                        {:else if dashboardId !== null}
+                            <h1 class="text-5xl font-bold">🤖 Does not compute!</h1>
+                            <p class="py-6">
+                                Cannot find the dashboard with id: <code>{dashboardId}</code>
+                            </p>
                             
-                            <button class="btn" on:click={() => (editing.set(true))}>Edit 🪚</button>
-                        </div>
+                            <div class="w-full mt-8 text-center">
+                                <span class="text-5xl">🤷</span>
+                            </div>
+                        {:else}
+                            <h1 class="text-5xl font-bold">👋 Hello there!</h1>
+                            <p class="py-6">Want to create a new dashboard?</p>
+                            
+                            <div class="w-full text-center">
+                                <button class="btn btn-primary" on:click={() => create()}>Hell yeah! 🎸</button>
+                            </div>
+                        {/if}
                     </div>
-                </div>
-            {/if}
+                </DashboardListHero>
+            </div>
         {/if}
     {/if}
 </div>

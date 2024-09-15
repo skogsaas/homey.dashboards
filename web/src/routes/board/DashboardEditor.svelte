@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Dashboard_v2 } from '$lib/types/Dashboard';
+    import type { Dashboard_v2 } from '$lib/types/Store';
     import { createEventDispatcher } from 'svelte';
 
     import IconPicker from '$lib/components/IconPicker.svelte';

@@ -217,16 +217,6 @@
         const _decimals = settings.decimals ?? decimals;
         return Math.pow(0.1, _decimals ?? 0);
     }
-
-    async function setCapabilityValue(_value: number|boolean|string) {
-        if(device && capability) {
-            await device.setCapabilityValue({ 
-                deviceId: device.id,
-                capabilityId: capability.id,
-                value: _value
-            });
-        }
-    }
 </script>
 
 <div class="flex flex-col w-full h-full px-1">

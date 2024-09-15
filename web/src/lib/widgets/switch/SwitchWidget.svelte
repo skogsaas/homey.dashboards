@@ -8,6 +8,7 @@
     import { devices, zones } from '$lib/stores/homey';
     import DndList from '$lib/components/DndList.svelte';
     import type { CapabilityEvent, CapabilityObj, DeviceObj, Emitter } from '$lib/types/Homey';
+    import DndSingle from '$lib/components/DndSingle.svelte';
     
     export let context: WidgetContext;
     export let settings: SwitchSettings_v1;
@@ -21,20 +22,16 @@
     
     let switchObj: any | undefined;
     let caseKey: string | undefined;
-
     let child: WidgetSettings_v1 | undefined;
-    let children: WidgetSettings_v1[];
 
     $: onSettings(settings);
     $: selectCase(selectedId)
-    $: dropDisabled = children.length > 0; // Only allow a single item as child
+    $: editable = context.editable && selectedId !== undefined;
 
     function onSettings(_settings: SwitchSettings_v1) {
         caseKey = _settings.case;
         cases = _settings.cases ?? [];
-
         child = undefined;
-        children = [];
         
         if(_settings.switch !== undefined && _settings.switchArg !== undefined) {
             if(_settings.switch === 'capability') {
@@ -133,15 +130,8 @@
         return false;
     }
 
-    function onItems(_items: WidgetSettings_v1[]) {
-        // Expect _items to only contain a single item
-        if(_items.length === 0) {
-            child = undefined;
-            children = [];
-        } else {
-            child = _items[0];
-            children = [child];
-        }
+    function onItem(_item: WidgetSettings_v1 | undefined) {
+        child = _item;
 
         const index = cases.findIndex(c => c.id === selectedId);
         cases[index] = { ...cases[index], item: child };
@@ -153,7 +143,6 @@
 
     function updateWidget(_item: WidgetSettings_v1) {
         child = { ..._item };
-        children = [child];
 
         const index = cases.findIndex(c => c.id === selectedId);
         cases[index] = { ...cases[index], item: child };
@@ -167,7 +156,6 @@
         const selected = cases.find(c => c.id === _selectedId);
 
         child = selected?.item;
-        children = child !== undefined ? [child] : [];
     }
 </script>
 
@@ -181,16 +169,15 @@
             </button>
         {/each}
     </div>
-    <DndList 
-        items={children}
-        on:items={e => onItems(e.detail)} 
-        editable={context.editable}
-        {dropDisabled}
-        class="w-full min-h-[50px]"
+    <DndSingle 
+        item={child}
+        on:item={e => onItem(e.detail)} 
+        {editable}
+        class="w-full {context.editable ? 'min-h-[50px]' : ''}"
         let:item
     >
         <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />
-    </DndList>
+    </DndSingle>
 {:else if child !== undefined}
     <Widget {context} settings={child} />
 {/if}

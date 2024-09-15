@@ -2,7 +2,7 @@
     import type { WidgetBreadcrumb, WidgetContext, WidgetSettings_v1 } from "$lib/types/Widgets";
     import { createEventDispatcher } from "svelte";
     import Icon from "./Icon.svelte";
-    import { mdiFloppy, mdiMenu, mdiTrashCan, mdiWidgets } from "./icons";
+    import { mdiFloppy, mdiMagnify, mdiMenu, mdiPencil, mdiTrashCan, mdiWidgets } from "./icons";
     import { findEditor, findInfo, findLabel } from "$lib/widgets";
     import Widget from "$lib/widgets/Widget.svelte";
     import WidgetTypeList from "./WidgetTypeList.svelte";
@@ -92,22 +92,28 @@
                 </div>
             </div>
 
-            <div class="navbar-center gap-2">
-                <button class="btn btn-square btn-ghost" on:click={() => { drawerContent = 'widgets'; drawerOpen = !drawerOpen; }} >
-                    <Icon data={mdiWidgets} />
-                    Widgets
-                </button>
+            {#if !preview}
+                <div class="navbar-center gap-2">
+                    <button class="btn btn-square btn-ghost" on:click={() => { drawerContent = 'widgets'; drawerOpen = !drawerOpen; }} >
+                        <Icon data={mdiWidgets} />
+                        Widgets
+                    </button>
 
-                <DndTrash class="btn btn-square btn-ghost">
-                    <Icon data={mdiTrashCan} />
-                    Trash
-                </DndTrash>
-            </div>
+                    <DndTrash class="btn btn-square btn-ghost">
+                        <Icon data={mdiTrashCan} />
+                        Trash
+                    </DndTrash>
+                </div>
+            {/if}
 
             <div class="navbar-end">
                 <div class="join mr-2">
-                    <button class="btn join-item" class:btn-secondary={preview} on:click={() => onPreview(true)}>Preview</button>
-                    <button class="btn join-item" class:btn-secondary={!preview} on:click={() => onPreview(false)}>Editing</button>
+                    <button class="btn join-item" class:btn-secondary={preview} on:click={() => onPreview(true)}>
+                        <Icon data={mdiMagnify} />    
+                    </button>
+                    <button class="btn join-item" class:btn-secondary={!preview} on:click={() => onPreview(false)}>
+                        <Icon data={mdiPencil} />
+                    </button>
                 </div>
 
                 <button class="btn btn-square btn-primary" on:click={() => save()} >
@@ -117,34 +123,36 @@
             </div>
         </div>
 
-        <div class="w-full text-sm breadcrumbs bg-base-200 px-2">
-            <ul>
-                <li></li>
-                <!-- svelte-ignore a11y-click-events-have-key-events -->
-                <!-- svelte-ignore a11y-no-static-element-interactions -->
-                <li>
+        {#if !preview}
+            <div class="w-full text-sm breadcrumbs bg-base-200 px-2">
+                <ul>
+                    <li></li>
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <!-- svelte-ignore a11y-missing-attribute -->
-                    <a on:click={() => select(undefined)}>
-                        <Icon data={settingsIcon} />
-                        {settingsTitle}
-                    </a>
-                </li>
-
-                {#each breadcrumbs as b}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <li>
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <!-- svelte-ignore a11y-no-static-element-interactions -->
                         <!-- svelte-ignore a11y-missing-attribute -->
-                        <a on:click={() => select(b)}>
-                            <Icon data={findInfo(b.settings.type)?.icon} />
-                            {findLabel(b.settings.type)}
+                        <a on:click={() => select(undefined)}>
+                            <Icon data={settingsIcon} />
+                            {settingsTitle}
                         </a>
                     </li>
-                {/each}
-            </ul>
-        </div>
+
+                    {#each breadcrumbs as b}
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <li>
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
+                            <!-- svelte-ignore a11y-missing-attribute -->
+                            <a on:click={() => select(b)}>
+                                <Icon data={findInfo(b.settings.type)?.icon} />
+                                {findLabel(b.settings.type)}
+                            </a>
+                        </li>
+                    {/each}
+                </ul>
+            </div>
+        {/if}
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->

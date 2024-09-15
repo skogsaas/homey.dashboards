@@ -20,7 +20,7 @@
     {#if mode === 'card'}
         {#if capability.id.startsWith('alarm_')}
             {#if value}
-                <Icon class="bg-warn-icon" data={mdiAlert} />
+                <Icon extraClass="bg-warn-icon" data={mdiAlert} />
             {:else}
                 <Icon data={mdiMinus} />
             {/if}
@@ -36,7 +36,7 @@
     {:else}
         <div class="flex items-center w-full">
                 {#if settings.iconId !== undefined}
-                    <Icon data={getIcon(settings.iconId)} class="mr-1" />
+                    <Icon data={getIcon(settings.iconId)} extraClass="mr-1" />
                 {/if}
                 
                 <h3>{settings.title ?? capability.title}</h3>
@@ -47,7 +47,7 @@
 
             {#if capability.id.startsWith('alarm_')}
                 {#if value}
-                    <Icon class="bg-warn-icon" data={mdiAlert} />
+                    <Icon extraClass="bg-warn-icon" data={mdiAlert} />
                 {:else}
                     <Icon data={mdiMinus} />
                 {/if}

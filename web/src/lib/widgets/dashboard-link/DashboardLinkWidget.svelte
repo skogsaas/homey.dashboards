@@ -1,6 +1,6 @@
 <script lang="ts">
     import { base } from '$app/paths';
-    import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     import { dashboards as homeyDashboards } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
 

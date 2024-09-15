@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { StackSettings_v1 } from './StackSettings';
+    import type { StackSettings_v1 } from './ListSettings';
     import Widget from '$lib/widgets/Widget.svelte';
     import type { WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
     import DndList from '$lib/components/DndList.svelte';
@@ -40,7 +40,7 @@
     items={settings.items} 
     on:items={e => onItems(e.detail)}
     editable={context.editable}
-    class="w-full min-h-[50px]" 
+    class="w-full {context.editable ? 'min-h-[50px]' : ''}" 
     let:item
 >
     <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />

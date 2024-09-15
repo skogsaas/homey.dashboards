@@ -12,10 +12,11 @@ import GridInfo from './grid';
 import IframeInfo from './iframe';
 import ImageInfo from './image';
 import InsightInfo from './insight';
+import ListInfo from '$lib/widgets/list';
 import SectionInfo from '$lib/widgets/section';
 import SectionsInfo from '$lib/widgets/sections';
+import SensorInfo from '$lib/widgets/sensor';
 import SliderInfo from './slider';
-import StackInfo from '$lib/widgets/stack';
 import StatisticInfo from './statistic';
 import SwitchInfo from './switch';
 import TemplateInfo from './template';
@@ -36,10 +37,11 @@ export const widgets: WidgetInfo[] = [
     IframeInfo,
     ImageInfo,
     InsightInfo,
+    ListInfo,
     SectionInfo,
     SectionsInfo,
+    SensorInfo,
     SliderInfo,
-    StackInfo,
     StatisticInfo,
     SwitchInfo,
     TemplateInfo,

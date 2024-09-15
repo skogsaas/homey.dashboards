@@ -16,7 +16,7 @@ export function create() : WidgetSettings_v1 {
 }
 
 export function migrate(settings: any) : any {
-    while(settings.version !== 5) {
+    while(settings.version !== 1) {
         settings = migrateOnce(settings);
     }
 

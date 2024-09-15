@@ -106,6 +106,10 @@
     }
 </script>
 
+<svelte:head>
+  <title>Home</title>
+</svelte:head>
+
 <div class="flex flex-col justify-center mx-auto w-full">
     {#if $homey !== undefined}
         <div class="hero min-h-screen bg-base-200">

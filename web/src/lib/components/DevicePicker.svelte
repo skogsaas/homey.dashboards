@@ -3,7 +3,7 @@
 
     import { createEventDispatcher } from "svelte";
 
-    import { devices, homey } from "$lib/stores/homey";
+    import { devices, homey, zones } from "$lib/stores/homey";
     import { mdiClose, mdiMagnify } from "./icons";
     import VirtualList from "./VirtualList.svelte";
     import Icon from "./Icon.svelte";
@@ -106,8 +106,8 @@
                     </h3>
     
                     <div class="w-full flex justify-between">
-                        <span>{item.title}</span>
-                        <span>{item.value} {item.units ?? ''}</span>
+                        <span>{item.zone !== undefined ? $zones[item.zone].name : ''}</span>
+                        <span>{item.class}</span>
                     </div>
                 </button>
 

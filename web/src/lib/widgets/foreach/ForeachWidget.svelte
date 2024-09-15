@@ -10,6 +10,7 @@
     import Widget from '$lib/widgets/Widget.svelte';
     import { devices, zones } from '$lib/stores/homey';
     import DndList from '$lib/components/DndList.svelte';
+    import type { Zone } from '$lib/types/Homey';
     
     export let context: WidgetContext;
     export let settings: ForeachSettings_v1;
@@ -35,22 +36,31 @@
         if(_settings.each !== undefined && _settings.in !== undefined && _settings.inArg !== undefined) {
             if(_settings.each === 'capability') {
                 if(_settings.in === 'device') {
-                    const device = $devices[_settings.inArg];
+                    const device = $devices[_settings.inArg ?? ''];
 
                     if(device !== undefined) {
                         items = Object.keys(device.capabilitiesObj).map(key => device.capabilitiesObj[key]);
                     }
                 } else if (_settings.in === 'zone') {
+                    const zones = getZones(_settings.inArg);
+
                     items = Object
-                        .keys($devices)
-                        .map(key => $devices[key])
-                        .filter(device => device.zone === _settings.inArg)
+                        .values($devices)
+                        .filter(device => zones.some(zone => zone.id === device.zone))
                         .flatMap(device => Object.keys(device.capabilitiesObj).map(key => device.capabilitiesObj[key]));
                 }
             } else if(_settings.each === 'device') {
-                // TODO
+                if (_settings.in === 'zone') {
+                    const zones = getZones(_settings.inArg);
+
+                    items = Object
+                        .values($devices)
+                        .filter(device => zones.some(zone => zone.id === device.zone));
+                }
             } else if(_settings.each === 'zone') {
-                // TODO
+                if (_settings.in === 'zone') {
+                    items = getZones(_settings.inArg);
+                }
             } else if(_settings.each === 'flow') {
                 // TODO
             } else if(_settings.each === 'folder') {
@@ -74,6 +84,12 @@
         settings = { ...settings, item: child };
 
         dispatch('settings', settings);
+    }
+
+    function getZones(zoneId: string) : Zone[] {
+        return Object.values($zones)
+            .filter(zone => zone.parent === zoneId)
+            .flatMap(zone => [zone, ...getZones(zone.id)]);
     }
 
     function updateWidget(_item: WidgetSettings_v1) {
@@ -125,7 +141,7 @@
             const matches: string[][] = [...copy.matchAll(variableRegex)];
 
             // Require the variable to be in the form ${slug.property}
-            const idSlug = settings.id.substring(0, 8);
+            const idSlug = settings.slug;
 
             for(const match of matches) {
                 const fullMatch = match[0];
@@ -159,7 +175,7 @@
         on:items={e => onItems(e.detail)} 
         editable={context.editable}
         {dropDisabled}
-        class="w-full min-h-[50px]"
+        class="w-full {context.editable ? 'min-h-[50px]' : ''}"
         let:item
     >
         <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />

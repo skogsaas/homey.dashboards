@@ -4,7 +4,7 @@
     import type { FlowSettings_v1 } from './FlowSettings';
     import type { Flow } from '$lib/types/Homey';
 
-    import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     
     import { getIcon } from '$lib/components/icons/utils';
     import Icon from '$lib/components/Icon.svelte'

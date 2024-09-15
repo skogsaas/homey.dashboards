@@ -1,6 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
-
     export let label: string;
     export let placeholder: string;
     export let value: number | undefined;
