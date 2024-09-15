@@ -3,8 +3,7 @@
         GridItemHTMLElement,
         GridStack,
         GridStackNode,
-        GridStackOptions,
-        GridStackWidget,
+        GridStackOptions
     } from "gridstack";
 
     import "gridstack/dist/gridstack-extra.min.css";
