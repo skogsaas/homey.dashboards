@@ -4,11 +4,11 @@
         GridStack,
         GridStackNode,
         GridStackOptions
-    } from "gridstack/dist/gridstack";
+    } from "gridstack";
 
     import "gridstack/dist/gridstack-extra.min.css";
     import "gridstack/dist/gridstack.min.css";
-    import "./Gridstack.css"
+    import "./Gridstack-columns.css"
 
     import { v4 as uuid } from 'uuid';
 
@@ -35,7 +35,7 @@
 
     const gridPromise = new Promise(resolve => {
         onMount(async () => {
-            const { GridStack } = await import("GridStack");
+            const { GridStack } = await import("gridStack");
             grid = GridStack.init(gridStackOptions, gridEl);
 
             GridStack.setupDragIn('.grid-stack-toolbar-item', { appendTo: 'body', helper: 'clone' });
