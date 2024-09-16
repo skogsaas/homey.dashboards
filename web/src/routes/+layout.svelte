@@ -1,5 +1,6 @@
 <script lang="ts">
     import './sentry';
+    import { pwaInfo } from 'virtual:pwa-info'; 
 
     // Svelte
     import { onMount } from 'svelte';
@@ -38,6 +39,8 @@
     let heartbeatInterval = 1000;
     let heartbeatClear: any | undefined;
 
+    $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
+
     // Heartbeat logic to check for page frozen
     $: {
         if(heartbeatClear !== undefined) clearInterval(heartbeatClear);
@@ -54,6 +57,24 @@
     let addDashboardOpen: boolean = false;
 
     onMount(async () => {
+      if (pwaInfo) {
+        const { registerSW } = await import('virtual:pwa-register')
+        registerSW({
+          immediate: true,
+          onRegistered(r: any) {
+            // uncomment following code if you want check for updates
+            r && setInterval(() => {
+               console.log('Checking for sw update')
+               r.update()
+            }, 15*60000) // Every 15 minutes
+            console.log(`SW Registered: ${r}`)
+          },
+          onRegisterError(error: any) {
+            console.log('SW registration error', error)
+          }
+        })
+      }
+      
       // TODO
       //document.body.setAttribute('data-theme', 'dark');
       await loadData()
@@ -340,6 +361,10 @@
     }
 
 </script>
+
+<svelte:head> 
+ 	{@html webManifestLink} 
+</svelte:head>
 
 <svelte:window on:visibilitychange={e => onWindowVisibilityChange()} />
 

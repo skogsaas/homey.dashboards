@@ -25,6 +25,9 @@ const config = {
     },
     version: {
       name: pkg.version,
+    },
+    serviceWorker: {
+      register: false
     }
   },
 };

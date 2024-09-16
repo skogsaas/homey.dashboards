@@ -153,7 +153,7 @@
                         <p class="py-6">
                             Direct authentication can only be used on the Homey Pro 2023 model. Older models do not have the API-Key feature.
                         </p>
-                        <button class="btn btn-ghost" on:click={() => active = '#online'}>
+                        <button class="btn btn-secondary" on:click={() => active = '#online'}>
                             <Icon data={mdiAccount} />
                             Login using Athom credentials instead
                         </button>
@@ -174,12 +174,12 @@
                                 </div>
 
                                 <div class="form-control">
-                                    <label class="label">
+                                    <label class="label" for="localHomeyId">
                                         <span class="label-text">Homey ID</span>
                                     </label>
-                                    <input type="text" class="input input-primary" bind:value={localHomeyId} />
+                                    <input type="text" id="localHomeyId" class="input input-primary" bind:value={localHomeyId} />
                                     {#if localHomeyId.length > 0 && localHomeyId.length !== 24}
-                                        <label class="label">
+                                        <label class="label" for="localHomeyId">
                                             <span class="label-text-alt">Must be 24 characters</span>
                                         </label>
                                     {/if}
@@ -201,12 +201,12 @@
                                 </div>
         
                                 <div class="form-control">
-                                    <label class="label">
+                                    <label class="label" for="localKey">
                                         <span class="label-text">Homey API-Key</span>
                                     </label>
-                                    <input type="text" class="input input-primary" bind:value={localKey} />
+                                    <input type="text" id="localKey" class="input input-primary" bind:value={localKey} />
                                     {#if localKeyError !== undefined}
-                                        <label class="label">
+                                        <label class="label" for="localKey">
                                             <span class="label-text-alt">{localKeyError}</span>
                                         </label>
                                     {/if}
