@@ -182,7 +182,7 @@
                     />
                 {:else}
                     <div class="text-lg text-center">{settingsTitle} settings</div>
-                    <slot name="settings"></slot>
+                    <slot></slot>
                 {/if}
             {/if}
         </div>
