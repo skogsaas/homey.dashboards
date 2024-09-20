@@ -4,7 +4,7 @@
     import { v4 as uuid } from 'uuid';
 
     import TextPicker from '$lib/components/TextPicker.svelte'
-    import { mdiInformation } from '$lib/components/icons';
+    import { mdiInformation, mdiTrashCan } from '$lib/components/icons';
     import Icon from '$lib/components/Icon.svelte';
 
     export let template: Template_v1;
@@ -12,7 +12,6 @@
     const dispatch = createEventDispatcher();
 
     let title: string;
-    let slug: string;
     let args: TemplateArgument_v1[];
     let arg: TemplateArgument_v1 | undefined;
 
@@ -45,7 +44,7 @@
 
     function addArgument() {
         const a: TemplateArgument_v1 = {
-            id: uuid(),
+            id: uuid().substring(0, 8),
             label: undefined,
             type: 'string',
             default: undefined
@@ -54,7 +53,13 @@
         args = [...args, a];
     }
 
+    function removeArgument(index: number) {
+        args = args.filter((a, i) => i !== index);
+    }
+
     function updateArgumentId(index: number, id: string) {
+        console.log(id);
+
         const a = { ...args[index], id };
         const copy = [...args];
         copy[index] = a;
@@ -81,12 +86,12 @@
 
 <TextPicker label="Title" placeholder="Title" value={title} on:value={e => title = e.detail} />
 
-<div class="flex justify-center my-1">
+<div class="flex justify-center mt-2">
     <button class="btn btn-ghost" on:click={() => addArgument()}>Add argument</button>
 </div>
 
 {#each args as a, index}
-    <div class="collapse collapse-arrow bg-base-300 my-1">
+    <div class="collapse collapse-arrow bg-base-300 mt-2">
         <input type="radio" name="arguments" bind:group={arg} value={a} />
         <div class="collapse-title text-lg font-medium">{a.id}</div>
         <div class="collapse-content">
@@ -98,6 +103,9 @@
                     <span class="label-text">Type</span>
                 </div>
                 <select class="select w-full" value={a.type} on:change={e => updateType(index, e.currentTarget.value)} placeholder="Type">
+                    {#if a.type === undefined}
+                        <option value={undefined}></option>
+                    {/if}
                     <option value="string">String</option>
                     <option value="number">Number</option>
                     <option value="boolean">Boolean</option>
@@ -112,6 +120,8 @@
                 <Icon data={mdiInformation} />
                 <span>This argument can be referenced in any child widget settings by writing: <code>${'{'}template.{a.id}{'}'}</code></span>
             </div>
+
+            <button class="btn btn-warning btn-outline w-full mt-2" on:click={() => removeArgument(index)}><Icon data={mdiTrashCan} />Remove</button>
         </div>
     </div>
 {/each}

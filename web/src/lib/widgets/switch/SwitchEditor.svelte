@@ -7,7 +7,7 @@
     import DevicePicker from '$lib/components/DevicePicker.svelte';
     import VariablePicker from '$lib/components/VariablePicker.svelte';
     import Icon from '$lib/components/Icon.svelte';
-    import { mdiInformation } from '$lib/components/icons';
+    import { mdiInformation, mdiTrashCan } from '$lib/components/icons';
     import CapabilityCase from './cases/CapabilityCase.svelte';
     import DeviceCase from './cases/DeviceCase.svelte';
     import VariableCase from './cases/VariableCase.svelte';
@@ -65,14 +65,18 @@
         cases = [...cases, c];
     }
 
+    function removeCase(index: number) {
+        cases = cases.filter((a, i) => i !== index);
+    }
+
     function updateCaseOperator(index: number, operator: any) {
         cases[index] = { ...cases[index], operator };
+        cases = [...cases];
     }
 
     function updateCaseValue(index: number, value: any) {
         cases[index] = { ...cases[index], value };
-
-        console.log(value);
+        cases = [...cases];
     }
 </script>
 
@@ -81,6 +85,9 @@
         <span class="label-text">Switch by</span>
     </div>
     <select class="select w-full mt-4" bind:value={switchType} placeholder="Switch by">
+        {#if switchType === undefined}
+            <option value={undefined}></option>
+        {/if}
         <option value="device">Device</option>
         <option value="capability">Capability</option>
         <option value="variable" disabled >⛔ Variable</option>
@@ -154,7 +161,7 @@
     </div>
 
     {#each cases as c, index}
-        <div class="collapse collapse-arrow bg-base-300 my-1">
+        <div class="collapse collapse-arrow bg-base-300 mt-2">
             <input type="radio" name="cases" bind:group={selectedId} value={c.id} />
             <div class="collapse-title text-lg font-medium">
                 <span class="text-secondary">{caseKey ?? ''}</span>
@@ -185,6 +192,8 @@
                 {:else if switchType === 'user'}
                     <UserCase value={c.value} on:value={e => updateCaseValue(index, e.detail)} />
                 {/if}
+
+                <button class="btn btn-warning btn-outline w-full mt-2" on:click={() => removeCase(index)}><Icon data={mdiTrashCan} />Remove</button>
             </div>
         </div>
     {/each}

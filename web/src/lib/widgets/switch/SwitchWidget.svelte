@@ -68,6 +68,8 @@
                 // TODO
             }
         }
+
+        matchCase();
     }
 
     function onCapability(event: CapabilityEvent) {
@@ -139,6 +141,8 @@
 
         settings = { ...settings, cases };
         dispatch('settings', settings);
+
+        selectCase(selectedId);
     }
 
     function updateWidget(_item: WidgetSettings_v1) {
@@ -162,7 +166,7 @@
 {#if context.editable}
     <div class="tabs tabs-bordered bg-base-300">
         {#each cases as c}
-            <button class="tab" class:tab-active={selectedId === c.id} on:click={e => (selectedId = c.id)}>
+            <button class="tab" class:tab-active={selectedId === c.id} on:click|stopPropagation={e => (selectedId = c.id)}>
                 <span class="text-secondary pr-1">{caseKey ?? ''}</span>
                 <span class="italic">{c.operator ?? ''}</span>
                 <span class="text-accent pl-1">{c.value ?? ''}</span>

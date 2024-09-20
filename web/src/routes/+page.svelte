@@ -148,7 +148,7 @@
         <div class="hero min-h-screen bg-base-200">
             {#if active === '#direct'}
                 <div class="hero-content flex-col lg:flex-row-reverse">
-                    <div class="text-center lg:text-left">
+                    <div class="text-center lg:text-left max-w-xs">
                         <h1 class="text-5xl font-bold">Welcome!</h1>
                         <p class="py-6">
                             Direct authentication can only be used on the Homey Pro 2023 model. Older models do not have the API-Key feature.
@@ -159,7 +159,7 @@
                         </button>
                     </div>
                     <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-                        <form class="card-body">    
+                        <form class="card-body max-w-xs">    
                             {#if !localHosting}
                                 <p class="pt-6">
                                     You can obtain the Homey-ID by navigating to:
@@ -266,12 +266,10 @@
                 </div>
             {:else}
                 <div class="hero-content flex-col lg:flex-row">
-                    <div class="text-center lg:text-left">
+                    <div class="text-center lg:text-left max-w-xs">
                         <h1 class="text-5xl font-bold">Welcome!</h1>
                         <p class="py-6">
-                            Online authentication can be used with both
-                            <br/>
-                            the newer Homey Pro 2023 and older models.
+                            Online authentication can be used with both the newer Homey Pro 2023 and older models.
                         </p>
 
                         <button class="btn btn-ghost" on:click={() => active = '#direct'}>
