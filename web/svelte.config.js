@@ -1,5 +1,5 @@
-import { adapter as autoAdapter } from '@sveltejs/adapter-auto';
-import { adapter as staticAdapter} from "@sveltejs/adapter-static";
+import autoAdapter from '@sveltejs/adapter-auto';
+import staticAdapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/kit/vite";
 
 import { readFileSync } from 'fs';
@@ -16,7 +16,7 @@ const config = {
   preprocess: [vitePreprocess({})],
 
   kit: {
-    adapter: target === "vercel" ? autoAdapter() : staticAdapter({
+    adapter: target !== "app" ? autoAdapter() : staticAdapter({
       fallback: "index.html",
       precompress: true,
     }),
