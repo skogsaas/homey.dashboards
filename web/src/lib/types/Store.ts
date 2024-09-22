@@ -36,6 +36,7 @@ export interface Template_v1 {
     title: string;
     root: WidgetSettings_v1 | undefined;
     arguments: TemplateArgument_v1[];
+    builtin?: boolean;
 }
 
 export interface TemplateArgument_v1 {

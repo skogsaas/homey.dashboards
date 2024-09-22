@@ -13,6 +13,8 @@
 
     export let title: string;
     export let root: WidgetSettings_v1 | undefined;
+
+    export let saveTitle: string = 'Save';
     
     export let settingsIcon: string;
     export let settingsTitle: string;
@@ -118,7 +120,7 @@
 
                 <button class="btn btn-square btn-primary" on:click={() => save()} >
                     <Icon data={mdiFloppy} />
-                    Save
+                    {saveTitle}
                 </button>
             </div>
         </div>

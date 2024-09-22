@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { baseUrl, dashboards as homeyDashboards, homey, homeys } from '$lib/stores/homey';
+    import { baseUrl, dashboards as homeyDashboards, homey } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import type { Homey } from '$lib/types/Homey';
     import { apiKey } from '$lib/stores/auth';
@@ -114,10 +114,10 @@
     {#if $homey !== undefined}
         <div class="hero min-h-screen bg-base-200">
             <div class="hero-content flex-col lg:flex-row-reverse">
-                <div class="text-center lg:text-left">
-                    <h1 class="text-5xl font-bold">Dashboards</h1>
+                <div class="text-center lg:text-left max-w-xs">
+                    <span class="text-5xl font-bold">Dashboards</span>
                     <p class="py-6">
-                        Add a new dashboard by using the native Homey app to add a new device of type <code>Dashboard</code>.<br/>
+                        A dashboard store can be created by using the native Homey App. This is required in order to have a place to store your dashboards.<br />
                         <span class="text-warning">NOTE:</span> This requires you to install the Dashboards companion app.
                     </p>
                 </div>
@@ -139,7 +139,7 @@
                             </div>
                         </div>
                     {:else}
-                        <h5>Oh no, you have no dashboards! <Icon data={mdiEmoticonSadOutline} /></h5>
+                        <span class="text-lg">Oh no, you have no dashboards! 😵</span>
                     {/if}
                 </div>
             </div>

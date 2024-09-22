@@ -21,10 +21,11 @@ import type {
     Zone, 
     ZoneMap 
 } from '$lib/types/Homey';
-import type { Dashboard_v1, DashboardMap, Store_v1, StoreMap, Template_v1 } from '$lib/types/Store';
+import type { Dashboard_v1, DashboardMap, Store_v1, StoreMap, Template_v1, TemplateMap } from '$lib/types/Store';
 import type { Dashboard_v2 } from '$lib/types/Store';
 import { driverId } from '$lib/constants';
-import type { TemplateMap } from '$lib/types/Template';
+
+import BuiltInTemplates from './builtin-templates.json';
 
 function createHomeys() {
     const { subscribe, set, update } = writable({} as HomeyMap);
@@ -216,6 +217,7 @@ export const templates = derived(
     stores, 
     (store: StoreMap) => Object.values(store)
         .flatMap(store => store.templates)
+        .concat((BuiltInTemplates as Template_v1[]).map(t => { t.builtin = true; return t; })) // Add the built-in templates
         .reduce((existing: TemplateMap, template: Template_v1) => {
             existing[template.id] = template;
             return existing;

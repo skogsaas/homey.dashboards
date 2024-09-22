@@ -84,44 +84,58 @@
     }
 </script>
 
-<TextPicker label="Title" placeholder="Title" value={title} on:value={e => title = e.detail} />
+<div role="tablist" class="tabs tabs-bordered tabs-lg">
+    <input type="radio" name="tabs" role="tab" class="tab" aria-label="Settings" checked={true} />
+    <div role="tabpanel" class="tab-content pt-2">
+        <TextPicker label="Title" placeholder="Title" value={title} on:value={e => title = e.detail} />
 
-<div class="flex justify-center mt-2">
-    <button class="btn btn-ghost" on:click={() => addArgument()}>Add argument</button>
-</div>
-
-{#each args as a, index}
-    <div class="collapse collapse-arrow bg-base-300 mt-2">
-        <input type="radio" name="arguments" bind:group={arg} value={a} />
-        <div class="collapse-title text-lg font-medium">{a.id}</div>
-        <div class="collapse-content">
-            <TextPicker label="ID" placeholder="ID" value={a.id} on:value={e => updateArgumentId(index, e.detail)} />
-            <TextPicker label="Label" placeholder="" value={a.label} on:value={e => updateArgumentLabel(index, e.detail)} />
-            
-            <label class="form-control w-full">
-                <div class="label">
-                    <span class="label-text">Type</span>
-                </div>
-                <select class="select w-full" value={a.type} on:change={e => updateType(index, e.currentTarget.value)} placeholder="Type">
-                    {#if a.type === undefined}
-                        <option value={undefined}></option>
-                    {/if}
-                    <option value="string">String</option>
-                    <option value="number">Number</option>
-                    <option value="boolean">Boolean</option>
-                    <option value="capabilityId">Capability</option>
-                    <option value="deviceId">Device</option>
-                    <option value="imageId">Image</option>
-                    <option value="iconId">Icon</option>
-                </select>
-            </label>
-
-            <div role="alert" class="alert mt-2">
-                <Icon data={mdiInformation} />
-                <span>This argument can be referenced in any child widget settings by writing: <code>${'{'}template.{a.id}{'}'}</code></span>
-            </div>
-
-            <button class="btn btn-warning btn-outline w-full mt-2" on:click={() => removeArgument(index)}><Icon data={mdiTrashCan} />Remove</button>
+        <div class="flex justify-center mt-2">
+            <button class="btn btn-ghost" on:click={() => addArgument()}>Add argument</button>
         </div>
+        
+        {#each args as a, index}
+            <div class="collapse collapse-arrow bg-base-300 mt-2">
+                <input type="radio" name="arguments" bind:group={arg} value={a} />
+                <div class="collapse-title text-lg font-medium">{a.id}</div>
+                <div class="collapse-content">
+                    <TextPicker label="ID" placeholder="ID" value={a.id} on:value={e => updateArgumentId(index, e.detail)} />
+                    <TextPicker label="Label" placeholder="" value={a.label} on:value={e => updateArgumentLabel(index, e.detail)} />
+                    
+                    <label class="form-control w-full">
+                        <div class="label">
+                            <span class="label-text">Type</span>
+                        </div>
+                        <select class="select w-full" value={a.type} on:change={e => updateType(index, e.currentTarget.value)} placeholder="Type">
+                            {#if a.type === undefined}
+                                <option value={undefined}></option>
+                            {/if}
+                            <option value="string">String</option>
+                            <option value="number">Number</option>
+                            <option value="boolean">Boolean</option>
+                            <option value="capabilityId">Capability</option>
+                            <option value="deviceId">Device</option>
+                            <option value="imageId">Image</option>
+                            <option value="iconId">Icon</option>
+                        </select>
+                    </label>
+        
+                    <div role="alert" class="alert mt-2">
+                        <Icon data={mdiInformation} />
+                        <span>This argument can be referenced in any child widget settings by writing: <code>${'{'}template.{a.id}{'}'}</code></span>
+                    </div>
+        
+                    <button class="btn btn-warning btn-outline w-full mt-2" on:click={() => removeArgument(index)}><Icon data={mdiTrashCan} />Remove</button>
+                </div>
+            </div>
+        {/each}
     </div>
-{/each}
+
+    <input type="radio" name="tabs" role="tab" class="tab" aria-label="JSON" />
+    <div role="tabpanel" class="tab-content pt-2">
+        <textarea
+            placeholder="JSON"
+            class="textarea textarea-bordered w-full max-w-xs h-max"
+            value={JSON.stringify(template)}
+        ></textarea>
+    </div>
+</div>

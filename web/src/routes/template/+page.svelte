@@ -110,6 +110,7 @@
     {#if template !== undefined}
         <WidgetEditor
             title={template?.title ?? 'Template title'}
+            saveTitle={storeId !== undefined ? 'Save' : 'Save as'}
             settingsTitle="Template"
             settingsIcon={mdiPostageStamp}
             root={root}
