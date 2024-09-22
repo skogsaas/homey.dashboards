@@ -16,7 +16,7 @@ const config = {
   preprocess: [vitePreprocess({})],
 
   kit: {
-    adapter: target !== "app" ? autoAdapter() : staticAdapter({
+    adapter: target === "auto" ? autoAdapter() : staticAdapter({
       fallback: "index.html",
       precompress: true,
     }),
