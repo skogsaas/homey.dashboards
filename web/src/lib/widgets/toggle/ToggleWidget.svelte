@@ -155,16 +155,18 @@
 
 </script>
 
-<label class="label cursor-pointer flex flex-row items-center gap-1">
-    <span>
+<label class="label cursor-pointer flex flex-row items-center p-0">
         {#if settings.iconId !== undefined || iconId !== undefined}
-            <Icon data={getIcon(settings.iconId ?? iconId)} />
+            <span>
+                <Icon data={getIcon(settings.iconId ?? iconId)} />
+            </span>
         {:else if iconUrl !== undefined}
             {#await $homey.baseUrl then url}
-                <img class="w-8 h-8 m-1 dark:invert" src={url + device?.iconObj.url} alt={device?.icon} />
+                <span>
+                    <img class="w-8 h-8 m-1 dark:invert" src={url + device?.iconObj.url} alt={device?.icon} />
+                </span>
             {/await}
         {/if}
-    </span>
 
     <span class="flex-1 overflow-ellipsis">{settings.label ?? label ?? uri ?? 'Not configured'}</span>
 

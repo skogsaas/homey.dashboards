@@ -72,13 +72,13 @@
         <CapabilityPicker 
             name={templateArg.label ?? templateArg.id}
             capabilityUri={getValue(templateArg.id) ?? templateArg.default}
-            on:value={e => setValue(templateArg.id, e.detail)} 
+            on:capabilityUri={e => setValue(templateArg.id, e.detail)} 
         />
-    {:else if templateArg.type === 'deviceUri'}
+    {:else if templateArg.type === 'deviceId'}
         <DevicePicker 
             name={templateArg.label ?? templateArg.id}
-            deviceUri={getValue(templateArg.id) ?? templateArg.default}
-            on:value={e => setValue(templateArg.id, e.detail)} 
+            deviceId={getValue(templateArg.id) ?? templateArg.default}
+            on:deviceId={e => setValue(templateArg.id, e.detail)} 
         />
     {:else if templateArg.type === 'imageId'}
         <p>Not implemented: Image picker</p>
@@ -86,7 +86,7 @@
         <IconPicker 
             name={templateArg.label ?? templateArg.id}
             iconId={getValue(templateArg.id) ?? templateArg.default}
-            on:value={e => setValue(templateArg.id, e.detail)} 
+            on:iconId={e => setValue(templateArg.id, e.detail)} 
         />
     {/if}
 {/each}

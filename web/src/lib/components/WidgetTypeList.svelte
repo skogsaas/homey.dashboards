@@ -8,18 +8,15 @@
     import { mdiHelp, mdiPlay } from "$lib/components/icons";
     import type { WidgetSettings_v1 } from "$lib/types/Widgets";
 
-    import { templates as homeyTemplates } from '$lib/stores/homey';
-    import { templates as localtemplates } from '$lib/stores/localstorage';
+    import { templates } from '$lib/stores/homey';
     import type { TemplateMap } from "$lib/types/Store";
     import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();
     const flipDurationMs = 300;    
 
-    $: templates = { ...$homeyTemplates, ...$localtemplates };
-
     let widgetItems: WidgetSettings_v1[][] = getWidgets();
-    let templateItems: TemplateSettings_v1[] = getTemplates(templates);
+    let templateItems: TemplateSettings_v1[] = getTemplates($templates);
 
     function getWidgets() : WidgetSettings_v1[][] {
         return categories
@@ -30,15 +27,15 @@
     }
 
     function getTemplates(_templates: TemplateMap) : TemplateSettings_v1[] {
-        const result: TemplateSettings_v1[] = [];
+        let result: TemplateSettings_v1[];
 
-        for (const key in templates) {
-            const template = templates[key];
-            const settings: TemplateSettings_v1 = TemplateInfo.create() as TemplateSettings_v1;
-            settings.templateId = template.id;
+        result = Object.values(_templates)
+            .map(template => {
+                const settings: TemplateSettings_v1 = TemplateInfo.create() as TemplateSettings_v1;
+                settings.templateId = template.id;
 
-            result.push(settings);
-        }
+                return settings;
+            });
 
         return result;
     }
@@ -56,7 +53,7 @@
     }
 
     function getTemplateLabel(templateId: string) : string {
-        const info = templates[templateId];
+        const info = $templates[templateId];
 
         return info?.title ?? 'Unkown';
     }
@@ -101,7 +98,10 @@
 
         if(index > -1) {
             const item = templateItems[index];
-            templateItems[index] = findInfo((item as TemplateSettings_v1).templateId)!.create() as TemplateSettings_v1;
+
+            const settings: TemplateSettings_v1 = TemplateInfo.create() as TemplateSettings_v1;
+            settings.templateId = (item as TemplateSettings_v1).templateId;
+            templateItems[index] = settings;
 
             templateItems = [...templateItems];
         }

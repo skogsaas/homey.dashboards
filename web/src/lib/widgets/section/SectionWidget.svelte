@@ -27,8 +27,7 @@
         dispatch('settings', settings);
     }
 
-    function updateWidget(_widget: WidgetSettings_v1) {
-        const index = items.findIndex(s => s.id === _widget.id);
+    function updateWidget(index: number, _widget: WidgetSettings_v1) {
         items[index] = { ..._widget };
 
         items = [...items];
@@ -57,8 +56,9 @@
             editable={context.editable}
             class="w-full {context.editable ? 'min-h-[50px]' : ''}" 
             let:item
+            let:index
         >
-            <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />
+            <Widget {context} settings={item} on:settings={e => updateWidget(index, e.detail)} />
         </DndList>
     </div>
 </section>

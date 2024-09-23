@@ -73,8 +73,6 @@
                 whereArg: _whereArg
             };
 
-            console.log(settings);
-
             dispatch('settings', settings);
         }
     }
@@ -129,7 +127,7 @@
 {/if}
 
 {#if inType === 'device'}
-    <DevicePicker bind:deviceUri={inArg} />
+    <DevicePicker bind:deviceId={inArg} />
 {:else if inType === 'zone'}
     <ZonePicker bind:zoneId={inArg} />
 {:else if inType === 'folder'}

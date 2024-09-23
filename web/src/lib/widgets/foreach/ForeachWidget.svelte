@@ -9,8 +9,8 @@
 
     import Widget from '$lib/widgets/Widget.svelte';
     import { devices, zones } from '$lib/stores/homey';
-    import DndList from '$lib/components/DndList.svelte';
     import type { Zone } from '$lib/types/Homey';
+    import DndSingle from '$lib/components/DndSingle.svelte';
     
     export let context: WidgetContext;
     export let settings: ForeachSettings_v1;
@@ -19,19 +19,16 @@
 
     let items: any[];
     let child: WidgetSettings_v1 | undefined;
-    let children: WidgetSettings_v1[];
     let renderSettings: WidgetSettings_v1[];
     let renderContext: WidgetContext;
 
     $: onSettings(settings);
     $: renderSettings = onChildItems(child, items);
     $: renderContext = { ...context, editable: false };
-    $: dropDisabled = children.length > 0; // Only allow a single item as child
 
     function onSettings(_settings: ForeachSettings_v1) {
         items = [];
         child = _settings.item;
-        children = child !== undefined ? [child] : [];
 
         if(_settings.each !== undefined && _settings.in !== undefined && _settings.inArg !== undefined) {
             if(_settings.each === 'capability') {
@@ -71,16 +68,8 @@
         }
     }
 
-    function onItems(_items: WidgetSettings_v1[]) {
-        // Expect _items to only contain a single item
-        if(_items.length === 0) {
-            child = undefined;
-            children = [];
-        } else {
-            child = _items[0];
-            children = [child];
-        }
-
+    function onItem(_item: WidgetSettings_v1) {
+        child = { ..._item };
         settings = { ...settings, item: child };
 
         dispatch('settings', settings);
@@ -94,7 +83,6 @@
 
     function updateWidget(_item: WidgetSettings_v1) {
         child = { ..._item };
-        children = [child];
         settings = { ...settings, item: child };
 
         dispatch('settings', settings);
@@ -121,7 +109,7 @@
                     // Stop recursion if a template widget is detected. Instead only populate/replace template 
                     // arguments with arguments from this template.
 
-                    (copy as TemplateSettings_v1).arguments = (copy as TemplateSettings_v1).arguments.map(a => ({
+                    (copy as TemplateSettings_v1).arguments = ((copy as TemplateSettings_v1).arguments ?? []).map(a => ({
                         argId: a.argId,
                         value: transform(a.value, item)
                     }));
@@ -170,16 +158,15 @@
 </script>
 
 {#if context.editable}
-    <DndList 
-        items={children}
-        on:items={e => onItems(e.detail)} 
+    <DndSingle 
+        item={child}
+        on:item={e => onItem(e.detail)} 
         editable={context.editable}
-        {dropDisabled}
         class="w-full {context.editable ? 'min-h-[50px]' : ''}"
         let:item
     >
         <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />
-    </DndList>
+    </DndSingle>
 {:else}
     {#each renderSettings as s}
         <Widget context={renderContext} settings={s} />

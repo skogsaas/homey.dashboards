@@ -58,8 +58,6 @@
     }
 
     function updateArgumentId(index: number, id: string) {
-        console.log(id);
-
         const a = { ...args[index], id };
         const copy = [...args];
         copy[index] = a;
@@ -112,7 +110,7 @@
                             <option value="string">String</option>
                             <option value="number">Number</option>
                             <option value="boolean">Boolean</option>
-                            <option value="capabilityId">Capability</option>
+                            <option value="capabilityUri">Capability</option>
                             <option value="deviceId">Device</option>
                             <option value="imageId">Image</option>
                             <option value="iconId">Icon</option>

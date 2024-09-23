@@ -53,6 +53,7 @@
     $: selected = capabilityUri !== undefined ? flatCapabilities.find(c => c.uri === capabilityUri) ?? undefined : undefined;
     $: filterCapabilities(search, sorted);
     $: onSelected(selected);
+    $: dispatch('capabilityUri', capabilityUri);
 
     function filterCapabilities(value: string, s: Item[]) {
         const normalized = value.toLowerCase();
@@ -68,7 +69,6 @@
         capabilityUri = item.uri;
         
         modal.close();
-        dispatch('capabilityUri', capabilityUri);
     }
 
     function onSelected(item: Item | undefined) {

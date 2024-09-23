@@ -35,10 +35,10 @@
             <option value="enum">enum</option>
         </select>
     </label>
-{:else if property === 'gettable'}
+{:else if property === 'getable'}
     <label class="form-control w-full">
         <div class="label">
-            <span class="label-text">Gettable</span>
+            <span class="label-text">Getable</span>
         </div>
         <select class="select w-full" {value} on:change={e => (value = e.currentTarget.value)} placeholder="Gettable">
             {#if value === undefined}
@@ -48,10 +48,10 @@
             <option value="0">False</option>
         </select>
     </label>
-{:else if property === 'settable'}
+{:else if property === 'setable'}
     <label class="form-control w-full">
         <div class="label">
-            <span class="label-text">Settable</span>
+            <span class="label-text">Setable</span>
         </div>
         <select class="select w-full" {value} on:change={e => (value = e.currentTarget.value)} placeholder="Settable">
             {#if value === undefined}

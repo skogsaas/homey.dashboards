@@ -31,6 +31,7 @@
     $: selected = deviceId !== undefined ? flatDevices.find(d => d.id === deviceId) : undefined;
     $: filterDevices(search, sorted);
     $: onSelected(selected);
+    $: dispatch('deviceId', deviceId);
 
     function filterDevices(value: string, s: DeviceObj[]) {
         const normalized = value.toLowerCase();
@@ -45,8 +46,6 @@
     function onDevice(device: DeviceObj) {
         deviceId = device.id;
         modal.close()
-
-        dispatch('deviceId', deviceId);
     }
 
     function onSelected(device: DeviceObj | undefined) {

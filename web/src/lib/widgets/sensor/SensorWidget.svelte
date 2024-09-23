@@ -115,7 +115,7 @@
 
 </script>
 
-<div class="flex flex-row items-center gap-1">
+<div class="flex flex-row items-center">
     <span>
         {#if settings.iconId !== undefined || iconId !== undefined}
             <Icon data={getIcon(settings.iconId ?? iconId)} />

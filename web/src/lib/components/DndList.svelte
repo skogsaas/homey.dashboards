@@ -71,14 +71,14 @@
         on:consider={e => handleDndConsider(e.detail.items, e.detail.info)}
         on:finalize={e => handleDndFinalize(e.detail.items, e.detail.info)}
     >
-        {#each inner as item(item.id)}
-            <slot {item}></slot>
+        {#each inner as item, index(item.id)}
+            <slot {item} {index}></slot>
         {/each}
     </div>
 {:else}
     <div class={classes}>
-        {#each inner as item(item.id)}
-            <slot {item}></slot>
+        {#each inner as item, index(item.id)}
+            <slot {item} {index}></slot>
         {/each}
     </div>
 {/if}

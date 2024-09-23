@@ -219,7 +219,7 @@
     }
 </script>
 
-<div class="flex flex-col w-full h-full px-1">
+<div class="flex flex-col w-full">
     {#if valuePosition === 'top'}
         <span class="w-full text-center {valueSize ?? ''}">{formatValue(value) ?? ''} {settings.unit ?? unit ?? ''}</span>
     {/if}

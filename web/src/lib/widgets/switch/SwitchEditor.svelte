@@ -109,8 +109,8 @@
                 {/if}
                 <option value="id">id</option>
                 <option value="type">type</option>
-                <option value="gettable">gettable</option>
-                <option value="settable">settable</option>
+                <option value="getable">getable</option>
+                <option value="setable">setable</option>
                 <option value="value">value</option>
             </select>
         </label>

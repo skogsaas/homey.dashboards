@@ -9,7 +9,7 @@
     import Widget from '$lib/widgets/Widget.svelte';
 
     import { templates } from '$lib/stores/homey';
-    import type { Template_v1 } from '$lib/types/Template';
+    import type { Template_v1 } from '$lib/types/Store';
     
     export let context: WidgetContext;
     export let settings: TemplateSettings_v1;
@@ -23,7 +23,7 @@
     $: template = $templates[settings.templateId];
     $: rendered = transform(template.root, settings);
     $: templateContext = { ...context, editable: false };
-
+    
     function transform(obj: any, _settings: TemplateSettings_v1) : any {
         if(obj === undefined) return undefined;
 
@@ -67,8 +67,8 @@
 
                 if(slug !== 'template') continue;
 
-                const templateArg = template.arguments.find(a => a.id === argId);
-                const settingsArg = _settings.arguments.find(a => a.argId === argId);
+                const templateArg = (template.arguments ?? []).find(a => a.id === argId);
+                const settingsArg = (_settings.arguments ?? []).find(a => a.argId === argId);
 
                 if(templateArg !== undefined) {
                     const argValue = settingsArg?.value ?? templateArg.default;
