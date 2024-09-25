@@ -1,14 +1,16 @@
 import type { GridItem_v1, GridItem_v2, GridOptions_v1 } from "$lib/types/Grid";
 import { findMigration } from ".";
-import type { CapabilitySettings_v3, CapabilitySettings_v4 } from "./capability/CapabilitySettings";
+import type { CapabilitySettings_v3, CapabilitySettings_v4, CapabilitySettings_v5 } from "./capability/CapabilitySettings";
 import { v4 as uuid } from 'uuid';
 import type { DeviceSettings_v1 } from "./device/DeviceSettings";
 import type { SliderSettings_v1 } from "./slider/SliderSettings";
 import type { Dashboard_v1, Dashboard_v2 } from "$lib/types/Store";
 import type { WidgetSettings_v1 } from "$lib/types/Widgets";
 import type { CardSettings_v1 } from '$lib/widgets/card/CardSettings';
-import GridInfo from '$lib/widgets/grid'
+import GridInfo from '$lib/widgets/grid';
+import TemplateInfo from '$lib/widgets/template';
 import type { GridSettings_v1 } from "./grid/GridSettings";
+import type { TemplateSettings_v1 } from "./template/TemplateSettings";
 
 export function migrate(dashboard: any) : any {
     if(dashboard === undefined) return undefined;
@@ -75,9 +77,23 @@ function migrateGridItem_v1_v2(v1: GridItem_v1) : GridItem_v2 {
         }
     }
 
+    const items = v1.card
+        .map(w => {
+            if(w.type !== 'capability') {
+                return w;
+            }
+
+            const c = w as CapabilitySettings_v5;
+            const t = TemplateInfo.create() as TemplateSettings_v1;
+            t.templateId = 'builtin-capability';
+            t.arguments = [{ argId: 'capabilityUri', value: c.capabilityUri }];
+
+            return t;
+        })
+
     return {
         id: v1.id,
-        settings: createCard(v1.card), 
+        settings: createCard(items), 
         position: {
             x: v1[24].x,
             y: v1[24].y,
