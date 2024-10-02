@@ -13,7 +13,11 @@ function getDashboards({ homey, query }: Args) {
 }
 
 function putDashboards({ homey, params, body }: Args) {
-    (homey.app as DashboardApp).setDashboardSettings(params.dashboardId, body);
+    (homey.app as DashboardApp).setDashboardSettings(params.storeId, params.dashboardId, body);
+}
+
+function putTemplates({ homey, params, body }: Args) {
+    (homey.app as DashboardApp).setTemplateSettings(params.storeId, params.templateId, body);
 }
 
 function dashboardHeartbeat({ homey, params, body }: Args) {
@@ -23,5 +27,6 @@ function dashboardHeartbeat({ homey, params, body }: Args) {
 module.exports = {
     getDashboards,
     putDashboards,
+    putTemplates,
     dashboardHeartbeat
 };
