@@ -3,19 +3,14 @@
 
     import { createEventDispatcher } from "svelte";
 
-    import Portal from 'stwui/portal';
-    import Modal from 'stwui/modal';
-    import Input from 'stwui/input';
-    import Button from 'stwui/button';
-    import List from "stwui/list";
-
-    import { devices, homey } from "$lib/stores/homey";
-    import { mdiClose } from "./icons";
-    import IconButton from "./IconButton.svelte";
+    import { devices } from "$lib/stores/homey";
+    import { mdiChartLine, mdiClose, mdiMagnify } from "./icons";
+    import Icon from '$lib/components/Icon.svelte'
+    import VirtualList from "./VirtualList.svelte";
 
     export let logId: string | undefined;
     export let logs: Log[] = [];
-    export let placeholder: string = 'Select log';
+    export let name: string = 'Log'
 
     const dispatch = createEventDispatcher();
 
@@ -24,6 +19,8 @@
         ownerName: string;
         searchString: string;
     }
+
+    let modal: HTMLDialogElement;
 
     let open: boolean = false;
     let search: string = '';
@@ -54,9 +51,11 @@
         }
     }
 
-    function onLog(log: Log) {
-        logId = log.id;
+    function onItem(item: LogItem) {
+        logId = item.log.id;
         open = false;
+
+        modal.close();
         
         dispatch('logId', logId);
     }
@@ -81,48 +80,56 @@
     }
 </script>
 
-<Button on:click={() => open = true} class="w-full justify-start border border-border">
-    {#if selected !== undefined}
-        <span>{getOwnerName(selected.ownerUri)} - {selected.title}</span>
-    {:else if logId !== undefined}
-        Insight not found
-    {:else}
-        {placeholder}
-    {/if}
-</Button>
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">{name}</span>
+    </div>
+    <div class="join flex items-center">
+        <input type="text" class="input input-bordered grow join-item" bind:value={logId} placeholder="Log"/>
+        <button class="btn btn-outline btn-primary join-item" on:click={() => modal.showModal()}>
+            {#if selected !== undefined}
+                <Icon data={mdiChartLine} />
+            {:else}
+                <Icon data={mdiMagnify} />
+            {/if}
+        </button>
+    </div>
+    <div class="label whitespace-nowrap overflow-ellipsis">
+        <span class="label-text"></span>
+        
+        {#if selected !== undefined}
+            <span class="label-text-alt">{getOwnerName(selected.ownerUri)} - {selected.title}</span>
+        {/if}
+    </div>
+</label>
 
-<Portal>
-    {#if open}
-        <Modal handleClose={() => open = false}>
-            <Modal.Content slot="content">
-                <Modal.Content.Body slot="body" class="h-full">
-                    <div class="relative w-full">
-                        <div class="absolute -top-4 -right-5 z-10">
-                            <IconButton data={mdiClose} on:click={() => open = false} />
-                        </div>
+<dialog bind:this={modal} class="modal">
+    <div class="modal-box flex flex-col">
+        <div class="flex-shrink-0 mb-2">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+                    <Icon data={mdiClose} />
+                </button>
+            </form>
+            
+            <input type="text" class="input w-full input-primary" bind:value={search} name="search" placeholder="Search" />
+        </div>
+        
+        <div class="flex-grow overflow-auto">
+            <VirtualList items={filtered} height="50vh" let:item>
+                <button class="btn btn-ghost w-full" on:click={() => onItem(item)}>
+                    <h3 class="w-full flex justify-start">
+                        {item.ownerName}
+                    </h3>
+    
+                    <div class="w-full flex justify-between">
+                        <span>{item.log.title}</span>
+                        <span>{item.log.lastValue} {item.log.units}</span>
                     </div>
-                    <div>
-                        <Input bind:value={search} name="search" placeholder="Search" />
-                    </div>
-                    <div class="flex-grow overflow-auto">
-                        <List>
-                            {#each filtered as item}
-                                <List.Item class="cursor-pointer" on:click={() => onLog(item.log)}>
-                                    <List.Item.Content slot="content">
-                                        <List.Item.Content.Title slot="title">
-                                            {item.ownerName}
-                                        </List.Item.Content.Title>
-                                        <List.Item.Content.Description slot="description" class="w-full flex justify-between">
-                                            <span>{item.log.title}</span>
-                                            <span>{item.log.lastValue} {item.log.units}</span>
-                                        </List.Item.Content.Description>
-                                    </List.Item.Content>
-                                </List.Item>
-                            {/each}
-                        </List>
-                    </div>
-                </Modal.Content.Body>
-            </Modal.Content>
-        </Modal>
-    {/if}
-</Portal>
+                </button>
+
+                <div class="divider divider-neutral my-1"></div>
+            </VirtualList>
+        </div>
+    </div>
+</dialog>

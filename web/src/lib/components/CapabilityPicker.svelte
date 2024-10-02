@@ -3,18 +3,15 @@
 
     import { createEventDispatcher } from "svelte";
 
-    import Portal from 'stwui/portal';
-    import Modal from 'stwui/modal';
-    import Input from 'stwui/input';
-    import Button from 'stwui/button';
-    import List from "stwui/list";
+    import Icon from '$lib/components/Icon.svelte'
+    import VirtualList from "./VirtualList.svelte";
 
     import { devices, homey } from "$lib/stores/homey";
-    import IconButton from "./IconButton.svelte";
-    import { mdiClose, mdiDelete } from "./icons";
+    import { mdiClose, mdiMagnify } from "./icons";
 
     export let capabilityUri: string | undefined;
-    export let placeholder: string = 'Select capability';
+    export let name: string = 'Capability';
+    export let placeholder: string = 'Capability';
     export let deviceFilter: ((device: DeviceObj) => boolean) | undefined = undefined;
     export let capabilityFilter: ((capability: CapabilityObj) => boolean) | undefined = undefined;
 
@@ -28,7 +25,8 @@
         search: string;
     }
 
-    let open: boolean = false;
+    let modal: HTMLDialogElement;
+
     let search: string = '';
     let filtered: Item[] = [];
     let selected: Item | undefined;
@@ -55,6 +53,7 @@
     $: selected = capabilityUri !== undefined ? flatCapabilities.find(c => c.uri === capabilityUri) ?? undefined : undefined;
     $: filterCapabilities(search, sorted);
     $: onSelected(selected);
+    $: dispatch('capabilityUri', capabilityUri);
 
     function filterCapabilities(value: string, s: Item[]) {
         const normalized = value.toLowerCase();
@@ -68,9 +67,8 @@
 
     function onItem(item: Item) {
         capabilityUri = item.uri;
-        open = false;
         
-        dispatch('capabilityUri', capabilityUri);
+        modal.close();
     }
 
     function onSelected(item: Item | undefined) {
@@ -79,62 +77,65 @@
     }
 </script>
 
-<Button on:click={() => open = true} class="w-full justify-start border border-border">
-    <span class="mr-1">Capability:</span>
-
-    {#if selected}
-        {#if selected.capability.iconObj?.url}
-            {#await $homey.baseUrl then url}
-                <img src={url + selected.capability.iconObj?.url} alt={selected.title} class="h-6 w-6 mr-2 dark:invert" />
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">{name}</span>
+    </div>
+    <div class="join flex items-center">
+        <input type="text" class="input input-bordered grow join-item" bind:value={capabilityUri} placeholder={placeholder} />
+        <button class="btn btn-outline btn-primary join-item" on:click={() => modal.showModal()}>
+            {#await $homey.baseUrl}
+                <Icon data={mdiMagnify} />
+            {:then url}
+                {#if selected !== undefined && selected.capability?.iconObj?.url}
+                    <img src={url + selected.capability.iconObj.url} alt={selected.capability.title} class="h-6 w-6 mr-2 dark:invert inline" />
+                {:else}
+                    <Icon data={mdiMagnify} />
+                {/if}
             {/await}
+        </button>
+    </div>
+    <div class="label whitespace-nowrap overflow-ellipsis">
+        <span class="label-text"></span>
+        
+        {#if selected !== undefined}
+            <span class="label-text-alt">{selected.title}</span>
         {/if}
-        <span class="mr-auto">{selected.title}</span>
-        <IconButton data={mdiDelete} size="14px" on:click={() => capabilityUri = undefined} />
-    {:else if capabilityUri !== undefined}
-        Capability not found
-    {:else}
-        {placeholder}
-    {/if}
-</Button>
+    </div>
+</label>
 
-<Portal>
-    {#if open}
-        <Modal handleClose={() => open = false}>
-            <Modal.Content slot="content">
-                <Modal.Content.Body slot="body" class="h-full flex flex-col">
-                    <div class="relative w-full">
-                        <div class="absolute -top-4 -right-5 z-10">
-                            <IconButton data={mdiClose} on:click={() => open = false} />
-                        </div>
+<dialog bind:this={modal} class="modal">
+    <div class="modal-box flex flex-col">
+        <div class="flex-shrink-0 mb-2">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+                    <Icon data={mdiClose} />
+                </button>
+            </form>
+            
+            <input type="text" class="input w-full input-primary" bind:value={search} name="search" placeholder="Search" />
+        </div>
+        
+        <div class="flex-grow overflow-auto">
+            <VirtualList items={filtered} height="50vh" let:item>
+                <button class="btn btn-ghost w-full" on:click={() => onItem(item)}>
+                    <h3 class="w-full flex justify-start">
+                        {#await $homey.baseUrl then url}
+                            {#if item.capability?.iconObj?.url}
+                                <img src={url + item.capability.iconObj.url} alt={item.capability.title} class="h-6 w-6 mr-2 dark:invert inline" />
+                            {/if}
+                        {/await}
+                        {item.device.name}
+                    </h3>
+    
+                    <div class="w-full flex justify-between">
+                        <span>{item.capability.title}</span>
+                        <span>{item.capability?.value} {item.capability?.units ?? ''}</span>
                     </div>
-                    
-                    <div>
-                        <Input bind:value={search} name="search" placeholder="Search" />
-                    </div>
-                    <div class="flex-grow overflow-auto">
-                        <List>
-                            {#each filtered as item}
-                                <List.Item class="cursor-pointer" on:click={() => onItem(item)}>
-                                    <List.Item.Content slot="content">
-                                        <List.Item.Content.Title slot="title" class="flex">
-                                            {#await $homey.baseUrl then url}
-                                                {#if item.capability?.iconObj?.url}
-                                                    <img src={url + item.capability.iconObj.url} alt={item.capability.title} class="h-6 w-6 mr-2 dark:invert" />
-                                                {/if}
-                                            {/await}
-                                            {item.device.name}
-                                        </List.Item.Content.Title>
-                                        <List.Item.Content.Description slot="description" class="w-full flex justify-between">
-                                            <span>{item.capability.title}</span>
-                                            <span>{item.capability?.value} {item.capability?.units ?? ''}</span>
-                                        </List.Item.Content.Description>
-                                    </List.Item.Content>
-                                </List.Item>
-                            {/each}
-                        </List>
-                    </div>
-                </Modal.Content.Body>
-            </Modal.Content>
-        </Modal>
-    {/if}
-</Portal>
+                </button>
+
+                <div class="divider divider-neutral my-1"></div>
+            </VirtualList>
+        </div>
+    </div>
+</dialog>

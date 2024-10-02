@@ -70,5 +70,11 @@
   },
   "0.15.2": {
     "en": "Restore variable widget leading icon."
+  },
+  "0.15.3": {
+    "en": "Fix selecting view editing mode."
+  },
+  "0.15.4": {
+    "en": "Add option to login with .local and add attempt for auto-refresh."
   }
 }

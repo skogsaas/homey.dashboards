@@ -6,12 +6,10 @@
     // UI elements
     import DevicePicker from '$lib/components/DevicePicker.svelte';
 
-    // Tailwind
-    import Input from "stwui/input";
-
     import type { DeviceObj } from '$lib/types/Homey';
     import type { DeviceSettings_v1 } from './DeviceSettings';
     import IconPicker from '$lib/components/IconPicker.svelte';
+    import TextPicker from '$lib/components/TextPicker.svelte';
 
     const dispatch = createEventDispatcher();
     
@@ -58,16 +56,10 @@
     }
 </script>
 
-<div>
-    <DevicePicker bind:deviceId={deviceId} />
-</div>
+<DevicePicker bind:deviceId={deviceId} />
 
 {#if device}
-    <div class="mt-2">
-        <Input name="title" bind:value={title} placeholder={device.name} />
-    </div>
-
-    <div class="mt-2">
-        <IconPicker bind:iconId={iconId} />
-    </div>
+    <TextPicker bind:value={title} placeholder={device.name} label="Title" />
 {/if}
+
+<IconPicker bind:iconId={iconId} />

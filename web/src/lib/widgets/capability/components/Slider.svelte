@@ -1,8 +1,7 @@
 <script lang="ts">
-    import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
 
-    import Slider from 'stwui/slider';
     import type { CapabilitySettings_v5 } from '../CapabilitySettings';
 
     export let settings: CapabilitySettings_v5;
@@ -50,30 +49,4 @@
     }
 </script>
 
-{#if capability !== undefined}
-    {#if mode === 'card'}
-        <span class="whitespace-nowrap cursor-pointer">{formatValue(value) ?? '...'} {capability.units ?? '%'}</span>
-    {:else}
-        <div class="flex flex-col w-full">
-            <div class="mx-auto">
-                <div class="flex flex-col items-center">
-                    <h1>{formatValue(value) ?? '...'} {capability?.units ?? '%'}</h1>
-                    <span>{settings.title ?? capability.title}</span>
-                </div>
-            </div>
-
-            <div class="flex flex-row mt-4">
-                <span class="whitespace-nowrap mr-4">{formatValue(capability.min)} {capability.units ?? '%'}</span>
-                <Slider 
-                    class="w-full"
-                    bind:value={value}
-                    min={capability.min} 
-                    max={capability.max} 
-                    step={capability.step ?? Math.pow(0.1, capability.decimals)}
-                    disabled={disabled} 
-                />
-                <span class="whitespace-nowrap ml-4">{formatValue(capability.max)} {capability.units ?? '%'}</span>
-            </div>
-        </div>
-    {/if}
-{/if}
+<span class="whitespace-nowrap cursor-pointer">{formatValue(value) ?? '...'} {capability.units ?? '%'}</span>

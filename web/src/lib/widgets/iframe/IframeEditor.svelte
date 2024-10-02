@@ -2,8 +2,8 @@
     import { createEventDispatcher } from 'svelte';
 
     import type IframeSettings from "./IframeSettings";
-
-    import { Input, InputNumber, Toggle } from 'stwui';
+    import NumberPicker from '$lib/components/NumberPicker.svelte';
+    import TextPicker from '$lib/components/TextPicker.svelte';
 
     export let settings: IframeSettings;
 
@@ -110,10 +110,9 @@
     }
 </script>
 
-<Input name="url" bind:value={url} placeholder="Url" />
-
-<InputNumber name="height" bind:value={height} placeholder="Height" />
-<InputNumber name="width" bind:value={width} placeholder="Width" />
+<TextPicker label="Url" placeholder="Url" bind:value={url} />
+<NumberPicker label="Height" placeholder="Height" bind:value={height} />
+<NumberPicker label="Width" placeholder="Width" bind:value={width} />
 
 <p class="m-4">
     The iframe is by default completly sandboxed. This means that it cannot run scripts or escape the sandbox. 
@@ -121,57 +120,79 @@
     This reduces security, so only do it for sources you trust.
 </p>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows to run scripts</span>
-    <Toggle name="allowScripts" bind:on={allowScripts} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allow to run scripts</span>
+        <input type="checkbox" class="toggle" bind:checked={allowScripts} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows form submission</span>
-    <Toggle name="allowForms" bind:on={allowForms} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allow form submission</span>
+        <input type="checkbox" class="toggle" bind:checked={allowForms} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows to open modal windows</span>
-    <Toggle name="allowModals" bind:on={allowModals} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allow to open modal windows</span>
+        <input type="checkbox" class="toggle" bind:checked={allowModals} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows to lock the screen orientation</span>
-    <Toggle name="allowOrientationLock" bind:on={allowOrientationLock} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allows to lock the screen orientation</span>
+        <input type="checkbox" class="toggle" bind:checked={allowOrientationLock} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows to use the Pointer Lock API</span>
-    <Toggle name="allowPointerLock" bind:on={allowPointerLock} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allows to use the Pointer Lock API</span>
+        <input type="checkbox" class="toggle" bind:checked={allowPointerLock} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows popups</span>
-    <Toggle name="allowPopups" bind:on={allowPopups} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allows popups</span>
+        <input type="checkbox" class="toggle" bind:checked={allowPopups} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows popups to open new windows without inheriting the sandboxing</span>
-    <Toggle name="allowPopupsToEscapeSandbox" bind:on={allowPopupsToEscapeSandbox} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allows popups to open new windows without inheriting the sandboxing</span>
+        <input type="checkbox" class="toggle" bind:checked={allowPopupsToEscapeSandbox} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows to start a presentation session</span>
-    <Toggle name="allowPresentation" bind:on={allowPresentation} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allows to start a presentation session</span>
+        <input type="checkbox" class="toggle" bind:checked={allowPresentation} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows the iframe content to be treated as being from the same origin</span>
-    <Toggle name="allowSameOrigin" bind:on={allowSameOrigin} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allows the iframe content to be treated as being from the same origin</span>
+        <input type="checkbox" class="toggle" bind:checked={allowSameOrigin} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows the iframe content to navigate its top-level browsing context</span>
-    <Toggle name="allowTopNavigation" bind:on={allowTopNavigation} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allows the iframe content to navigate its top-level browsing context</span>
+        <input type="checkbox" class="toggle" bind:checked={allowTopNavigation} />
+    </label>
 </div>
 
-<div class="w-full flex flex-row justify-between items-center mt-2">
-    <span>Allows the iframe content to navigate its top-level browsing context, but only if initiated by user</span>
-    <Toggle name="allowTopLevelNavigationByUserActivation" bind:on={allowTopLevelNavigationByUserActivation} />
+<div class="form-control w-full">
+    <label class="label cursor-pointer">
+        <span class="label-text">Allows the iframe content to navigate its top-level browsing context, but only if initiated by user</span>
+        <input type="checkbox" class="toggle" bind:checked={allowTopLevelNavigationByUserActivation} />
+    </label>
 </div>

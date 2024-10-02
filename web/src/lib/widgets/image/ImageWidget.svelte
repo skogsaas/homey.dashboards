@@ -1,11 +1,13 @@
 <script lang="ts">
     import { devices, homey } from '$lib/stores/homey';
-    import type { WidgetContext } from '$lib/types/Widgets';
+    import type { GridStackWidget } from 'gridstack';
 
     import type ImageSettings from './ImageSettings';
+    import type { WidgetContext } from '$lib/types/Widgets';
     
-    export let settings: ImageSettings;
+    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
+    export let settings: ImageSettings;
 
     let refreshSlug = 0;
     let refreshClear: number | undefined;

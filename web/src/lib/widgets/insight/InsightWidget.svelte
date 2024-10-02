@@ -14,9 +14,10 @@
     import { onDestroy, } from 'svelte';
     import { dateFnsLocale } from '$lib/stores/i18n';
     import type { Threshold, WidgetContext } from '$lib/types/Widgets';
+    import type { GridStackWidget } from 'gridstack';
     
-    export let settings: InsightSettings_v5;
     export let context: WidgetContext;
+    export let settings: InsightSettings_v5;
 
     let resolution: string;
     let series: Series_v5[];
@@ -96,7 +97,10 @@
             load = true;
         }
 
-        if(series === undefined || series.length != s.series?.length || JSON.stringify(series) !== JSON.stringify(s.series)) {
+        if(series === undefined || 
+            series.length != s.series?.length || 
+            JSON.stringify(series) !== JSON.stringify(s.series)
+        ) {
             if(s?.series !== undefined) {
                 series = [...s.series];
                 load = true;
@@ -346,13 +350,13 @@
 {#if series === undefined || series.length === 0}
     <span>Insights not configured</span>
 {:else}
-    <div class="w-full min-h-0" class:flex-1={context.mode !== 'view'} class:h-96={context.mode === 'view'}>
-        <Chart 
-            bind:chart 
-            type="line" 
-            {data} 
-            {options} 
-            {plugins}
-        />
-    </div>
+<div style="height: {settings.height ?? 200}px;">
+    <Chart 
+        bind:chart 
+        type="line" 
+        {data} 
+        {options} 
+        {plugins}
+    />
+</div>
 {/if}

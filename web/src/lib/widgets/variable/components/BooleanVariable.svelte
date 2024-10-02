@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     import type { Variable } from '$lib/types/Homey';
     
     import Boolean from '$lib/components/boolean/Boolean.svelte';

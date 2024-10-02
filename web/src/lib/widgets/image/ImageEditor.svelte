@@ -4,11 +4,8 @@
 
     import type ImageSettings from "./ImageSettings";
 
-    import Select from 'stwui/select';
-    import Toggle from 'stwui/toggle';
-
     import DevicePicker from '$lib/components/DevicePicker.svelte';
-    import type { DeviceObj, ImageObj } from '$lib/types/Homey';
+    import type { DeviceObj, Image } from '$lib/types/Homey';
 
     export let settings: ImageSettings;
 
@@ -44,15 +41,15 @@
     ];
 
     let deviceId: string | undefined;
-    let imageId: Option | undefined;
-    let refresh: Option;
+    let imageId: string | undefined;
+    let refresh: number;
     let hideTitle: boolean;
-    let fontColor: Option;
+    let fontColor: string | undefined;
     let fontBlur: boolean;
 
     const deviceFilter = (device: DeviceObj) => device.images.length > 0;
 
-    let images: Option[] = [];
+    let images: Image[] = [];
 
     $: onSettings(settings);
 
@@ -70,47 +67,51 @@
             const image = ($devices[deviceId].images ?? []).find(i => i.id === settings?.imageId);
 
             if(image !== undefined) {
-                imageId = { value: image.id, label: image.title };
+                imageId = image.id;
             }
         }
         
-        refresh = refreshOptions.find(r => Number(r.value) === (settings?.refresh ?? 0)) ?? refreshOptions[0];
+        refresh = settings?.refresh ?? 0;
         hideTitle = settings?.hideTitle ?? false;
-        fontColor = colorOptions.find(c => c.value === (settings?.fontColor ?? 'black')) ?? colorOptions[0];
+        fontColor = settings?.fontColor ?? 'black';
         fontBlur = settings?.fontBlur ?? false;
     }
 
-    function onDevice(value: string | undefined) {
-        if(value === undefined) {
+    function onDevice(_deviceId: string | undefined) {
+        if(_deviceId === undefined) {
             return;
         }
 
-        images = $devices[value].images
-            .map(i => ({ value: i.id, label: i.title }));
+        images = $devices[_deviceId].images;
 
-        if(value === settings.deviceId) {
+        if(_deviceId === settings.deviceId) {
             return;
         }
 
         // Reset the capability after changing device
-        imageId = undefined;
+
+        if(images.length === 1) {
+            imageId = images[0].id;
+        } else {
+            imageId = undefined;
+        }
         
         const s: ImageSettings = { ...settings, deviceId, imageId };
         dispatch('settings', s);
     }
 
-    function onImage(option: Option | undefined) {
-        if(option === undefined || option.value === settings.imageId) {
+    function onImage(_imageId: string | undefined) {
+        if(_imageId === undefined || _imageId === settings.imageId) {
             return;
         }
 
-        const s: ImageSettings = { ...settings, imageId: option.value };
+        const s: ImageSettings = { ...settings, imageId: _imageId };
         dispatch('settings', s);
     }
 
-    function onRefresh(option: Option) {
-        if(Number(option.value) !== settings.refresh) {
-            const s: ImageSettings = { ...settings, refresh: Number(option.value) };
+    function onRefresh(_refresh: number) {
+        if(_refresh !== settings.refresh) {
+            const s: ImageSettings = { ...settings, refresh: _refresh };
             dispatch('settings', s);
         }
     }
@@ -122,9 +123,9 @@
         }
     }
 
-    function onFontColor(option: Option) {
-        if(option.value !== settings.fontColor) {
-            const s: ImageSettings = { ...settings, fontColor: option.value };
+    function onFontColor(_color: string | undefined) {
+        if(_color !== settings.fontColor) {
+            const s: ImageSettings = { ...settings, fontColor: _color };
             dispatch('settings', s);
         }
     }
@@ -139,63 +140,65 @@
 
 <DevicePicker bind:deviceId={deviceId} {deviceFilter} />
 
-<div>
 {#if deviceId}
-    <Select 
-        bind:value={imageId} 
-        placeholder="Image"
-        name="imageId"
-    >
-        <Select.Options slot="options">
-            {#each images as option}
-                <Select.Options.Option {option} />
+    <label class="form-control w-full">
+        <div class="label">
+            <span class="label-text">Image</span>
+        </div>
+        <select class="select" bind:value={imageId}>
+            {#each images as image}
+                <option value={image.id}>{image.title}</option>
             {/each}
-        </Select.Options>
-        
-    </Select>
+        </select>
+    </label>
 {/if}
+
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Refresh every</span>
+    </div>
+    <select class="select" bind:value={refresh}>
+        <option value="0">Never</option>
+        <option value="1">1 second</option>
+        <option value="5">5 seconds</option>
+        <option value="15">15 seconds</option>
+        <option value="30">30 seconds</option>
+        <option value="60">1 minute</option>
+        <option value="300">5 minutes</option>
+        <option value="600">10 minutes</option>
+        <option value="1800">30 minutes</option>
+        <option value="3600">1 hour</option>
+        <option value="21600">6 hour</option>
+        <option value="43200">12 hour</option>
+        <option value="86400">24 hour</option>
+    </select>
+</label>
+
+<div class="form-control">
+    <label class="label cursor-pointer">
+      <span class="label-text">Hide title</span> 
+      <input type="checkbox" class="toggle" bind:checked={hideTitle} />
+    </label>
 </div>
 
-<Select 
-    bind:value={refresh} 
-    placeholder="Refresh every"
-    name="refresh"
->
-    <Select.Options slot="options">
-        {#each refreshOptions as option}
-            <Select.Options.Option {option} />
-        {/each}
-    </Select.Options>
-</Select>
-
-<Toggle
-    name="hideTitle"
-    bind:on={hideTitle}
->
-    <Toggle.ContentRight slot="content-right">
-        <Toggle.ContentRight.Label slot="label">Hide title</Toggle.ContentRight.Label>
-    </Toggle.ContentRight>
-</Toggle>
-
 {#if !hideTitle}
-    <Toggle
-        name="fontBlur"
-        bind:on={fontBlur}
-    >
-        <Toggle.ContentRight slot="content-right">
-            <Toggle.ContentRight.Label slot="label">Blur background</Toggle.ContentRight.Label>
-        </Toggle.ContentRight>
-    </Toggle>
+    <div class="form-control">
+        <label class="label cursor-pointer">
+        <span class="label-text">Blur background</span> 
+        <input type="checkbox" class="toggle" bind:checked={fontBlur} />
+        </label>
+    </div>
 
-    <Select 
-        bind:value={fontColor} 
-        placeholder="Font color"
-        name="fontColor"
-    >
-        <Select.Options slot="options">
-            {#each colorOptions as option}
-                <Select.Options.Option {option} />
-            {/each}
-        </Select.Options>
-    </Select>
+    <label class="form-control w-full">
+        <div class="label">
+            <span class="label-text">Color</span>
+        </div>
+        <select class="select" bind:value={fontColor}>
+            <option value="black">Black</option>
+            <option value="white">White</option>
+            <option value="red">Red</option>
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+        </select>
+    </label>
 {/if}

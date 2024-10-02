@@ -2,6 +2,8 @@ export interface Homey {
     id: string;
     baseUrl: Promise<string>;
 
+    __io: any;
+
     apps: AppManager;
     devices: DeviceManager;
     flow: FlowManager;
@@ -153,9 +155,9 @@ export interface DeviceObj extends Emitter {
     setCapabilityValue(opts: { capabilityId: string, deviceId: string, value: string|number|boolean, transactionId?: string, transactionTime?: number }) : Promise<any>;
 }
 
-export interface CapabilityObj {
+export interface CapabilityObj extends Emitter {
     id: string;
-    type: string;
+    type: 'boolean' | 'number' | 'string' | 'enum';
     iconObj: IconObj;
     title: string;
     getable: boolean;
@@ -235,7 +237,7 @@ export interface Variable extends Emitter {
     id: string;
     uri: string;
     name: string;
-    type: string;
+    type: 'boolean'|'number'|'string';
     value: string|boolean|number;
 }
 
@@ -342,7 +344,7 @@ export interface OAuthDevice {
     platform: string;
     publicKey: string;
     token: string;
-    updateD: string;
+    updated: string;
 }
 
 export interface OAuthHomey {

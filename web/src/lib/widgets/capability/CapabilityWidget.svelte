@@ -3,7 +3,7 @@
 
     import type { CapabilityEvent, CapabilityObj, DeviceObj } from '$lib/types/Homey';
     
-    import Icon from 'stwui/icon';
+    import Icon from '$lib/components/Icon.svelte'
 
     import Slider from './components/Slider.svelte';
     import Sensor from './components/Sensor.svelte';
@@ -13,10 +13,11 @@
     import Picker from './components/Picker.svelte';
     import type { CapabilitySettings_v5 } from './CapabilitySettings';
     import { getIcon } from '$lib/components/icons/utils';
-    import type { WidgetContext } from '$lib/types/Widgets';
+    import type { GridItemLayout_v1 } from '$lib/types/Grid';
     
-    export let settings: CapabilitySettings_v5;
+    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
+    export let settings: CapabilitySettings_v5;
 
     let deviceId: string = '';
     let capabilityId: string = '';
@@ -24,13 +25,15 @@
     let device: DeviceObj | undefined;
     let capability: CapabilityObj | undefined;
 
+    let subscribedDevice: DeviceObj | undefined;
+
     $: onSettings(settings);
 
-    $: latestDevice = $devices[deviceId];
-    $: capability = latestDevice && capabilityId ? latestDevice.capabilitiesObj[capabilityId] : undefined;
+    $: device = $devices[deviceId];
+    $: capability = device !== undefined && capabilityId !== undefined ? device.capabilitiesObj[capabilityId] : undefined;
     $: controllable = $scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.control');
 
-    $: onDevice(latestDevice);
+    $: onDevice(device);
 
     function onSettings(s: CapabilitySettings_v5) {
         if(s.capabilityUri) {
@@ -40,17 +43,17 @@
         }
     }
 
-    function onDevice(d: DeviceObj) {
+    function onDevice(_device: DeviceObj) {
         // If the device changes, try to unsubscribe from events
-        if(device !== undefined && device.off !== undefined) {
-            device.off('capability', updateCapability);
+        if(subscribedDevice !== undefined && subscribedDevice.off !== undefined) {
+            subscribedDevice.off('capability', updateCapability);
         }
 
-        if(d !== undefined) {
-            device = d;
+        if(_device !== undefined) {
+            subscribedDevice = _device;
 
-            if(device.on !== undefined) {
-                device.on('capability', updateCapability);
+            if(subscribedDevice.on !== undefined) {
+                subscribedDevice.on('capability', updateCapability);
             }
         }
     }
@@ -99,15 +102,13 @@
 
 {#if device !== undefined && capability !== undefined}
     <div class="flex items-center justify-between w-full pl-1 pr-1 leading-normal cursor-pointer">
-        {#if context.mode === 'card'}
-            {#if settings.iconId !== undefined}
-                <Icon data={getIcon(settings.iconId)} class="mr-1" />
-            {/if}
-        
-            <div class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap flex-grow">
-                {settings.title ?? capability.title}
-            </div>
+        {#if settings.iconId !== undefined}
+            <Icon data={getIcon(settings.iconId)} />
         {/if}
+    
+        <div class="font-extralight overflow-hidden overflow-ellipsis whitespace-nowrap flex-grow">
+            {settings.title ?? capability.title}
+        </div>
         
         <svelte:component 
             this={getComponent(capability)} 
@@ -115,7 +116,6 @@
             {device}
             {capability} 
             {controllable}
-            mode={context.mode}
         />
     </div>
 {:else}

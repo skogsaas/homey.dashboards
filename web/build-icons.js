@@ -15,7 +15,7 @@ function camelize(str) {
 
 const body = meta
     .filter(icon => !icon.deprecated)
-    .map(icon => `export const ${camelize('mdi ' + icon.name)}: string = '<svg viewBox="0 0 24 24"><path d="${icon.path}" /></svg>';\n`)
+    .map(icon => `export const ${camelize('mdi ' + icon.name)}: string = '<path d="${icon.path}" />';\n`)
     .join('');
 
 const lookup = meta

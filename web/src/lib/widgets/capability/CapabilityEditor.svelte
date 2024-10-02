@@ -1,18 +1,11 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    // UI elements
-    import DevicePicker from '$lib/components/DevicePicker.svelte';
-
-    // Tailwind
-    import Input from "stwui/input";
-
-    import { devices } from '$lib/stores/homey';
-
     import type { CapabilityObj } from '$lib/types/Homey';
-    import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
     import type { CapabilitySettings_v5 } from './CapabilitySettings';
+    import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
     import IconPicker from '$lib/components/IconPicker.svelte';
+    import TextPicker from '$lib/components/TextPicker.svelte';
 
     const dispatch = createEventDispatcher();
     
@@ -57,14 +50,10 @@
     }
 </script>
 
-<div class="mt-2">
-    <CapabilityPicker bind:capabilityUri={capabilityUri} on:capability={(c) => (capability = c.detail)} />
-</div>
+<CapabilityPicker bind:capabilityUri={capabilityUri} on:capability={(c) => (capability = c.detail)} />
 
 {#if capability}
-    <Input name="title" bind:value={title} placeholder={capability.title} class="mt-2" />
+    <TextPicker bind:value={title} placeholder={capability.title} label="Title" />
 {/if}
 
-<div class="mt-2">
-    <IconPicker bind:iconId={iconId} />
-</div>
+<IconPicker bind:iconId={iconId} />

@@ -1,14 +1,13 @@
 <script lang="ts">
-    import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     import type { CapabilityObj, DeviceObj } from '$lib/types/Homey';
     import { formatDistance } from 'date-fns'
 
     import Toggle from '$lib/components/boolean/Toggle.svelte';
     import { createEventDispatcher } from 'svelte';
     import type { CapabilitySettings_v5 } from '../CapabilitySettings';
-    import { Icon } from 'stwui';
+    import Icon from '$lib/components/Icon.svelte'
     import { getIcon } from '$lib/components/icons/utils';
-    import { mdiLightbulb } from '$lib/components/icons';
 
     const dispatcher = createEventDispatcher();
 
@@ -59,7 +58,7 @@
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div class="flex items-center w-full" on:click|stopPropagation>
             {#if settings.iconId !== undefined}
-                <Icon data={getIcon(settings.iconId)} class="mr-1" />
+                <Icon data={getIcon(settings.iconId)} extraClass="mr-1" />
             {/if}
             <h3>{settings.title ?? capability.title}</h3>
             <span class="font-extralight ml-2 text-xs mr-auto">{formatDistance(new Date(capability.lastUpdated), new Date(), { addSuffix: true })}</span>
