@@ -180,7 +180,7 @@ export const stores = derived(
         .reduce((existing: StoreMap, dev: DeviceObj) => {
             const settings = dev.settings;
             let store: Store_v1 = {
-                id: dev.id,
+                id: dev.data.id, // Use the data.id as store id, and not the device.id
                 version: 1,
                 title: dev.name,
                 dashboards: [],
