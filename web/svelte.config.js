@@ -1,4 +1,5 @@
-import adapter from "@sveltejs/adapter-static";
+import autoAdapter from "@sveltejs/adapter-static";
+import staticAdapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/kit/vite";
 
 import { readFileSync } from 'fs';
@@ -16,11 +17,11 @@ const config = {
 
   kit: {
     adapter: target === "app" ? 
-    adapter({
+    staticAdapter({
       fallback: "index.html",
       precompress: true,
     }) : 
-    adapter(),
+    autoAdapter(),
     paths: {
       base: target === "app" ? "/app/skogsaas.dashboards/assets/dashboard" : "",
     },

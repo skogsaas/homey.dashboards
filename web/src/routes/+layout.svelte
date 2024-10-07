@@ -28,7 +28,7 @@
     import { clientId, clientSecret } from '$lib/constants';
 
     import { v4 as uuid } from 'uuid';
-    import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
+    import HomeyAPIV3Local from 'homey-api/lib/HomeyAPI/HomeyAPIV3Local';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
     import { getIcon } from '$lib/components/icons/utils';
 
@@ -62,11 +62,10 @@
         registerSW({
           immediate: true,
           onRegistered(r: any) {
-            // uncomment following code if you want check for updates
             r && setInterval(() => {
                console.log('Checking for sw update')
                r.update()
-            }, 15*60000) // Every 15 minutes
+            }, 60*60000) // Every 1 hour
             console.log(`SW Registered: ${r}`)
           },
           onRegisterError(error: any) {
@@ -112,10 +111,14 @@
       if($homey === undefined) {
         if($apiKey !== undefined) {
           // Local Homey API-key exists
-          const instance: Homey = await HomeyAPI.createLocalAPI({
-            address: $baseUrl,
+          const props = {
             token: $apiKey,
-          });
+            debug: function debug() { },
+            baseUrl: $baseUrl,
+            strategy: []
+          };
+
+          const instance: Homey = new HomeyAPIV3Local(props);
 
           homeys.add(instance);
           homey.set(instance);

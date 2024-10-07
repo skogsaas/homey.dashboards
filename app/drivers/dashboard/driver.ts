@@ -1,11 +1,9 @@
 import { randomUUID } from 'crypto';
 import Homey from 'homey';
 
-type ItemMap = { [key: string]: any; }
-
 interface Store_v1 {
-  dashboards: ItemMap;
-  templates: ItemMap;
+  dashboards: any[];
+  templates: any[];
 }
 
 export class DashboardDriver extends Homey.Driver {
@@ -30,50 +28,59 @@ export class DashboardDriver extends Homey.Driver {
     const device = this.getDevice({ id: storeId });
     const existing = device.getSettings();
 
-    const updated: Store_v1 = {
-      dashboards: {},
-      templates: {}
+    this.log('Existing:')
+    this.log(existing);
+
+    const store: Store_v1 = {
+      dashboards: (existing as Store_v1).dashboards ?? [],
+      templates: (existing as Store_v1).templates ?? []
     }
 
-    if(existing.hasOwnProperty('dashboards') || existing.hasOwnProperty('templates')) {
-      updated.dashboards = (existing as Store_v1).dashboards ?? {};
-      updated.templates = (existing as Store_v1).templates ?? {};
-    } else if(existing.hasOwnProperty('items')) { // Dashboard_v1
-      updated.dashboards = {};
-      updated.templates = {};
-
-      // Originally the storeId was the dashboardId before converting each dashboard device to a store.
-      updated.dashboards[storeId] = existing
+    if(existing.hasOwnProperty('items')) { // Dashboard_v1
+      store.dashboards.push(existing)
+      
+      this.log('Converting to store.');
     }
 
-    updated.dashboards[dashboardId] = settings
+    const index = store.dashboards.findIndex(d => d.id === dashboardId);
 
-    await device.setSettings(settings);
+    if(index == -1) {
+      store.dashboards.push(settings);
+    } else {
+      store.dashboards[index] = settings;
+    }
+
+    this.log('Updating dashboard  \'' + dashboardId + '\' in store \'' + storeId + '\' with ' + store.dashboards.length + ' dashboards and ' + store.templates.length + ' templates');
+
+    await device.setSettings(store);
   }
 
   public async setTemplateSettings(storeId: string, templateId: string, settings: any) : Promise<void> {
     const device = this.getDevice({ id: storeId });
     const existing = device.getSettings();
 
-    const updated: Store_v1 = {
-      dashboards: {},
-      templates: {}
+    const store: Store_v1 = {
+      dashboards: (existing as Store_v1).dashboards ?? [],
+      templates: (existing as Store_v1).templates ?? []
     }
 
-    if(existing.hasOwnProperty('dashboards') || existing.hasOwnProperty('templates')) {
-      updated.dashboards = (existing as Store_v1).dashboards ?? {};
-      updated.templates = (existing as Store_v1).templates ?? {};
-    } else if(existing.hasOwnProperty('items')) { // Dashboard_v1
-      updated.dashboards = {};
-      updated.templates = {};
+    if(existing.hasOwnProperty('items')) { // Dashboard_v1
+      store.dashboards.push(existing)
 
-      // Originally the storeId was the dashboardId before converting each dashboard device to a store.
-      updated.dashboards[storeId] = existing
+      this.log('Converting to store.');
     }
 
-    updated.templates[templateId] = settings
+    const index = store.templates.findIndex(d => d.id === templateId);
 
-    await device.setSettings(settings);
+    if(index == -1) {
+      store.dashboards.push(settings);
+    } else {
+      store.dashboards[index] = settings;
+    }
+
+    this.log('Updating template  \'' + templateId + '\' in store \'' + storeId + '\' with ' + store.dashboards.length + ' dashboards and ' + store.templates.length + ' templates');
+
+    await device.setSettings(store);
   }
 }
 

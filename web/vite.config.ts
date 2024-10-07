@@ -47,9 +47,6 @@ export default defineConfig({
 					},
 				],
 			},
-			injectManifest: {
-				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}']
-			},
 			workbox: {
 				globPatterns: ['client/**/*.{js,css,ico,png,svg,webp,woff,woff2}'],
 				maximumFileSizeToCacheInBytes: 4096000

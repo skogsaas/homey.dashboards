@@ -10,11 +10,12 @@
     import { clientId, clientSecret } from '$lib/constants';
 
     import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
+    import HomeyAPIV3Local from 'homey-api/lib/HomeyAPI/HomeyAPIV3Local';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
 
     // Tailwind
     import Icon from '$lib/components/Icon.svelte'
-    import { mdiAccount, mdiEmoticonSadOutline, mdiKey } from '$lib/components/icons';
+    import { mdiAccount, mdiKey } from '$lib/components/icons';
     import { getIcon } from '$lib/components/icons/utils';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
@@ -56,10 +57,14 @@
         try {
             const url = localHosting ? $baseUrl : 'https://' + localHomeyId + '.connect.athom.com';
 
-            const instance: Homey = await HomeyAPI.createLocalAPI({
-                address: url,
-                token: localKey,
-            });
+            const props = {
+            token: localKey,
+            debug: function debug() { },
+            baseUrl: url,
+            strategy: []
+          };
+
+          const instance: Homey = new HomeyAPIV3Local(props);
 
             return instance;
         }

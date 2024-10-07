@@ -183,16 +183,14 @@ export const stores = derived(
                 id: dev.data.id, // Use the data.id as store id, and not the device.id
                 version: 1,
                 title: dev.name,
-                dashboards: [],
-                templates: []
+                dashboards: (settings as Store_v1).dashboards ?? [],
+                templates: (settings as Store_v1).templates ?? []
             }
 
             if(settings.hasOwnProperty('items')) { // Dashboard_v1
-                store.dashboards.push({ id: dev.data.id, title: dev.name, ...dev.settings });
+                store.dashboards.push({ ...settings, title: dev.name });
             } else if(settings.hasOwnProperty('root')) { // Dashboard_v2
-                store.dashboards.push({ id: dev.data.id, title: dev.name, ...dev.settings });
-            } else if(settings.version !== undefined && settings.version === 1) {
-                store = { ...store, ...settings };
+                store.dashboards.push({ ...settings, title: dev.name });
             }
 
             existing[store.id] = store;
@@ -204,7 +202,7 @@ export const storesLoading = derived(devicesLoading, (loading: boolean) => loadi
 
 export const dashboards = derived(
     stores, 
-    (store: StoreMap) => Object.values(store)
+    (storeMap: StoreMap) => Object.values(storeMap)
         .flatMap(store => store.dashboards)
         .reduce((existing: DashboardMap, dashboard: Dashboard_v2) => {
             existing[dashboard.id] = dashboard;
@@ -215,9 +213,9 @@ export const dashboardsLoading = derived(devicesLoading, (loading: boolean) => l
 
 export const templates = derived(
     stores, 
-    (store: StoreMap) => Object.values(store)
+    (storeMap: StoreMap) => Object.values(storeMap)
         .flatMap(store => store.templates)
-        .concat((BuiltInTemplates as Template_v1[]).map(t => { t.builtin = true; return t; })) // Add the built-in templates
+        .concat((BuiltInTemplates as unknown as Template_v1[]).map(t => { t.builtin = true; return t; })) // Add the built-in templates
         .reduce((existing: TemplateMap, template: Template_v1) => {
             existing[template.id] = template;
             return existing;
