@@ -39,8 +39,6 @@
     let heartbeatInterval = 1000;
     let heartbeatClear: any | undefined;
 
-    $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
-
     // Heartbeat logic to check for page frozen
     $: {
         if(heartbeatClear !== undefined) clearInterval(heartbeatClear);
@@ -56,24 +54,7 @@
     let dashboardMenuOpen: boolean = false;
     let addDashboardOpen: boolean = false;
 
-    onMount(async () => {
-      if (pwaInfo) {
-        const { registerSW } = await import('virtual:pwa-register')
-        registerSW({
-          immediate: true,
-          onRegistered(r: any) {
-            r && setInterval(() => {
-               console.log('Checking for sw update')
-               r.update()
-            }, 60*60000) // Every 1 hour
-            console.log(`SW Registered: ${r}`)
-          },
-          onRegisterError(error: any) {
-            console.log('SW registration error', error)
-          }
-        })
-      }
-      
+    onMount(async () => {      
       // TODO
       //document.body.setAttribute('data-theme', 'dark');
       await loadData()
@@ -364,10 +345,6 @@
     }
 
 </script>
-
-<svelte:head> 
- 	{@html webManifestLink} 
-</svelte:head>
 
 <svelte:window on:visibilitychange={e => onWindowVisibilityChange()} />
 

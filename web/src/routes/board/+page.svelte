@@ -65,6 +65,10 @@
             dashboard = d;
             root = d.root;
             storeId = Object.values($stores).find(store => store.dashboards.some(dash => dash.id === dashboard?.id))?.id;
+        } else if(_dashboardId === null) {
+            dashboard = undefined;
+            root = undefined;
+            storeId = undefined;
         }
     }
 

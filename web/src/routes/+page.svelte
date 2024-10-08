@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { pwaInfo } from 'virtual:pwa-info'; 
+
     import { baseUrl, dashboards as homeyDashboards, homey } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import type { Homey } from '$lib/types/Homey';
@@ -30,7 +32,26 @@
 
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
 
+    $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
+
     onMount(async () => {
+        if (pwaInfo && $page.url.pathname === $baseUrl) {
+            const { registerSW } = await import('virtual:pwa-register')
+            registerSW({
+            immediate: true,
+            onRegistered(r: any) {
+                r && setInterval(() => {
+                console.log('Checking for sw update')
+                r.update()
+                }, 60*60000) // Every 1 hour
+                console.log(`SW Registered: ${r}`)
+            },
+            onRegisterError(error: any) {
+                console.log('SW registration error', error)
+            }
+            })
+        }
+        
         const apiKey = $page.url.searchParams.get('api-key');
 
         if($page.url.origin.includes('.homey.homeylocal.com') || 
@@ -113,6 +134,7 @@
 
 <svelte:head>
   <title>Home</title>
+  {@html webManifestLink} 
 </svelte:head>
 
 <div class="flex flex-col justify-center mx-auto w-full">
