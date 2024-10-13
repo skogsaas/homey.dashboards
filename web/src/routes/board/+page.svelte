@@ -85,7 +85,11 @@
 
     async function onStoreSelect(_storeId: string) {
         storeId = _storeId;
-        //await saveDashboard($homey!.id, storeId, dashboard!);
+        await saveDashboard($homey!.id, storeId, dashboard!);
+    }
+
+    function onSettings(_dashboard: Dashboard_v2) {
+        dashboard = { ..._dashboard, root };
     }
 
     function onRoot(_root: WidgetSettings_v1 | undefined) {
@@ -135,7 +139,7 @@
                 on:root={e => onRoot(e.detail)}
                 on:save={e => onSave()}
             >
-                <DashboardEditor bind:settings={dashboard} />
+                <DashboardEditor settings={dashboard} on:settings={e => onSettings(e.detail)} />
             </WidgetEditor>
 
             <StoreDialog bind:open={storeOpen} on:storeId={e => onStoreSelect(e.detail)} />
