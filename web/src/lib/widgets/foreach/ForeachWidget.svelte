@@ -140,7 +140,12 @@
 
                 if(Object.hasOwn(item, itemKey)) {
                     const itemValue = item[itemKey];
-                    copy = copy.replaceAll(fullMatch, itemValue);
+                    
+                    if(copy === fullMatch) {
+                        copy = itemValue;
+                    } else {
+                        copy = copy.replaceAll(fullMatch, itemValue);
+                    }
                 }
             }
 

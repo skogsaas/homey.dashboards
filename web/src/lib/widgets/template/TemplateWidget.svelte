@@ -78,7 +78,11 @@
                     if(matches.length === 0 && (templateArg.type === 'number' || templateArg.type === 'boolean')) {
                         return argValue;
                     } else {
-                        copy = copy.replaceAll(fullMatch, argValue);
+                        if(copy === fullMatch) {
+                            copy = argValue;
+                        } else {
+                            copy = copy.replaceAll(fullMatch, argValue);
+                        }
                     }
                 }
             }
