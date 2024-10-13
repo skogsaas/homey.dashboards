@@ -11,7 +11,7 @@
     import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys, variables, devicesLoading, variablesLoading, flowFoldersLoading, basicFlowsLoading, advancedFlowsLoading, insightsLoading, zonesLoading } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import { editing } from '$lib/stores/editing';
-    import { apiKey } from '$lib/stores/auth';
+    import { apiKey, homeyId } from '$lib/stores/auth';
 
     // UI components
     import Icon from '$lib/components/Icon.svelte'
@@ -27,7 +27,6 @@
 
     import { clientId, clientSecret } from '$lib/constants';
 
-    import { v4 as uuid } from 'uuid';
     import HomeyAPIV3Local from 'homey-api/lib/HomeyAPI/HomeyAPIV3Local';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
     import { getIcon } from '$lib/components/icons/utils';
@@ -96,8 +95,16 @@
             token: $apiKey,
             debug: function debug() { },
             baseUrl: $baseUrl,
-            strategy: []
+            strategy: [],
+            properties: {
+              id: $homeyId
+            }
           };
+
+          //const instance = await HomeyAPI.createLocalAPI({
+          //  address: $baseUrl,
+          //  token: $apiKey,
+          //});
 
           const instance: Homey = new HomeyAPIV3Local(props);
 

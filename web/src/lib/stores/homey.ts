@@ -47,8 +47,8 @@ function createBaseUrl() {
         if($homey !== undefined) {
             $homey.baseUrl.then(u => set(u))
         }
-        else if(localStorage.homeyId !== undefined) {
-            set(localStorage.homeyId);
+        else if(localStorage.homeyUrl !== undefined) {
+            set(localStorage.homeyUrl);
         }
         else if(import.meta.env.VITE_HOMEY_URL) { // Inject development variables
             set(import.meta.env.VITE_HOMEY_URL);

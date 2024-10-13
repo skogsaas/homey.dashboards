@@ -4,7 +4,7 @@
     import { baseUrl, dashboards as homeyDashboards, homey } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import type { Homey } from '$lib/types/Homey';
-    import { apiKey } from '$lib/stores/auth';
+    import { apiKey, homeyId } from '$lib/stores/auth';
     
     import { goto } from '$app/navigation';
     import { base } from '$app/paths';
@@ -95,11 +95,8 @@
     }
 
     async function setHomey(instance: Homey) {
-        if(!localHosting) {
-            localStorage.homeyId = localHomeyId;
-        }
-
         apiKey.set(localKey);
+        homeyId.set(localHomeyId);
         homey.set(instance);
 
         await goto(base + '/');
@@ -187,35 +184,33 @@
                     </div>
                     <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
                         <form class="card-body max-w-xs">    
-                            {#if !localHosting}
-                                <p class="pt-6">
-                                    You can obtain the Homey-ID by navigating to:
-                                </p>
-                                <div class="text-sm breadcrumbs">
-                                    <ul>
-                                        <li>Homey</li> 
-                                        <li>Settings</li> 
-                                        <li>General</li>
-                                        <li>Cloud</li>
-                                    </ul>
-                                </div>
+                            <p class="pt-6">
+                                You can obtain the Homey-ID by navigating to:
+                            </p>
+                            <div class="text-sm breadcrumbs">
+                                <ul>
+                                    <li>Homey</li> 
+                                    <li>Settings</li> 
+                                    <li>General</li>
+                                    <li>Cloud</li>
+                                </ul>
+                            </div>
 
-                                <div class="form-control">
+                            <div class="form-control">
+                                <label class="label" for="localHomeyId">
+                                    <span class="label-text">Homey ID</span>
+                                </label>
+                                <input type="text" id="localHomeyId" class="input input-primary" bind:value={localHomeyId} />
+                                {#if localHomeyId.length > 0 && localHomeyId.length !== 24}
                                     <label class="label" for="localHomeyId">
-                                        <span class="label-text">Homey ID</span>
+                                        <span class="label-text-alt">Must be 24 characters</span>
                                     </label>
-                                    <input type="text" id="localHomeyId" class="input input-primary" bind:value={localHomeyId} />
-                                    {#if localHomeyId.length > 0 && localHomeyId.length !== 24}
-                                        <label class="label" for="localHomeyId">
-                                            <span class="label-text-alt">Must be 24 characters</span>
-                                        </label>
-                                    {/if}
-                                </div>
+                                {/if}
+                            </div>
 
-                                <div class="divider"></div>
-                            {/if}
+                            <div class="divider"></div>
     
-                            {#if localHosting || localHomeyId.length === 24}
+                            {#if localHomeyId.length === 24}
                                 <p class="pt-6">
                                     You can then create a API-key at:
                                 </p>
@@ -242,7 +237,7 @@
                                 
                             <button 
                                 class="btn btn-primary mt-6" 
-                                disabled={localKey === '' || (!localHosting && localHomeyId.length != 24)} 
+                                disabled={localKey === '' || localHomeyId.length != 24} 
                                 on:click={verifyApiKey}
                             >
                                 Verify
