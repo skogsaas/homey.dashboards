@@ -32,8 +32,8 @@ export class DashboardDriver extends Homey.Driver {
     this.log(existing);
 
     const store: Store_v1 = {
-      dashboards: (existing as Store_v1).dashboards ?? [],
-      templates: (existing as Store_v1).templates ?? []
+      dashboards: [...((existing as Store_v1).dashboards ?? [])],
+      templates: [...((existing as Store_v1).templates ?? [])]
     }
 
     if(existing.hasOwnProperty('items')) { // Dashboard_v1
