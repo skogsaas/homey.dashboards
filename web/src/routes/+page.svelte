@@ -35,7 +35,7 @@
     $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
     onMount(async () => {
-        if (pwaInfo && $page.url.pathname === $baseUrl) {
+        if (pwaInfo) {
             const { registerSW } = await import('virtual:pwa-register')
             registerSW({
             immediate: true,
