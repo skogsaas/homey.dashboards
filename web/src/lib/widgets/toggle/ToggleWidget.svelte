@@ -27,7 +27,6 @@
 
     $: onSettings(settings);
     $: onUri(uri);
-    $: onChecked(checked);
 
     function onSettings(_settings: ToggleSettings_v1) {
         if(_settings.uri !== uri) {
@@ -140,14 +139,14 @@
                 await device.setCapabilityValue({ 
                     deviceId: device.id,
                     capabilityId: capability.id,
-                    value: checked
+                    value: _value
                 });
             }
         } else if (variable !== undefined) {
             if(_value !== variable.value && !disabled) {
                 await $homey.logic.updateVariable({
                     id: variable.id,
-                    variable: { value: checked }
+                    variable: { value: _value }
                 })
             }
         }
@@ -156,19 +155,19 @@
 </script>
 
 <label class="label cursor-pointer flex flex-row items-center p-0">
-        {#if settings.iconId !== undefined || iconId !== undefined}
+    {#if settings.iconId !== undefined || iconId !== undefined}
+        <span>
+            <Icon data={getIcon(settings.iconId ?? iconId)} />
+        </span>
+    {:else if iconUrl !== undefined}
+        {#await $homey.baseUrl then url}
             <span>
-                <Icon data={getIcon(settings.iconId ?? iconId)} />
+                <img class="w-8 h-8 m-1 dark:invert" src={url + device?.iconObj.url} alt={device?.icon} />
             </span>
-        {:else if iconUrl !== undefined}
-            {#await $homey.baseUrl then url}
-                <span>
-                    <img class="w-8 h-8 m-1 dark:invert" src={url + device?.iconObj.url} alt={device?.icon} />
-                </span>
-            {/await}
-        {/if}
+        {/await}
+    {/if}
 
     <span class="flex-1 overflow-ellipsis">{settings.label ?? label ?? uri ?? 'Not configured'}</span>
 
-    <input type="checkbox" class="toggle" {disabled} bind:checked={checked} />
+    <input type="checkbox" class="toggle" {disabled} checked={checked} on:click={e => onChecked(!checked)} />
 </label>
