@@ -1,12 +1,12 @@
 <script lang="ts">
-    import type { StackSettings_v1 } from './ListSettings';
+    import type { ListSettings_v1 } from './ListSettings';
     import Widget from '$lib/widgets/Widget.svelte';
     import type { WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
     import DndList from '$lib/components/DndList.svelte';
     import { createEventDispatcher } from 'svelte';
     
-    export let settings: StackSettings_v1;
-    export let context: WidgetContext;
+    export let settings: ListSettings_v1;
+    export let context: WidgetContext; 
 
     const dispatch = createEventDispatcher();
 
@@ -14,7 +14,7 @@
 
     $: onSettings(settings);
 
-    function onSettings(_settings: StackSettings_v1) {
+    function onSettings(_settings: ListSettings_v1) {
         items = settings.items ?? [];
     }
 
