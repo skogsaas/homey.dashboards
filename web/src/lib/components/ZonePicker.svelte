@@ -1,11 +1,10 @@
 <script lang="ts">
-    import type { DeviceObj, Zone } from "$lib/types/Homey";
+    import type { Zone } from "$lib/types/Homey";
 
     import { createEventDispatcher } from "svelte";
 
-    import { devices, homey, zones } from "$lib/stores/homey";
+    import { zones } from "$lib/stores/homey";
     import { mdiClose, mdiMagnify } from "./icons";
-    import VirtualList from "$lib/components/VirtualList.svelte";
     import Icon from "./Icon.svelte";
     import ZonePickerItem from "./ZonePickerItem.svelte";
 

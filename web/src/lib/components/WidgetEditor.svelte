@@ -158,7 +158,7 @@
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="flex flex-row justify-center" on:click={() => onBreadrumbs([])}>
+        <div class="flex flex-row justify-center p-2" on:click={() => onBreadrumbs([])}>
             <div class="w-full">
                 <DndSingle editable={context.editable} item={root} on:item={e => onRoot(e.detail)} let:item>
                     <Widget settings={item} {context} on:settings={e => onRoot(e.detail)} />
