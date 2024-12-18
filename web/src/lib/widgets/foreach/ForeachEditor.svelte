@@ -29,9 +29,11 @@
     let whereOp: 'and' | 'or';
     let selectedWhereId: string | undefined;
 
+    let gap: string;
+
     $: onSettings(settings);
     $: onEachType(eachType);
-    $: onChange(slug, eachType, inType, inArg, where, whereOp);
+    $: onChange(slug, eachType, inType, inArg, where, whereOp, gap);
 
     function onSettings(_settings: ForeachSettings_v1) {
         slug = _settings.slug ?? _settings.id.substring(0, 8);
@@ -43,6 +45,8 @@
 
         where = _settings.where ?? [];
         whereOp = _settings.whereOp ?? 'and';
+
+        gap = _settings.gap ?? 'gap-0';
     }
 
     function onChange(
@@ -51,14 +55,16 @@
         _in: any,
         _inArg: any,
         _where: any,
-        _whereOp: any
+        _whereOp: any,
+        _gap: any
     ) {
         if(_slug !== settings.slug ||
             _each !== settings.each ||
             _in !== settings.in ||
             _inArg !== settings.inArg ||
             _where !== settings.where ||
-            _whereOp !== settings.whereOp
+            _whereOp !== settings.whereOp ||
+            _gap !== settings.gap
         ) {
             settings = {
                 ...settings,
@@ -67,7 +73,8 @@
                 in: _in,
                 inArg: _inArg,
                 where: _where,
-                whereOp: _whereOp
+                whereOp: _whereOp,
+                gap: _gap
             };
 
             dispatch('settings', settings);
@@ -254,6 +261,26 @@
         </div>
     {/each}
 {/if}
+
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Gap</span>
+    </div>
+    <select class="select" bind:value={gap}>
+        <option value="gap-0">0 px</option>
+        <option value="gap-0.5">2 px</option>
+        <option value="gap-1">4 px</option>
+        <option value="gap-2">8 px</option>
+        <option value="gap-3">12 px</option>
+        <option value="gap-4">16 px</option>
+        <option value="gap-5">20 px</option>
+        <option value="gap-6">24 px</option>
+        <option value="gap-7">28 px</option>
+        <option value="gap-8">32 px</option>
+        <option value="gap-9">36 px</option>
+        <option value="gap-10">40 px</option>
+    </select>
+</label>
 
 <TextPicker bind:value={slug} label="Slug" placeholder={slug} />
 

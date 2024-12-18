@@ -52,13 +52,15 @@
         item={child}
         on:item={e => onItem(e.detail)} 
         editable={context.editable}
-        class="w-full {context.editable ? 'min-h-[50px]' : ''}"
+        class="w-full {settings.gap ?? 'gap-0'} {context.editable ? 'min-h-[50px]' : ''}"
         let:item
     >
         <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />
     </DndSingle>
 {:else}
-    {#each renderSettings as s}
-        <Widget context={renderContext} settings={s} />
-    {/each}
+    <div class="flex flex-col {settings.gap ?? 'gap-0'}">
+        {#each renderSettings as s}
+            <Widget context={renderContext} settings={s} />
+        {/each}
+    </div>
 {/if}
