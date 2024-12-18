@@ -8,9 +8,16 @@ export interface ForeachSettings_v1 extends WidgetSettings_v1 {
     in?: 'device' | 'zone' | 'folder';
     inArg?: string;
     
-    where?: string; // Object property name
-    whereOp?: 'equal' | 'not-equal' | 'starts-with' | 'contains' | 'ends-with';
-    whereArg?: string;
+    where?: ForeachCondition_v1[];
+    whereOp?: 'and' | 'or';
 
     item?: WidgetSettings_v1;
+}
+
+export interface ForeachCondition_v1 {
+    id: string;
+    
+    key?: string;
+    operator?: 'equal' | 'not-equal' | 'starts-with' | 'contains' | 'ends-with';
+    value?: string;
 }
