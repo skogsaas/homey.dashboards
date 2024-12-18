@@ -13,6 +13,8 @@ import type {
     FlowFolderMap, 
     Homey, 
     HomeyMap, 
+    ImageMap, 
+    ImageObj, 
     LogMap, 
     OAuthUser, 
     Session, 
@@ -21,8 +23,7 @@ import type {
     Zone, 
     ZoneMap 
 } from '$lib/types/Homey';
-import type { Dashboard_v1, DashboardMap, Store_v1, StoreMap, Template_v1, TemplateMap } from '$lib/types/Store';
-import type { Dashboard_v2 } from '$lib/types/Store';
+import type { Dashboard_v1, Dashboard_v2, DashboardMap, Store_v1, StoreMap, Template_v1, TemplateMap } from '$lib/types/Store';
 import { driverId } from '$lib/constants';
 
 import BuiltInTemplates from './builtin-templates.json';
@@ -145,6 +146,17 @@ function createZones() {
     };
 }
 
+function createImages() {
+    const { subscribe, set, update } = writable({} as ImageMap);
+
+    return {
+        subscribe,
+        set,
+        onCreate: (img: ImageObj) => update((existing: ImageMap) => ({ ...existing })),
+        onDelete: (img: ImageObj) => update((existing: ImageMap) => { const copy = {...existing}; delete copy[img.id]; return copy; })
+    };
+}
+
 export const user = writable(undefined as (OAuthUser | undefined));
 export const homeys = createHomeys();
 export const homey = writable<Homey|undefined>(undefined as (Homey | undefined));
@@ -169,6 +181,9 @@ export const advancedFlowsLoading = writable(false);
 
 export const zones = createZones();
 export const zonesLoading = writable(false);
+
+export const images = createImages();
+export const imagesLoading = writable(false);
 
 export const insights = writable({} as (LogMap));
 export const insightsLoading = writable(false);

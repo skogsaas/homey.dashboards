@@ -88,6 +88,7 @@ export type FlowFolderMap = { [key: string]: FlowFolder; }
 export type BasicFlowMap = { [key: string]: BasicFlow; }
 export type AdvancedFlowMap = { [key: string]: AdvancedFlow; }
 export type ZoneMap = { [key: string]: Zone; }
+export type ImageMap = { [key: string]: ImageObj; }
 export type LogMap = { [key: string]: Log; }
 export type VariableMap = { [key: string]: Variable; }
 
@@ -197,6 +198,7 @@ export interface Image {
 
 export interface ImageObj {
     id: string;
+    uri: string;
     ownerUri: string;
     url: string;
     lastUpdated: number;
