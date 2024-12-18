@@ -11,40 +11,11 @@
 
     const dispatch = createEventDispatcher();
 
-    interface Option {
-        value: string;
-        label: string;
-    }
-
-    const refreshOptions = [
-        { value: '0', label: 'Never' },
-        { value: '1', label: '1 second' },
-        { value: '5', label: '5 seconds' },
-        { value: '15', label: '15 seconds' },
-        { value: '30', label: '30 seconds' },
-        { value: '60', label: '1 minute' },
-        { value: '300', label: '5 minutes' },
-        { value: '600', label: '10 minutes' },
-        { value: '1800', label: '30 minutes' },
-        { value: '3600', label: '1 hour' },
-        { value: '21600', label: '6 hour' },
-        { value: '43200', label: '12 hour' },
-        { value: '86400', label: '24 hour' },
-    ];
-
-    const colorOptions = [
-        { value: 'black', label: 'Black' },
-        { value: 'white', label: 'White' },
-        { value: 'red', label: 'Red' },
-        { value: 'green', label: 'Green' },
-        { value: 'blue', label: 'Blue' },
-    ];
-
     let deviceId: string | undefined;
     let imageId: string | undefined;
     let refresh: number;
     let hideTitle: boolean;
-    let fontColor: string | undefined;
+    let fontColor: string;
     let fontBlur: boolean;
 
     const deviceFilter = (device: DeviceObj) => device.images.length > 0;
@@ -54,12 +25,8 @@
     $: onSettings(settings);
 
     $: onDevice(deviceId);
-    $: onImage(imageId);
-    $: onRefresh(refresh);
-    $: onHideTitle(hideTitle);
-    $: onFontColor(fontColor);
-    $: onFontBlur(fontBlur);
-
+    $: onChanges(deviceId, imageId, refresh, hideTitle, fontColor, fontBlur);
+    
     function onSettings(s: ImageSettings) {
         deviceId = settings?.deviceId;
 
@@ -77,64 +44,42 @@
         fontBlur = settings?.fontBlur ?? false;
     }
 
+    function onChanges(
+        _deviceId: string | undefined,
+        _imageId: string | undefined,
+        _refresh: number,
+        _hideTitle: boolean,
+        _fontColor: string,
+        _fontBlur: boolean
+    ) {
+        if(_deviceId !== settings.deviceId ||
+            _imageId !== settings.imageId ||
+            _refresh !== settings.refresh ||
+            _hideTitle !== settings.hideTitle ||
+            _fontColor !== settings.fontColor ||
+            _fontBlur !== settings.fontBlur
+        ) {
+            settings = {
+                ...settings,
+                deviceId: _deviceId,
+                imageId: _imageId,
+                refresh: _refresh,
+                hideTitle: _hideTitle,
+                fontColor: _fontColor,
+                fontBlur: _fontBlur
+            };
+
+            dispatch('settings', settings);
+        }
+    }
+
     function onDevice(_deviceId: string | undefined) {
         if(_deviceId === undefined) {
+            images = [];
             return;
         }
 
         images = $devices[_deviceId].images;
-
-        if(_deviceId === settings.deviceId) {
-            return;
-        }
-
-        // Reset the capability after changing device
-
-        if(images.length === 1) {
-            imageId = images[0].id;
-        } else {
-            imageId = undefined;
-        }
-        
-        const s: ImageSettings = { ...settings, deviceId, imageId };
-        dispatch('settings', s);
-    }
-
-    function onImage(_imageId: string | undefined) {
-        if(_imageId === undefined || _imageId === settings.imageId) {
-            return;
-        }
-
-        const s: ImageSettings = { ...settings, imageId: _imageId };
-        dispatch('settings', s);
-    }
-
-    function onRefresh(_refresh: number) {
-        if(_refresh !== settings.refresh) {
-            const s: ImageSettings = { ...settings, refresh: _refresh };
-            dispatch('settings', s);
-        }
-    }
-
-    function onHideTitle(value: boolean) {
-        if(value !== settings.hideTitle) {
-            const s: ImageSettings = { ...settings, hideTitle: value };
-            dispatch('settings', s);
-        }
-    }
-
-    function onFontColor(_color: string | undefined) {
-        if(_color !== settings.fontColor) {
-            const s: ImageSettings = { ...settings, fontColor: _color };
-            dispatch('settings', s);
-        }
-    }
-
-    function onFontBlur(value: boolean) {
-        if(value !== settings.fontBlur) {
-            const s: ImageSettings = { ...settings, fontBlur: value };
-            dispatch('settings', s);
-        }
     }
 </script>
 
