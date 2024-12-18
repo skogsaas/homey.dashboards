@@ -118,7 +118,7 @@
 
 <div class="w-full h-full">
     {#if $homey === undefined || $dashboardsLoading}
-        <div class="flex justify-center">
+        <div class="flex justify-center m-2">
             <div class="card w-full max-w-md mt-8 bg-base-300">
                 <div class="card-body">
                     <h1 class="card-title">🤖 Bzzt!</h1>
@@ -144,7 +144,9 @@
 
             <StoreDialog bind:open={storeOpen} on:storeId={e => onStoreSelect(e.detail)} />
         {:else if root !== undefined}
-            <Widget settings={root} {context} />
+            <div class="p-2">
+                <Widget settings={root} {context} />
+            </div>
         {:else}
             <div class="flex min-h-screen justify-center">
                 <DashboardListHero>

@@ -37,7 +37,7 @@
 {#if context.editable}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-    <fieldset on:click|stopPropagation={() => select()} class="border-dashed border-2 m-2 mt-0">
+    <fieldset on:click|stopPropagation={() => select()} class="border-dashed border m-0.5">
         <legend use:dragHandle class="ml-2 cursor-grab">
             <Icon data={mdiCursorMove} class="inline-block w-5 h-5 dark:invert" />
             {getLabel()}

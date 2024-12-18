@@ -8,7 +8,31 @@
     import { base } from '$app/paths';
 
     // Stores
-    import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys, variables, devicesLoading, variablesLoading, flowFoldersLoading, basicFlowsLoading, advancedFlowsLoading, insightsLoading, zonesLoading } from '$lib/stores/homey';
+    import { 
+      advancedFlows, 
+      advancedFlowsLoading, 
+      baseUrl, 
+      basicFlows, 
+      basicFlowsLoading, 
+      dashboards as homeyDashboards, 
+      devices, 
+      devicesLoading, 
+      flowFolders, 
+      flowFoldersLoading, 
+      homey, 
+      homeys,
+      insights, 
+      insightsLoading, 
+      images,
+      imagesLoading,
+      scopes, 
+      session, 
+      user, 
+      variables, 
+      variablesLoading, 
+      zones, 
+      zonesLoading
+    } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import { editing } from '$lib/stores/editing';
     import { apiKey, homeyId } from '$lib/stores/auth';
@@ -82,6 +106,7 @@
         loadFlows();
         loadZones();
         loadInsights();
+        //loadImages();
       }
 
       loading = false;
@@ -289,6 +314,28 @@
       }
     }
 
+    function loadImages() {
+      try {
+        if($scopes.includes('homey') || $scopes.includes('homey.insights') || $scopes.includes('homey.insights.readonly')) {
+          imagesLoading.set(true);
+
+          $homey!.images
+            .connect()
+            .then(() => {
+              $homey!.images
+                .getImages()
+                .then(imgs => { images.set(imgs); })
+                .finally(() => imagesLoading.set(false));
+            }, 
+            // On error
+            () => imagesLoading.set(false));
+        }
+      } catch(e) {
+        error = 'Images: ' + e;
+        imagesLoading.set(false);
+      }
+    }
+
     function loadZones() {
       try {
         if($scopes.includes('homey') || $scopes.includes('homey.zone') || $scopes.includes('homey.zone.readonly')) {
@@ -361,7 +408,36 @@
   </div>
 {:else if $homey !== undefined}
   {#if menuOpen == false && toolbarOpen == false && $editing === false}
-    <button class="btn btn-circle fixed top-0 z-10" on:click={() => menuOpen = true}>
+    <div class="btm-nav btm-nav-md bg-base-300 md:hidden z-10">
+      <button on:click={e => menuOpen = !menuOpen}>
+        <Icon data={mdiMenu} />
+        <span class="btm-nav-label">Menu</span>
+      </button>
+
+      <button>2</button>
+      
+      <button class="dropdown dropdown-top dropdown-end">
+        <button tabindex="0"><Icon data={mdiViewDashboard} /><span class="btm-nav-label block">Dashboards</span></button>
+        <ul
+          tabindex="0"
+          class="dropdown-content menu menu-lg bg-base-300 rounded-box my-2 gap-1 w-72 p-2 shadow"
+        >
+          {#each dashboards as d}
+            <li>
+              <a href="{base + '/board/?id=' + d.id}" class="overflow-hidden overflow-ellipsis">
+                {#if d.iconId !== undefined}
+                  <Icon data={getIcon(d.iconId)} />
+                {/if}
+                <span>{d.title}</span>
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </button>
+      
+    </div>
+    
+    <button class="btn btn-circle fixed top-0 z-10 hidden md:block" on:click={() => menuOpen = true}>
       <Icon data={mdiMenu} />
     </button>
   {/if}
