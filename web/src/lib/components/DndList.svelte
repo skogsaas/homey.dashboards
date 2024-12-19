@@ -10,7 +10,7 @@
     export { classes as class };
 
     const dispatch = createEventDispatcher();
-    const flipDurationMs = 300;
+    const flipDurationMs = 500;
 
     let inner: any[];
     let modifying: boolean = false;
