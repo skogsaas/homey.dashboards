@@ -28,26 +28,30 @@
     $: flow = flows.find(f => f.id === flowId) ?? undefined;
 
     $: onSettings(settings);
-    $: onFlow(flowId);
-    $: onIcon(iconId);
-
+    $: onChange(flowId, iconId, title);
+    
     function onSettings(s: FlowSettings_v1) {
         flowId = s?.flowId;
         iconId = s?.iconId;
     }
 
-    function onFlow(value: string | undefined) {
-        if(value === undefined || value === settings.flowId) {
-            return;
-        }
+    function onChange(
+        _flowId: string | undefined,
+        _iconId: string | undefined,
+        _title: string | undefined
+    ) {
+        if(_flowId !== settings.flowId ||
+            _iconId !== settings.iconId ||
+            _title !== settings.title
+        ) {
+            settings = {
+                ...settings,
+                flowId: _flowId,
+                iconId: _iconId,
+                title: _title
+            };
 
-        settings.flowId = value;
-        dispatch('settings', settings);
-    }
-
-    function onIcon(id: string | undefined) {
-        if(id !== settings.iconId) {
-            dispatch('settings', { ...settings, iconId: id });
+            dispatch('settings', settings);
         }
     }
 </script>

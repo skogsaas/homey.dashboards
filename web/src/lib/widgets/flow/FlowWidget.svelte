@@ -9,9 +9,7 @@
     import { getIcon } from '$lib/components/icons/utils';
     import Icon from '$lib/components/Icon.svelte'
     import type { WidgetContext } from '$lib/types/Widgets';
-    import type { GridStackWidget } from 'gridstack';
 
-    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
     export let settings: FlowSettings_v1;
 
@@ -40,6 +38,6 @@
             <Icon data={getIcon(settings.iconId ?? 'play')} />
         </button>
         
-        <div class="my-auto ml-3 mr-1">{flow.name}</div>
+        <div class="my-auto ml-3 mr-1">{settings.title ?? flow.name}</div>
     </div>
 {/if}
