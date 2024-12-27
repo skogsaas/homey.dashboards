@@ -46,8 +46,16 @@
       "method": "PUT",
       "path": "/dashboards/:storeId/:dashboardId"
     },
+    "deleteDashboards": {
+      "method": "DELETE",
+      "path": "/dashboards/:storeId/:dashboardId"
+    },
     "putTemplates": {
       "method": "PUT",
+      "path": "/templates/:storeId/:templateId"
+    },
+    "deleteTemplates": {
+      "method": "DELETE",
       "path": "/templates/:storeId/:templateId"
     },
     "dashboardHeartbeat": {

@@ -68,36 +68,53 @@
     }
 </script>
 
-<div class="card bg-base-300 p-2">
-    Adjust the number of columns and gaps based on screen sizes below.
-</div>
-
-<div class="divider">Small: &gt; 640 px</div>
-<div class="card bg-base-300 p-2">
-    <GridColsPicker bind:value={sm} />
-    <GapPicker bind:value={smGap} />
-</div>
-
-<div class="divider">Medium: &gt; 768 px</div>
-<div class="card bg-base-300 p-2">
-    <GridColsPicker bind:value={md} />
-    <GapPicker bind:value={mdGap} />
-</div>
-
-<div class="divider">Large: &gt; 1024 px</div>
-<div class="card bg-base-300 p-2">
-    <GridColsPicker bind:value={lg} />
-    <GapPicker bind:value={lgGap} />
-</div>
-
-<div class="divider">X-Large: &gt; 1280 px</div>
-<div class="card bg-base-300 p-2">
-    <GridColsPicker bind:value={xl} />
-    <GapPicker bind:value={xlGap} />
-</div>
-
-<div class="divider">XX-Large: &gt; 1536 px</div>
-<div class="card bg-base-300 p-2">
-    <GridColsPicker bind:value={xxl} />
-    <GapPicker bind:value={xxlGap} />
+<div class="flex flex-col gap-2">
+    <div class="">
+        Adjust the number of columns and gaps based on screen sizes below.
+    </div>
+    
+    <div class="collapse bg-base-300">
+        <input type="radio" name="breakpoint" /> 
+        <div class="collapse-title text-lg font-medium">Small: &gt; 640 px</div>
+        <div class="collapse-content p-1"> 
+            <GridColsPicker bind:value={sm} />
+            <GapPicker bind:value={smGap} />    
+        </div>
+    </div>
+    
+    <div class="collapse bg-base-300">
+        <input type="radio" name="breakpoint" /> 
+        <div class="collapse-title text-lg font-medium">Medium: &gt; 768 px</div>
+        <div class="collapse-content p-1"> 
+            <GridColsPicker bind:value={md} />
+            <GapPicker bind:value={mdGap} />
+        </div>
+    </div>
+    
+    <div class="collapse bg-base-300">
+        <input type="radio" name="breakpoint" /> 
+        <div class="collapse-title text-lg font-medium">Large: &gt; 1024 px</div>
+        <div class="collapse-content p-1"> 
+            <GridColsPicker bind:value={lg} />
+            <GapPicker bind:value={lgGap} />
+        </div>
+    </div>
+    
+    <div class="collapse bg-base-300">
+        <input type="radio" name="breakpoint" /> 
+        <div class="collapse-title text-lg font-medium">X-Large: &gt; 1280 px</div>
+        <div class="collapse-content p-1"> 
+            <GridColsPicker bind:value={xl} />
+            <GapPicker bind:value={xlGap} />
+        </div>
+    </div>
+    
+    <div class="collapse bg-base-300">
+        <input type="radio" name="breakpoint" /> 
+        <div class="collapse-title text-lg font-medium">XX-Large: &gt; 1536 px</div>
+        <div class="collapse-content p-1"> 
+            <GridColsPicker bind:value={xxl} />
+            <GapPicker bind:value={xxlGap} />
+        </div>
+    </div>
 </div>

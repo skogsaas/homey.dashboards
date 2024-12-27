@@ -219,6 +219,7 @@ export const dashboards = derived(
     stores, 
     (storeMap: StoreMap) => Object.values(storeMap)
         .flatMap(store => store.dashboards)
+        .filter(dashboard => dashboard?.id)
         .reduce((existing: DashboardMap, dashboard: Dashboard_v2) => {
             existing[dashboard.id] = dashboard;
             return existing;

@@ -23,7 +23,7 @@
 
     // Utils
     import { migrate as migrateDashboard } from '$lib/widgets/migrations';
-    import { saveDashboard } from '$lib/api/webhook';
+    import { deleteDashboard, saveDashboard } from '$lib/api/webhook';
     import { v4 as uuid } from 'uuid';
     import Icon from '$lib/components/Icon.svelte';
     import DashboardListHero from '$lib/components/DashboardListHero.svelte';
@@ -64,7 +64,7 @@
 
             dashboard = d;
             root = d.root;
-            storeId = Object.values($stores).find(store => store.dashboards.some(dash => dash.id === dashboard?.id))?.id;
+            storeId = Object.values($stores).find(store => store.dashboards.some(dash => dash?.id === dashboard?.id))?.id;
         } else if(_dashboardId === null) {
             dashboard = undefined;
             root = undefined;
@@ -76,6 +76,8 @@
         if(dashboard !== undefined) {
             if(storeId !== undefined) {
                 await saveDashboard($homey!.id, storeId, dashboard);
+
+                editing.set(false);
             } else {
                 // This is a new dashboard, need to select a store first.
                 storeOpen = true;
@@ -86,6 +88,13 @@
     async function onStoreSelect(_storeId: string) {
         storeId = _storeId;
         await saveDashboard($homey!.id, storeId, dashboard!);
+    }
+
+    async function onDelete() {
+        if(dashboard !== undefined && storeId !== undefined) {
+            await deleteDashboard($homey!.id, storeId, dashboard);
+            await goto(base + '/board/');
+        }
     }
 
     function onSettings(_dashboard: Dashboard_v2) {
@@ -139,7 +148,7 @@
                 on:root={e => onRoot(e.detail)}
                 on:save={e => onSave()}
             >
-                <DashboardEditor settings={dashboard} on:settings={e => onSettings(e.detail)} />
+                <DashboardEditor settings={dashboard} on:settings={e => onSettings(e.detail)} on:delete={e => onDelete()} />
             </WidgetEditor>
 
             <StoreDialog bind:open={storeOpen} on:storeId={e => onStoreSelect(e.detail)} />

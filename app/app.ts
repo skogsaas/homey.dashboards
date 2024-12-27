@@ -63,8 +63,16 @@ export class DashboardApp extends Homey.App {
           this.saveDashboard(args);
           break;
 
-          case 'save_template': 
+        case 'delete_dashboard': 
+          this.deleteDashboard(args);
+          break;
+
+        case 'save_template': 
           this.saveTemplate(args);
+          break;
+
+        case 'delete_template': 
+          this.deleteTemplate(args);
           break;
         
         case 'active_dashboard':
@@ -90,10 +98,26 @@ export class DashboardApp extends Homey.App {
     await this.setDashboardSettings(storeId, dashboardId, settings);
   }
 
+  private async deleteDashboard(args: any) : Promise<void> {
+    const storeId = args.query.storeId;
+    const dashboardId = args.query.dashboardId;
+    const settings = null; // Indicate that this dashboard should be deleted.
+
+    await this.setDashboardSettings(storeId, dashboardId, settings);
+  }
+
   private async saveTemplate(args: any) : Promise<void> {
     const storeId = args.query.storeId;
     const templateId = args.query.templateId;
     const settings = JSON.parse(args.body);
+
+    await this.setTemplateSettings(storeId, templateId, settings);
+  }
+
+  private async deleteTemplate(args: any) : Promise<void> {
+    const storeId = args.query.storeId;
+    const templateId = args.query.templateId;
+    const settings = null; // Indicate that this template should be deleted.
 
     await this.setTemplateSettings(storeId, templateId, settings);
   }

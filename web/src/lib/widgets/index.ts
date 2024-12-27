@@ -26,11 +26,9 @@ import UnknownInfo from './unknown';
 import VariableInfo from './variable';
 
 export const widgets: WidgetInfo[] = [
-    CanvasInfo,
-    CapabilityInfo,
+    //CanvasInfo,
     CardInfo,
     DashboardLinkInfo,
-    DeviceInfo,
     FlowInfo,
     ForeachInfo,
     GridInfo,
@@ -45,9 +43,7 @@ export const widgets: WidgetInfo[] = [
     StatisticInfo,
     SwitchInfo,
     TemplateInfo,
-    TextInfo,
     ToggleInfo,
-    VariableInfo,
 ];
 
 export const categories: WidgetCategory[] = [

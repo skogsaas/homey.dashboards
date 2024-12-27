@@ -28,9 +28,6 @@ export class DashboardDriver extends Homey.Driver {
     const device = this.getDevice({ id: storeId });
     const existing = device.getSettings();
 
-    this.log('Existing:')
-    this.log(existing);
-
     const store: Store_v1 = {
       dashboards: [...((existing as Store_v1).dashboards ?? [])],
       templates: [...((existing as Store_v1).templates ?? [])]
@@ -42,15 +39,17 @@ export class DashboardDriver extends Homey.Driver {
       this.log('Converting to store.');
     }
 
-    const index = store.dashboards.findIndex(d => d.id === dashboardId);
+    const index = store.dashboards.findIndex(d => d?.id === dashboardId);
 
     if(index == -1) {
       store.dashboards.push(settings);
     } else {
-      store.dashboards[index] = settings;
+      if(settings !== null) {
+        store.dashboards[index] = settings;
+      } else {
+        store.dashboards = store.dashboards.filter((value, i) => i !== index && value !== null);
+      }
     }
-
-    this.log('Updating dashboard  \'' + dashboardId + '\' in store \'' + storeId + '\' with ' + store.dashboards.length + ' dashboards and ' + store.templates.length + ' templates');
 
     await device.setSettings(store);
   }
@@ -70,15 +69,17 @@ export class DashboardDriver extends Homey.Driver {
       this.log('Converting to store.');
     }
 
-    const index = store.templates.findIndex(d => d.id === templateId);
+    const index = store.templates.findIndex(d => d?.id === templateId);
 
     if(index == -1) {
-      store.dashboards.push(settings);
+      store.templates.push(settings);
     } else {
-      store.dashboards[index] = settings;
+      if(settings !== null) {
+        store.templates[index] = settings;
+      } else {
+        store.templates = store.templates.filter((value, i) => i !== index && value !== null);
+      }
     }
-
-    this.log('Updating template  \'' + templateId + '\' in store \'' + storeId + '\' with ' + store.dashboards.length + ' dashboards and ' + store.templates.length + ' templates');
 
     await device.setSettings(store);
   }

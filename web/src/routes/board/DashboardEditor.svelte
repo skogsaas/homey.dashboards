@@ -12,6 +12,8 @@
     let title: string;
     let iconId: string | undefined;
 
+    let enableDelete = false;
+
     $: onSettings(settings);
     $: onChange(title, iconId);
 
@@ -37,8 +39,18 @@
             dispatch('settings', s);
         }
     }
+
+    function deleteDashboard() {
+        dispatch('delete');
+    }
 </script>
 
 <TextPicker bind:value={title} label="Title" placeholder="Title" />
 
 <IconPicker bind:iconId={iconId} />
+
+<div class="alert">
+    <span class="text-error">Danger!</span>
+    <input type="checkbox" class="checkbox checkbox-error" bind:checked={enableDelete} />
+    <button class="btn btn-error" disabled={!enableDelete} on:click={e => deleteDashboard()}>Delete dashboard</button>
+</div>
