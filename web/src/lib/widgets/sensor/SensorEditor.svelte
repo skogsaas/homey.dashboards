@@ -1,9 +1,9 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
 
-    import type { ToggleSettings_v1 } from './SensorSettings';
+    import type { SensorSettings_v1 } from './SensorSettings';
     
-    import HomeyPicker from '$lib/components/HomeyPicker/HomeyPicker.svelte';
+    import EntityPicker from '$lib/components/entity-picker/EntityPicker.svelte';
 
     import IconPicker from '$lib/components/IconPicker.svelte';
     import TextPicker from '$lib/components/TextPicker.svelte';
@@ -11,7 +11,7 @@
 
     const dispatch = createEventDispatcher();
     
-    export let settings: ToggleSettings_v1;
+    export let settings: SensorSettings_v1;
 
     let uri: string | undefined;
     let label: string | undefined;
@@ -22,7 +22,7 @@
     $: onSettings(settings);
     $: onChange(uri, label, iconId);
 
-    function onSettings(s: ToggleSettings_v1) {
+    function onSettings(s: SensorSettings_v1) {
         uri = s?.uri;
         label = s?.label;
         iconId = s?.iconId;
@@ -57,6 +57,6 @@
     }
 </script>
 
-<HomeyPicker bind:uri={uri} on:item={(e) => (item = e.detail)} {variableFilter} {capabilityFilter} label="Item" />
+<EntityPicker bind:uri={uri} on:item={(e) => (item = e.detail)} {variableFilter} {capabilityFilter} label="Item" />
 <TextPicker bind:value={label} placeholder={item?.title ?? 'Label'} label="Label" />
 <IconPicker bind:iconId={iconId} />

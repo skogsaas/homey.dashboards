@@ -3,7 +3,7 @@
 
     import type { ToggleSettings_v1 } from './ToggleSettings';
     
-    import HomeyPicker from '$lib/components/HomeyPicker/HomeyPicker.svelte';
+    import EntityPicker from '$lib/components/entity-picker/EntityPicker.svelte';
 
     import IconPicker from '$lib/components/IconPicker.svelte';
     import TextPicker from '$lib/components/TextPicker.svelte';
@@ -57,6 +57,6 @@
     }
 </script>
 
-<HomeyPicker bind:uri={uri} on:item={(e) => (item = e.detail)} {variableFilter} {capabilityFilter} label="Item" />
+<EntityPicker bind:uri={uri} on:item={(e) => (item = e.detail)} {variableFilter} {capabilityFilter} label="Item" />
 <TextPicker bind:value={label} placeholder={item?.title ?? 'Label'} label="Label" />
 <IconPicker bind:iconId={iconId} />

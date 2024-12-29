@@ -2,7 +2,7 @@
     import { createEventDispatcher } from 'svelte';
 
     import type { SliderSettings_v3 } from "./SliderSettings";
-    import HomeyPicker from '$lib/components/HomeyPicker/HomeyPicker.svelte';
+    import EntityPicker from '$lib/components/entity-picker/EntityPicker.svelte';
     import BooleanPicker from '$lib/components/BooleanPicker.svelte';
     import TextPicker from '$lib/components/TextPicker.svelte';
     import NumberPicker from '$lib/components/NumberPicker.svelte';
@@ -109,7 +109,7 @@
     }
 </script>
 
-<HomeyPicker bind:uri={uri} on:item={(e) => (item = e.detail)} {variableFilter} {capabilityFilter} label="Item" />
+<EntityPicker bind:uri={uri} on:item={(e) => (item = e.detail)} {variableFilter} {capabilityFilter} label="Item" />
 <TextPicker bind:value={label} placeholder={item?.title ?? 'Label'} label="Label" />
 
 <label class="form-control w-full">
