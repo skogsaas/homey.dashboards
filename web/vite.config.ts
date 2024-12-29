@@ -14,7 +14,7 @@ export default defineConfig({
 			manifest: {
 				short_name: 'Homeyboard',
 				name: 'Homeyboard',
-				start_url: '/',
+				start_url: '/favorite/',
 				scope: '/',
 				display: 'standalone',
 				theme_color: "#f4502a",

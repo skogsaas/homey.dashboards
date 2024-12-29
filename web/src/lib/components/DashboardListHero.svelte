@@ -1,13 +1,25 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { base } from '$app/paths';
+    import { deleteDashboard as apiDelete } from '$lib/api/webhook';
+    import { favorite } from '$lib/stores/favorite';
     
     import { dashboards as homeyDashboards } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
+    import type { Dashboard_v2 } from '$lib/types/Store';
     import Icon from './Icon.svelte';
+    import { mdiDotsVertical, mdiMenu, mdiStar, mdiStarOutline, mdiTrashCan } from './icons';
     import { getIcon } from './icons/utils';
 
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
+
+    function favoriteDashboard(dashboard: Dashboard_v2) {
+        favorite.set(dashboard.id);
+    }
+
+    function deleteDashboard(dashboard: Dashboard_v2) {
+
+    }
 </script>
 
 <div class="hero bg-base-200">
@@ -20,12 +32,27 @@
                 <div class="card w-96 bg-base-100 shadow-xl">
                     <div class="card-body">                                
                         {#each dashboards as dashboard, i}
-                            <button class="btn btn-ghost w-full" on:click={() => goto(base + '/board/?id=' + dashboard.id)}>
-                                <Icon data={getIcon(dashboard.iconId ?? 'view-dashboard')} />
-                                {dashboard.title}
-                                <span class="mx-auto"></span>
-                            </button>
+                            <div class="flex flex-row items-center">
+                                <button class="btn btn-ghost flex-1 flex justify-start" on:click={() => goto(base + '/board/?id=' + dashboard.id)}>
+                                    <Icon data={getIcon(dashboard.iconId ?? 'view-dashboard')} />
+                                    {dashboard.title}
+                                </button>
+                                {#if $favorite === dashboard.id}
+                                    <Icon data={mdiStar} />
+                                {/if}
 
+                                <details class="dropdown">
+                                    <summary class="btn btn-ghost">
+                                        <Icon data={mdiDotsVertical} />
+                                    </summary>
+                                    <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+                                        <li><a on:click={e => favoriteDashboard(dashboard)}><Icon data={mdiStar} />Favorite</a></li>
+                                        <!--<li><a class="text-error" on:click={e => deleteDashboard(dashboard)}><Icon data={mdiTrashCan} />Delete</a></li>-->
+                                    </ul>
+                                </details>
+                                
+                            </div>
+                            
                             {#if i < (dashboards.length - 1)}
                                 <div class="divider divider-neutral my-1"></div>
                             {/if}

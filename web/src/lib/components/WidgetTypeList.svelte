@@ -21,7 +21,7 @@
     function getWidgets() : WidgetSettings_v1[][] {
         return categories
             .map(c => widgets
-                .filter(w => w.category === c.id && w.type !== TemplateInfo.type)
+                .filter(w => w.category === c.id && w.type !== TemplateInfo.type && !w.deprecated)
                 .map(w => w.create())
             );
     }
