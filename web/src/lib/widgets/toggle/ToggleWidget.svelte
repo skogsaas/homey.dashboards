@@ -169,5 +169,5 @@
 
     <span class="flex-1 overflow-ellipsis">{settings.label ?? label ?? uri ?? 'Not configured'}</span>
 
-    <input type="checkbox" class="toggle" {disabled} checked={checked} on:click={e => onChecked(!checked)} />
+    <input type="checkbox" class="toggle toggle-primary" {disabled} checked={checked} on:click={e => onChecked(!checked)} />
 </label>
