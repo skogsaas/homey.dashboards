@@ -16,7 +16,8 @@ const info: WidgetInfo = {
         { oneOf: ['homey', 'homey.logic', 'homey.logic.readonly'] }
     ],
     create: create,
-    migration: migrate
+    migration: migrate,
+    deprecated: true
 };
 
 export default info;

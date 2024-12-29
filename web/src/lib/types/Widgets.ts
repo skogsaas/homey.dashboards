@@ -33,6 +33,7 @@ export interface WidgetInfo {
     scopes: { oneOf: string[] }[];
     create: () => WidgetSettings_v1;
     migration: (e: WidgetSettings_v1) => WidgetSettings_v1;
+    deprecated?: boolean;
 }
 
 export interface Threshold {

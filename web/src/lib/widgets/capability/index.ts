@@ -16,7 +16,8 @@ const info: WidgetInfo = {
         { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] }
     ],
     create: create,
-    migration: migrate
+    migration: migrate,
+    deprecated: true
 }
 
 export default info;

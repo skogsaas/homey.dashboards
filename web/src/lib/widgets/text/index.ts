@@ -14,7 +14,8 @@ const info: WidgetInfo = {
     editor: TextEditor,
     scopes: [],
     create: () => ({ id: uuid(), type: 'text', version: 1 }),
-    migration: (e: WidgetSettings_v1) => e
+    migration: (e: WidgetSettings_v1) => e,
+    deprecated: true
 };
 
 export default info;

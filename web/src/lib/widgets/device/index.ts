@@ -14,7 +14,8 @@ const info: WidgetInfo = {
     editor: DeviceEditor,
     scopes: [],
     create: create,
-    migration: migrate
+    migration: migrate,
+    deprecated: true
 };
 
 export default info;
