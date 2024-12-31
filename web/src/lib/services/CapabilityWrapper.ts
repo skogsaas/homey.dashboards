@@ -20,8 +20,6 @@ export class CapabilityWrapper implements ValueWrapper {
     }
 
     async setValue(_value: any | null): Promise<void> {
-        console.log(this.capability);
-
         await this.capability.device.setCapabilityValue({ 
             capabilityId: this.capability.id, 
             deviceId: this.capability.device.id,
