@@ -43,7 +43,7 @@
     // Tailwind
     import "../app.css";
 
-    import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant, mdiLogout, mdiPostageStamp } from "$lib/components/icons";
+    import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant, mdiLogout, mdiPostageStamp, mdiMap } from "$lib/components/icons";
 
     // Types
     import type { AdvancedFlow, BasicFlow, CapabilityEvent, VariableEvent, Homey, OAuthHomey } from '$lib/types/Homey';
@@ -132,6 +132,14 @@
           //});
 
           const instance: Homey = new HomeyAPIV3Local(props);
+          instance.on('connect', (e: any) => console.log('connect', e));
+          instance.on('disconnect', (e: any) => console.log('disconnect', e));
+          instance.on('error', (e: any) => console.log('error', e));
+          instance.on('reconnect', (e: any) => console.log('reconnect', e));
+          instance.on('reconnect_attempt', (e: any) => console.log('reconnect_attempt', e));
+          instance.on('reconnecting', (e: any) => console.log('reconnecting', e));
+          instance.on('reconnect_error', (e: any) => console.log('reconnect_error', e));
+          instance.on('connect_error', (e: any) => console.log('connect_error', e));
 
           homeys.add(instance);
           homey.set(instance);
@@ -414,7 +422,10 @@
         <span class="btm-nav-label">Menu</span>
       </button>
 
-      <button>2</button>
+      <button disabled>
+        <Icon data={mdiMap} />
+        <span class="btm-nav-label">Explore</span>
+      </button>
       
       <button class="dropdown dropdown-top dropdown-end">
         <button tabindex="0"><Icon data={mdiViewDashboard} /><span class="btm-nav-label block">Dashboards</span></button>
@@ -442,10 +453,15 @@
     </button>
   {/if}
 
-  <div class="drawer w-full h-full">
+  <div class="drawer w-full h-full relative">
     <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
     
+    <div class="absolute z-50 bottom-0 right-0">
+      
+    </div>
+
     <div class="drawer-content">
+      
       <slot></slot>
     </div>
 

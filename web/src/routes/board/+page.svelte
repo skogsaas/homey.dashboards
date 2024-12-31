@@ -25,7 +25,6 @@
     import { migrate as migrateDashboard } from '$lib/widgets/migrations';
     import { deleteDashboard, saveDashboard } from '$lib/api/webhook';
     import { v4 as uuid } from 'uuid';
-    import Icon from '$lib/components/Icon.svelte';
     import DashboardListHero from '$lib/components/DashboardListHero.svelte';
     
     let dashboards: DashboardMap;

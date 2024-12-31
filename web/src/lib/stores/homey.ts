@@ -70,11 +70,16 @@ function createDevices() {
     };
 }
 
-function onDeviceUpdate(existing: DeviceMap, patch: any) : DeviceMap {
+function onDeviceUpdate(existingMap: DeviceMap, patch: any) : DeviceMap {
     const deviceId: string = patch.id;
 
-    const copy = { ...existing };
-    copy[deviceId] = { ...existing[deviceId], ...patch };
+    const copy = { ...existingMap };
+    const device = copy[deviceId] as any;
+    
+    Object
+        .keys(patch)
+        .filter(key => key !== 'id' && key !== 'uri')
+        .forEach(key => device[key] = patch[key]);
 
     return copy;
 }
@@ -106,11 +111,15 @@ function createVariables() {
     };
 }
 
-function onVariable(existing: VariableMap, patch: any) : VariableMap {
+function onVariable(existingMap: VariableMap, patch: any) : VariableMap {
     const variableId: string = patch.id;
+    const copy = { ...existingMap };
+    const variable = copy[variableId] as any;
 
-    const copy = { ...existing };
-    copy[variableId] = { ...existing[variableId], ...patch };
+    Object
+        .keys(patch)
+        .filter(key => key !== 'id' && key !== 'uri')
+        .forEach(key => variable[key] = patch[key]);
 
     return copy;
 }

@@ -6,8 +6,7 @@
 
     import Widget from '$lib/widgets/Widget.svelte';
     import { devices, zones } from '$lib/stores/homey';
-    import DndList from '$lib/components/DndList.svelte';
-    import type { CapabilityEvent, CapabilityObj, DeviceObj, Emitter } from '$lib/types/Homey';
+    import type { CapabilityEvent, DeviceObj, HomeyEmitter } from '$lib/types/Homey';
     import DndSingle from '$lib/components/DndSingle.svelte';
     
     export let context: WidgetContext;
@@ -18,7 +17,7 @@
     let cases: SwitchCase_v1[];
     let selectedId: string | undefined;
 
-    let watched: Emitter | undefined;
+    let watched: HomeyEmitter | undefined;
     
     let switchObj: any | undefined;
     let caseKey: string | undefined;
