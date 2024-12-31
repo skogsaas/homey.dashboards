@@ -39,7 +39,7 @@ export const widgets: WidgetInfo[] = [
     SectionsInfo,
     SensorInfo,
     SliderInfo,
-    StatisticInfo,
+    //StatisticInfo,
     SwitchInfo,
     TemplateInfo,
     ToggleInfo,
