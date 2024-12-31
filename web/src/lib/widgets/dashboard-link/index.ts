@@ -7,7 +7,7 @@ import DashboardLinkWidget from './DashboardLinkWidget.svelte';
 
 const info: WidgetInfo = {
     type: 'dashboard-link', 
-    label: 'Dashboard',
+    label: 'Dashboard link',
     icon: mdiViewDashboard,
     category: 'component',
     widget: DashboardLinkWidget, 
