@@ -62,6 +62,10 @@
             const d = migrateDashboard(_dashboard);
             migrated = d !== _dashboard;
 
+            if(migrated) {
+                alerts.plain('Tip!', 'This dashboard has been updated to a newer version. If everything looks good, coinsider saving the dashboard.', 10000);
+            }
+
             dashboard = d;
             root = d.root;
             storeId = Object.values($stores).find(store => store.dashboards.some(dash => dash?.id === dashboard?.id))?.id;
@@ -79,7 +83,7 @@
                     await saveDashboard($homey!.id, storeId, dashboard);
                     editing.set(false);
                 } catch(error) {
-                    alerts.error('Error!', 'Error while saving dashboard: ' + error, 10000);
+                    alerts.error('Error!', 'Could not save dashboard: ' + error, 10000);
                 }
             } else {
                 // This is a new dashboard, need to select a store first.
@@ -90,13 +94,23 @@
 
     async function onStoreSelect(_storeId: string) {
         storeId = _storeId;
-        await saveDashboard($homey!.id, storeId, dashboard!);
+        
+        try {
+            await saveDashboard($homey!.id, storeId, dashboard!);
+            editing.set(false);
+        } catch(error) {
+            alerts.error('Error!', 'Could not save dashboard: ' + error, 10000);
+        }
     }
 
     async function onDelete() {
         if(dashboard !== undefined && storeId !== undefined) {
-            await deleteDashboard($homey!.id, storeId, dashboard);
-            await goto(base + '/board/');
+            try {
+                await deleteDashboard($homey!.id, storeId, dashboard);
+                await goto(base + '/board/');
+            } catch(error) {
+                alerts.error('Error!', 'Could not delete dashboard: ' + error, 10000);
+            }
         }
     }
 
