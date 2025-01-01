@@ -14,13 +14,14 @@
     export let settings: FlowSettings_v1;
 
     $: flow = settings?.flowId !== undefined ? $basicFlows[settings.flowId] as Flow ?? $advancedFlows[settings.flowId] as Flow : undefined;   
+    $: disabled = context.editable || context.readonly;
 
     async function triggerFlow() {
         if(!$editing && flow !== undefined) {
             if($basicFlows[flow.id]) {
-                await $homey.flow.triggerFlow({ id: flow.id });
+                await $homey!.flow.triggerFlow({ id: flow.id });
             } else if($advancedFlows[flow.id]) {
-                await $homey.flow.triggerAdvancedFlow({ id: flow.id });
+                await $homey!.flow.triggerAdvancedFlow({ id: flow.id });
             }
         }
     }
@@ -34,7 +35,7 @@
     {/if}
 {:else}
     <div class="flex w-full h-full">
-        <button class="btn btn-circle my-auto btn-lg btn-success" on:click={() => triggerFlow()}>
+        <button class="btn btn-circle my-auto btn-lg btn-success" on:click={() => triggerFlow()} {disabled}>
             <Icon data={getIcon(settings.iconId ?? 'play')} />
         </button>
         

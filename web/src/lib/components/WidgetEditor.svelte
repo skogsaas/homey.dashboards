@@ -30,7 +30,7 @@
     let context: WidgetContext;
     $: context = { 
         editable: !preview, 
-        readonly: false, 
+        readonly: true, 
         breadcrumbs: [],
         select: onBreadrumbs
     };
