@@ -62,9 +62,7 @@
     $: fullscreenSupported = document.fullscreenEnabled;
 
     let menuOpen: boolean = false;
-    let toolbarOpen: boolean = false;
     let dashboardMenuOpen: boolean = false;
-    let addDashboardOpen: boolean = false;
 
     onMount(async () => {
       await connectHomey();
@@ -190,7 +188,7 @@
     <span class="loading loading-infinity w-40 text-primary"></span>
   </div>
 {:else if $homey !== undefined}
-  {#if menuOpen == false && toolbarOpen == false && $editing === false}
+  {#if menuOpen === false && $editing === false}
     <div class="btm-nav btm-nav-md bg-base-300 md:hidden z-10">
       <button on:click={e => menuOpen = !menuOpen}>
         <Icon data={mdiMenu} />
@@ -302,7 +300,7 @@
             
             <ul>
               {#each Object.values($dashboards) as dashboard}
-                <li on:click={() => openDashboard(dashboard)}>
+                <li on:click|stopPropagation={() => openDashboard(dashboard)}>
                   <div class="flex items-center">
                     {#if dashboard.iconId !== undefined}
                       <Icon class="w-8 h-8 rounded-full invert" data={getIcon(dashboard.iconId)} />
