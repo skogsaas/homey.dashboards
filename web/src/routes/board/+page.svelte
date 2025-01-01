@@ -26,6 +26,7 @@
     import { deleteDashboard, saveDashboard } from '$lib/api/webhook';
     import { v4 as uuid } from 'uuid';
     import DashboardListHero from '$lib/components/DashboardListHero.svelte';
+    import { alerts } from '$lib/stores/alerting';
     
     let dashboards: DashboardMap;
     let dashboard: Dashboard_v2 | undefined;
@@ -74,9 +75,12 @@
     async function onSave() {
         if(dashboard !== undefined) {
             if(storeId !== undefined) {
-                await saveDashboard($homey!.id, storeId, dashboard);
-
-                editing.set(false);
+                try {
+                    await saveDashboard($homey!.id, storeId, dashboard);
+                    editing.set(false);
+                } catch(error) {
+                    alerts.error('Error!', 'Error while saving dashboard: ' + error, 10000);
+                }
             } else {
                 // This is a new dashboard, need to select a store first.
                 storeOpen = true;

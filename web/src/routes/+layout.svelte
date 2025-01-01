@@ -43,7 +43,7 @@
     // Tailwind
     import "../app.css";
 
-    import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant, mdiLogout, mdiPostageStamp, mdiMap } from "$lib/components/icons";
+    import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant, mdiLogout, mdiPostageStamp, mdiMap, mdiInformation } from "$lib/components/icons";
 
     // Types
     import type { AdvancedFlow, BasicFlow, CapabilityEvent, VariableEvent, Homey, OAuthHomey } from '$lib/types/Homey';
@@ -54,6 +54,8 @@
     import HomeyAPIV3Local from 'homey-api/lib/HomeyAPI/HomeyAPIV3Local';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
     import { getIcon } from '$lib/components/icons/utils';
+    import { AlertManager } from '$lib/services/AlertManager';
+    import { alerts } from '$lib/stores/alerting';
 
     let loading: boolean = true;
     let error: any | undefined = undefined;
@@ -77,7 +79,9 @@
     let dashboardMenuOpen: boolean = false;
     let addDashboardOpen: boolean = false;
 
-    onMount(async () => {      
+    let alertManager: AlertManager = new AlertManager();
+
+    onMount(async () => {
       // TODO
       //document.body.setAttribute('data-theme', 'dark');
       await loadData()
@@ -456,8 +460,18 @@
   <div class="drawer w-full h-full relative">
     <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
     
-    <div class="absolute z-50 bottom-0 right-0">
-      
+    <div class="absolute z-50 bottom-1 right-1 flex flex-col gap-2">
+      {#each $alerts as alert}
+        <div class="alert shadow-lg {alert.classes}">
+          {#if alert.icon !== undefined}
+            <Icon data={getIcon(alert.icon)} />
+          {/if}
+          <div class="w-40">
+            <span class="font-bold">{alert.title}</span>
+            <div class="text-sm">{alert.text}</div>
+          </div>
+        </div>
+      {/each}
     </div>
 
     <div class="drawer-content">
