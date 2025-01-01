@@ -1,8 +1,7 @@
 <script lang="ts">
     import { pwaInfo } from 'virtual:pwa-info'; 
 
-    import { baseUrl, dashboards as homeyDashboards, homey } from '$lib/stores/homey';
-    import { dashboards as localDashboards } from '$lib/stores/localstorage';
+    import { baseUrl, homey } from '$lib/stores/homey';
     import type { Homey } from '$lib/types/Homey';
     import { apiKey, homeyId } from '$lib/stores/auth';
     
@@ -11,16 +10,15 @@
 
     import { clientId, clientSecret } from '$lib/constants';
 
-    import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
     import HomeyAPIV3Local from 'homey-api/lib/HomeyAPI/HomeyAPIV3Local';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
 
     // Tailwind
     import Icon from '$lib/components/Icon.svelte'
     import { mdiAccount, mdiKey } from '$lib/components/icons';
-    import { getIcon } from '$lib/components/icons/utils';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
+    import DashboardListHero from '$lib/components/DashboardListHero.svelte';
     
     let active = import.meta.env.VITE_DEFAULT_LOGIN ?? '#online';
 
@@ -29,8 +27,6 @@
     let localKeyLoading: Promise<Homey | undefined> | undefined;
     let localHosting: boolean = false;
     let localHomeyId: string = '';
-
-    $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
 
     $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
@@ -136,37 +132,14 @@
 
 <div class="flex flex-col justify-center mx-auto w-full">
     {#if $homey !== undefined}
-        <div class="hero min-h-screen bg-base-200">
-            <div class="hero-content flex-col lg:flex-row-reverse">
-                <div class="text-center lg:text-left max-w-xs">
-                    <span class="text-5xl font-bold">Dashboards</span>
-                    <p class="py-6">
-                        A dashboard store can be created by using the native Homey App. This is required in order to have a place to store your dashboards.<br />
-                        <span class="text-warning">NOTE:</span> This requires you to install the Dashboards companion app.
-                    </p>
-                </div>
-                <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-                    {#if dashboards !== undefined && dashboards.length > 0}
-                        <div class="card w-96 bg-base-100 shadow-xl">
-                            <div class="card-body">                                
-                                {#each dashboards as dashboard, i}
-                                    <button class="btn btn-ghost w-full" on:click={() => goto(base + '/board/?id=' + dashboard.id)}>
-                                        <Icon data={getIcon(dashboard.iconId ?? 'view-dashboard')} />
-                                        {dashboard.title}
-                                        <span class="mx-auto"></span>
-                                    </button>
-
-                                    {#if i < (dashboards.length - 1)}
-                                        <div class="divider divider-neutral my-1"></div>
-                                    {/if}
-                                {/each}
-                            </div>
-                        </div>
-                    {:else}
-                        <span class="text-lg">Oh no, you have no dashboards! 😵</span>
-                    {/if}
-                </div>
-            </div>
+        <div class="flex min-h-screen justify-center">
+            <DashboardListHero>
+                <span class="text-5xl font-bold">Dashboards</span>
+                <p class="py-6">
+                    A dashboard store can be created by using the native Homey App. This is required in order to have a place to store your dashboards.<br />
+                    <span class="text-warning">NOTE:</span> This requires you to install the Dashboards companion app.
+                </p>
+            </DashboardListHero>
         </div>
     {:else}
         <div class="hero min-h-screen bg-base-200">
