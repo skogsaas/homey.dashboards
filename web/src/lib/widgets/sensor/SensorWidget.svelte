@@ -1,9 +1,12 @@
 <script lang="ts">
     import type { SensorSettings_v1 } from './SensorSettings';
     import type { WidgetContext } from '$lib/types/Widgets';
-    import type { CapabilityEvent, CapabilityObj, DeviceObj, Variable } from '$lib/types/Homey';
+    import type { DeviceMap, VariableMap } from '$lib/types/Homey';
+    import type { ValueWrapper } from '$lib/services/ValueWrapper';
+    import { VariableWrapper } from '$lib/services/VariableWrapper';
+    import { CapabilityWrapper } from '$lib/services/CapabilityWrapper';
 
-    import { devices, variables, homey } from '$lib/stores/homey';
+    import { devices, variables, homey, baseUrl } from '$lib/stores/homey';
     import Icon from '$lib/components/Icon.svelte';
     import { getIcon } from '$lib/components/icons/utils';
     
@@ -14,18 +17,17 @@
     let iconId: string | undefined;
     let iconUrl: string | undefined;
 
-    let device: DeviceObj | undefined;
-    let capability: CapabilityObj | undefined;
-
-    let variable: Variable | undefined;
+    let wrapper: ValueWrapper | undefined;
+    let wrapperUri: string | undefined;
 
     let label: string | undefined;
     let value: any;
-    let type: 'boolean' | 'number' | 'string' | 'enum';
+    let values: { id: string, title: string }[];
     let unit: string | undefined;
+    let type: 'boolean' | 'number' | 'string' | 'enum' | undefined;
 
     $: onSettings(settings);
-    $: onUri(uri);
+    $: onUri(uri, $variables, $devices);
 
     function onSettings(_settings: SensorSettings_v1) {
         if(_settings.uri !== uri) {
@@ -33,59 +35,63 @@
         }
     }
 
-    function onUri(_uri: string | undefined) {
-        if(_uri !== undefined) {
+    function onUri(
+        _uri: string | undefined,
+        _variables: VariableMap,
+        _devices: DeviceMap
+    ) {
+        if(_uri !== undefined && _uri !== wrapperUri) {
             const segments = _uri.split(':');
 
-            if(capability !== undefined) {
-                capability.off('update', onCapability);
-                capability = undefined;
-                device = undefined;
-            }
-
-            if(variable !== undefined) {
-                variable.off('update', onVariable);
-                variable = undefined;
+            // First do some cleanup from previous URI
+            if(wrapper !== undefined && wrapper) {
+                wrapper.destroy();
+                wrapper = undefined;
+                wrapperUri = undefined;
             }
 
             if(segments[1] === 'variable') {
-                getVariable(segments[2]);
+                getVariable(segments[2], _variables);
             } else if (segments[1] === 'device' && segments.length === 4) {
-                getCapability(segments[2], segments[3]);
+                getCapability(segments[2], segments[3], _devices);
             }
             // TODO: Flow token
         }
     }
 
-    function getVariable(variableId: string) {
-        variable = $variables[variableId];
+    function getVariable(variableId: string, _variables: VariableMap) {
+        const variable = $variables[variableId];
 
         if(variable === undefined) return;
 
+        wrapper = new VariableWrapper(variable, $homey!.logic);
+        wrapperUri = variable.uri;
+
         label = variable.name;
         value = variable.value;
+        values = [];
         type = variable.type;
         unit = undefined;
         iconId = 'variable';
         iconUrl = undefined;
 
-        variable.on('update', onVariable);
+        type = variable.type;
+
+        onValue(wrapper.value);
+        wrapper.onValue(onValue);
     }
 
-    function onVariable() {
-        if(variable === undefined) return;
-
-        value = variable.value;
-    }
-
-    function getCapability(deviceId: string, capabilityId: string) {
-        device = $devices[deviceId];
+    function getCapability(deviceId: string, capabilityId: string, _devices: DeviceMap) {
+        const device = $devices[deviceId];
 
         if(device === undefined) return;
 
-        capability = device.capabilitiesObj[capabilityId];
+        const capability = device.capabilitiesObj[capabilityId];
 
         if(capability === undefined) return;
+
+        wrapper = new CapabilityWrapper(device, capabilityId);
+        wrapperUri = device.uri + ':' + capabilityId;
 
         label = capability.title;
         value = capability.value;
@@ -98,18 +104,15 @@
             value = capability.values.find(v => v.id === value)?.title ?? value
         }
         
-        device.on('capability', (e: any) => onCapability(capabilityId, e));
+        onValue(wrapper.value);
+        wrapper.onValue(onValue);
     }
 
-    function onCapability(capabilityId: string, event: CapabilityEvent) {
-        if(event.capabilityId !== capabilityId) return;
-
-        if(capability === undefined) return;
-        
-        value = capability.value;
-
-        if(type === 'enum') {
-            value = capability.values.find(v => v.id === value)?.title ?? value
+    function onValue(_value: any) {
+        if(type !== 'enum') {
+            value = _value;
+        } else {
+            value = values.find(v => v.id === value)?.title ?? _value
         }
     }
 
@@ -120,8 +123,8 @@
         {#if settings.iconId !== undefined || iconId !== undefined}
             <Icon data={getIcon(settings.iconId ?? iconId)} />
         {:else if iconUrl !== undefined}
-            {#await $homey.baseUrl then url}
-                <img class="w-8 h-8 m-1 dark:invert" src={url + device?.iconObj.url} alt={device?.icon} />
+            {#await $baseUrl then url}
+                <img class="w-8 h-8 m-1 dark:invert" src={url + iconUrl} alt={iconUrl} />
             {/await}
         {/if}
     </span>
@@ -132,7 +135,7 @@
         {#if type === 'boolean'}
             <span>{value ? 'Yes' : 'No'}</span>
         {:else}
-            <span class="whitespace-nowrap">{value ?? '...'} {capability?.units ?? ''}</span>
+            <span class="whitespace-nowrap">{value ?? '...'} {unit ?? ''}</span>
         {/if}
     </span>
 </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
     import type { CanvasSettings_v1 } from "./CanvasSettings";
-    import ImagePicker from '$lib/components/ImagePicker.svelte';
+    import ImageUploader from '$lib/components/ImageUploader.svelte';
 
     export let settings: CanvasSettings_v1;
 
@@ -56,5 +56,5 @@
     <div class="label">
         <span class="label-text">Background</span>
     </div>
-    <ImagePicker />
+    <ImageUploader />
 </label>

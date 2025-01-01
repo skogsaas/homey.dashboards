@@ -8,7 +8,6 @@
 
     import WidgetGrid from '$lib/components/grid/WidgetGrid.svelte';
 
-    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
     export let settings: CanvasSettings_v1;
 
@@ -28,5 +27,11 @@
 </script>
 
 <div class="h-full w-full">
-    <WidgetGrid {options} bind:items={items} {context} />
+    <WidgetGrid {options} bind:items={items} {context} editable={context.editable} />
 </div>
+
+cellHeight?: number;
+    column?: number;
+    columnOpts?: Responsive;
+    float?: boolean;
+    margin?: number;

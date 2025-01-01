@@ -15,6 +15,7 @@
     import { dateFnsLocale } from '$lib/stores/i18n';
     import type { Threshold, WidgetContext } from '$lib/types/Widgets';
     import type { GridStackWidget } from 'gridstack';
+    import { alerts } from '$lib/stores/alerting';
     
     export let context: WidgetContext;
     export let settings: InsightSettings_v5;
@@ -164,8 +165,8 @@
                 }
             }
         }
-        catch(e) {
-            // Ignore for now.
+        catch(error) {
+            alerts.warn('Error!', 'Could not load series: ' + error, 5000);
         }
 
         if(data.datasets.length > series.length) {
@@ -195,7 +196,7 @@
         const sampleRate = series.sampleRate ?? 60;
 
         try {
-            const entries = await $homey.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
+            const entries = await $homey!.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
             const timeSeries = resample(entries, aggregation, sampleRate, log.decimals);
 
             const yAxis = 'y' + log.units;
@@ -214,8 +215,8 @@
 
             return Math.max(entries.step - entries.updatesIn, 10_000);
         }
-        catch(e) {
-            // Do nothing for now.
+        catch(error) {
+            alerts.warn('Error!', 'Could not load series: ' + error, 5000);
         }
 
         return 30_000; // By default refresh every 30 seconds

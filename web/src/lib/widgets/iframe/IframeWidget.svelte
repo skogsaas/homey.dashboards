@@ -1,11 +1,9 @@
 <script lang="ts">
     import { editing } from '$lib/stores/editing';
     import type { WidgetContext } from '$lib/types/Widgets';
-    import type { GridStackWidget } from 'gridstack';
 
     import type IframeSettings from './IframeSettings';
 
-    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
     export let settings: IframeSettings;
 

@@ -9,9 +9,7 @@
     import type DashboardLinkSettings from './DashboardLinkSettings';
     import { getIcon } from '$lib/components/icons/utils';
     import type { WidgetContext } from '$lib/types/Widgets';
-    import type { GridStackWidget } from 'gridstack';
 
-    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
     export let settings: DashboardLinkSettings;
 

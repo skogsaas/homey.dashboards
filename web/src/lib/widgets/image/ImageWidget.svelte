@@ -1,11 +1,9 @@
 <script lang="ts">
-    import { devices, homey } from '$lib/stores/homey';
-    import type { GridStackWidget } from 'gridstack';
+    import { baseUrl, devices, homey } from '$lib/stores/homey';
 
     import type ImageSettings from './ImageSettings';
     import type { WidgetContext } from '$lib/types/Widgets';
     
-    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
     export let settings: ImageSettings;
 
@@ -43,7 +41,7 @@
             </div>
         {/if}
 
-        {#await $homey.baseUrl}
+        {#await $baseUrl}
             ...
         {:then url}
             <img class="w-full h-full" src={url + image.imageObj.url + '?v=' + refreshSlug} alt={image.title + ' refreshed: ' + refreshSlug} />

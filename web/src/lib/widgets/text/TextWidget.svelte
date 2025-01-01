@@ -1,9 +1,7 @@
 <script lang="ts">
     import type { WidgetContext } from '$lib/types/Widgets';
-    import type { GridStackWidget } from 'gridstack';
     import type TextSettings from './TextSettings';
     
-    export let gridItem: GridStackWidget;
     export let context: WidgetContext;
     export let settings: TextSettings;
 

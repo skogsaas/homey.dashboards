@@ -5,4 +5,4 @@
     export let context: WidgetContext;
 </script>
 
-<div>Unknown widget type: {JSON.stringify(settings)}</div>
+<div>Unknown widget: {JSON.stringify(settings)}</div>
