@@ -4,10 +4,8 @@ import { page } from '$app/stores';
 import type { 
     AdvancedFlow, 
     AdvancedFlowMap, 
-    AppObj, 
     BasicFlow, 
     BasicFlowMap, 
-    CapabilityEvent, 
     DeviceMap, 
     DeviceObj, 
     FlowFolderMap, 
@@ -20,10 +18,9 @@ import type {
     Session, 
     VariableEvent, 
     VariableMap, 
-    Zone, 
     ZoneMap 
 } from '$lib/types/Homey';
-import type { Dashboard_v1, Dashboard_v2, DashboardMap, Store_v1, StoreMap, Template_v1, TemplateMap } from '$lib/types/Store';
+import type { Dashboard_v2, DashboardMap, Store_v1, StoreMap, Template_v1, TemplateMap } from '$lib/types/Store';
 import { driverId } from '$lib/constants';
 
 import BuiltInTemplates from './builtin-templates.json';
@@ -169,8 +166,12 @@ function createImages() {
 export const user = writable(undefined as (OAuthUser | undefined));
 export const homeys = createHomeys();
 export const homey = writable<Homey|undefined>(undefined as (Homey | undefined));
+export const connection = writable<'connect'|'disconnect'|'reconnect'|'error'|'reconnecting'|'reconnect_attempt'|'reconnect_error'|'connect_error'>('disconnect');
 export const baseUrl = createBaseUrl();
+
 export const session = writable(undefined as (Session | undefined));
+export const sessionLoading = writable(false);
+
 export const scopes = derived(session, (s: Session) => s?.scopes ?? [], []);
 
 export const devices = createDevices();

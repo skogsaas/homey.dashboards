@@ -9,29 +9,15 @@
 
     // Stores
     import { 
-      advancedFlows, 
-      advancedFlowsLoading, 
       baseUrl, 
-      basicFlows, 
-      basicFlowsLoading, 
-      dashboards as homeyDashboards, 
-      devices, 
-      devicesLoading, 
-      flowFolders, 
-      flowFoldersLoading, 
+      dashboards,
       homey, 
       homeys,
-      insights, 
-      insightsLoading, 
-      images,
-      imagesLoading,
-      scopes, 
-      session, 
-      user, 
-      variables, 
-      variablesLoading, 
-      zones, 
-      zonesLoading
+      user,
+
+      sessionLoading
+
+
     } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import { editing } from '$lib/stores/editing';
@@ -43,10 +29,10 @@
     // Tailwind
     import "../app.css";
 
-    import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant, mdiLogout, mdiPostageStamp, mdiMap, mdiInformation } from "$lib/components/icons";
+    import { mdiMenu, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant, mdiLogout, mdiPostageStamp, mdiMap, mdiInformation } from "$lib/components/icons";
 
     // Types
-    import type { AdvancedFlow, BasicFlow, CapabilityEvent, VariableEvent, Homey, OAuthHomey } from '$lib/types/Homey';
+    import type { Homey, OAuthHomey } from '$lib/types/Homey';
     import type { Dashboard_v2 } from '$lib/types/Store';
 
     import { clientId, clientSecret } from '$lib/constants';
@@ -56,9 +42,11 @@
     import { getIcon } from '$lib/components/icons/utils';
     import { AlertManager } from '$lib/services/AlertManager';
     import { alerts } from '$lib/stores/alerting';
+    import { HomeyManager } from '$lib/services/HomeyManager';
+    import { version } from '$app/environment';
 
-    let loading: boolean = true;
-    let error: any | undefined = undefined;
+    let homeyManager: HomeyManager | undefined;
+    let alertManager: AlertManager = new AlertManager();
     
     let heartbeat: number;
     let heartbeatInterval = 1000;
@@ -71,7 +59,6 @@
         heartbeatClear = setInterval(() => { heartbeat = Date.now(); }, heartbeatInterval);
     }
 
-    $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
     $: fullscreenSupported = document.fullscreenEnabled;
 
     let menuOpen: boolean = false;
@@ -79,41 +66,16 @@
     let dashboardMenuOpen: boolean = false;
     let addDashboardOpen: boolean = false;
 
-    let alertManager: AlertManager = new AlertManager();
-
     onMount(async () => {
-      // TODO
-      //document.body.setAttribute('data-theme', 'dark');
-      await loadData()
+      await connectHomey();
     });
 
     async function onWindowVisibilityChange() {      
       if($homey !== undefined && heartbeat < (Date.now() - heartbeatInterval * 2)) {
         console.log('reconnecting');
         
-        //$homey.__io.io.engine.close();
-        
-        await loadData()
+        await connectHomey();
       }
-    }
-
-    async function loadData() {
-      loading = true;
-
-      await connectHomey();
-
-      if($homey !== undefined) {
-        await loadSession();
-
-        loadDevices();
-        loadVariables();
-        loadFlows();
-        loadZones();
-        loadInsights();
-        //loadImages();
-      }
-
-      loading = false;
     }
 
     async function connectHomey() {
@@ -136,14 +98,7 @@
           //});
 
           const instance: Homey = new HomeyAPIV3Local(props);
-          instance.on('connect', (e: any) => console.log('connect', e));
-          instance.on('disconnect', (e: any) => console.log('disconnect', e));
-          instance.on('error', (e: any) => console.log('error', e));
-          instance.on('reconnect', (e: any) => console.log('reconnect', e));
-          instance.on('reconnect_attempt', (e: any) => console.log('reconnect_attempt', e));
-          instance.on('reconnecting', (e: any) => console.log('reconnecting', e));
-          instance.on('reconnect_error', (e: any) => console.log('reconnect_error', e));
-          instance.on('connect_error', (e: any) => console.log('connect_error', e));
+          homeyManager = new HomeyManager(instance);
 
           homeys.add(instance);
           homey.set(instance);
@@ -159,6 +114,8 @@
             const usr = await cloudApi.getAuthenticatedUser();
             const firstHomey = await usr.getFirstHomey();
             const instance = await firstHomey.authenticate();
+
+            homeyManager = new HomeyManager(instance);
 
             user.set(usr);
 
@@ -177,198 +134,9 @@
           }
         }
       }
-    }
 
-    async function loadSession() {
-      try {
-        const s = await $homey!.sessions.getSessionMe();
-        session.set(s);
-      } catch (e) {
-        error = 'Session: ' + e;
-      } 
-
-      loading = false;
-    }
-
-    function loadDevices() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.readonly') || $scopes.includes('homey.device.control')) {
-          devicesLoading.set(true);
-
-          $homey!.devices
-            .connect()
-            .then(() => {
-              $homey!.devices
-                .getDevices()
-                .then(d => {
-                  $homey!.devices.on('device.update', (patch: any) => devices.onUpdate(patch));
-                
-                  Object.values(d).forEach(async (device) => {
-                    device
-                      .connect()
-                      .then(() => {
-                        device.on('capability', (event: CapabilityEvent) => {
-                          const capability = device.capabilitiesObj[event.capabilityId];
-
-                          if(capability !== undefined) {
-                            capability.value = event.value;
-                            capability.lastUpdated = event.transactionTime; 
-                          }
-                        });
-                      });
-                  });
-
-                  devices.set(d);
-                })
-                .finally(() => devicesLoading.set(false));
-            }, 
-            // On error
-            () => devicesLoading.set(false));
-          }
-      } catch(e) {
-        error = 'Devices: ' + e;
-        devicesLoading.set(false);
-      }
-    }
-
-    function loadVariables() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.logic') || $scopes.includes('homey.logic.readonly')) {
-          variablesLoading.set(true);
-
-          $homey!.logic
-            .connect()
-            .then(() => {
-              $homey!.logic
-                .getVariables()
-                .then(v => {
-                  $homey!.logic.on('variable.update', (event: VariableEvent) => variables.onUpdate(event));
-                  variables.set(v);
-                })
-                .finally(() => variablesLoading.set(false));;
-            }, 
-            // On error
-            () => devicesLoading.set(false));
-        }
-      } catch(e) {
-        error = 'Variables: ' + e;
-        variablesLoading.set(false);
-      }
-    }
-
-    function loadFlows() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.flow') || $scopes.includes('homey.flow.readonly') || $scopes.includes('homey.flow.start')) {
-          flowFoldersLoading.set(true);
-          basicFlowsLoading.set(true);
-          advancedFlowsLoading.set(true);
-
-          $homey!.flow.connect().then(() => {
-            $homey!.flow
-              .getFlowFolders()
-              .then(folders => { flowFolders.set(folders); })
-              .finally(() => flowFoldersLoading.set(false));
-            $homey!.flow
-              .getFlows()
-              .then(flows => { basicFlows.set(flows); })
-              .finally(() => () => basicFlowsLoading.set(false));
-            $homey!.flow
-              .getAdvancedFlows()
-              .then(flows => { advancedFlows.set(flows); })
-              .finally(() => advancedFlowsLoading.set(false));
-
-            $homey!.flow.on('flow.create', (e: BasicFlow) => basicFlows.onCreate(e));
-            $homey!.flow.on('flow.delete', (e: BasicFlow) => basicFlows.onDelete(e));
-            $homey!.flow.on('advancedflow.create', (e: AdvancedFlow) => advancedFlows.onCreate(e));
-            $homey!.flow.on('advancedflow.delete', (e: AdvancedFlow) => advancedFlows.onDelete(e));
-          }, () => {
-            // On error
-            flowFoldersLoading.set(false);
-            basicFlowsLoading.set(false);
-            advancedFlowsLoading.set(false);
-          });
-        }
-      } catch(e) {
-        error = 'Flows: ' + e;
-
-        // On error
-        flowFoldersLoading.set(false);
-        basicFlowsLoading.set(false);
-        advancedFlowsLoading.set(false);
-      }
-    }
-
-    function loadInsights() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.insights') || $scopes.includes('homey.insights.readonly')) {
-          insightsLoading.set(true);
-
-          $homey!.insights
-            .connect()
-            .then(() => {
-              $homey!.insights
-                .getLogs()
-                .then(logs => { insights.set(logs); })
-                .finally(() => insightsLoading.set(false));
-            }, 
-            // On error
-            () => insightsLoading.set(false));
-
-          /*
-          $homey.insights.on('log.create', (e: Log) => insights.onCreate(e));
-          $homey.insights.on('log.update', (e: Log) => insights.onUpdate(e));
-          $homey.insights.on('log.delete', (e: Log) => insights.onDelete(e));
-          */
-        }
-      } catch(e) {
-        error = 'Insights: ' + e;
-        insightsLoading.set(false);
-      }
-    }
-
-    function loadImages() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.insights') || $scopes.includes('homey.insights.readonly')) {
-          imagesLoading.set(true);
-
-          $homey!.images
-            .connect()
-            .then(() => {
-              $homey!.images
-                .getImages()
-                .then(imgs => { images.set(imgs); })
-                .finally(() => imagesLoading.set(false));
-            }, 
-            // On error
-            () => imagesLoading.set(false));
-        }
-      } catch(e) {
-        error = 'Images: ' + e;
-        imagesLoading.set(false);
-      }
-    }
-
-    function loadZones() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.zone') || $scopes.includes('homey.zone.readonly')) {
-          zonesLoading.set(true);
-
-          $homey!.zones
-            .connect()
-            .then(() => {
-              $homey!.zones.getZones().then(z => { zones.set(z); });
-            })
-            .finally(() => zonesLoading.set(false));
-          
-          /*
-          $homey.zones.on('zone.create', (e: Zone) => zones.onCreate(e));
-          $homey.zones.on('zone.delete', (e: Zone) => zones.onDelete(e));
-          $homey.zones.on('zone.update', (e: Zone) => zones.onUpdate(e));
-          */
-        }
-      } catch(e) {
-        error = 'Zones: ' + e;
-        zonesLoading.set(false);
+      if(homeyManager !== undefined) {
+        await homeyManager.loadAsync();
       }
     }
 
@@ -380,13 +148,15 @@
     function openDashboard(dash: Dashboard_v2) : Promise<void> {
       menuOpen = false;
       dashboardMenuOpen = false;
-      return goto(base + '/board/?id=' + dash.id)
+      return goto(base + '/board/?id=' + dash.id);
     }
 
     async function selectHomey(h: OAuthHomey) {
       const instance = await h.authenticate();
 
       homey.set(instance);
+      homeyManager = new HomeyManager(instance);
+      await homeyManager.loadAsync();
 
       // Navigate to home-screen after switching
       await goto(base + '/');
@@ -406,6 +176,7 @@
       }
 
       homey.set(undefined);
+      homeyManager?.destroy();
 
       return goto(base + '/');
     }
@@ -414,7 +185,7 @@
 
 <svelte:window on:visibilitychange={e => onWindowVisibilityChange()} />
 
-{#if loading}
+{#if $sessionLoading}
   <div class="w-full mt-8 text-center">
     <span class="loading loading-infinity w-40 text-primary"></span>
   </div>
@@ -437,13 +208,13 @@
           tabindex="0"
           class="dropdown-content menu menu-lg bg-base-300 rounded-box my-2 gap-1 w-72 p-2 shadow"
         >
-          {#each dashboards as d}
+          {#each Object.values($dashboards) as dashboard}
             <li>
-              <a href="{base + '/board/?id=' + d.id}" class="overflow-hidden overflow-ellipsis">
-                {#if d.iconId !== undefined}
-                  <Icon data={getIcon(d.iconId)} />
+              <a href="{base + '/board/?id=' + dashboard.id}" class="overflow-hidden overflow-ellipsis">
+                {#if dashboard.iconId !== undefined}
+                  <Icon data={getIcon(dashboard.iconId)} />
                 {/if}
-                <span>{d.title}</span>
+                <span>{dashboard.title}</span>
               </a>
             </li>
           {/each}
@@ -530,14 +301,14 @@
             </div>
             
             <ul>
-              {#each dashboards as d}
-                <li on:click={() => openDashboard(d)}>
+              {#each Object.values($dashboards) as dashboard}
+                <li on:click={() => openDashboard(dashboard)}>
                   <div class="flex items-center">
-                    {#if d.iconId !== undefined}
-                      <Icon class="w-8 h-8 rounded-full invert" data={getIcon(d.iconId)} />
+                    {#if dashboard.iconId !== undefined}
+                      <Icon class="w-8 h-8 rounded-full invert" data={getIcon(dashboard.iconId)} />
                     {/if}
                     <div class="flex-1 min-w-0 ml-2">
-                      <p class="text-sm font-medium">{d.title}</p>
+                      <p class="text-sm font-medium">{dashboard.title}</p>
                     </div>
                   </div>
                 </li>
@@ -578,6 +349,8 @@
             </div>
           </li>
         </ul>
+
+        <div class="text-sm m-8">Version: {version}</div>
       </div>
     </div>
   </div>
