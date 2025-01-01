@@ -20,7 +20,7 @@ export class AlertManager {
 
     removeAlerts() : void {
         const now = Date.now();
-        const expired = this.alerts
+        this.alerts
             .filter(alert => alert.expires < now)
             .forEach(alert => alertStore.remove(alert.id));
     }

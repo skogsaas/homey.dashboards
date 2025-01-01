@@ -36,7 +36,7 @@ function createAlerts() {
             const alert = createAlert(title, text, timeout, 'check', 'alert-success');
             update((existing: Alert[]) => ([ ...existing, alert ]));
         },
-        remove: (id: string) => update((existing: Alert[]) => existing.filter(alert => alert.id === id))
+        remove: (id: string) => update((existing: Alert[]) => existing.filter(alert => alert.id !== id))
     };
 }
 

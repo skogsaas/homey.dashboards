@@ -455,12 +455,8 @@
     <button class="btn btn-circle fixed top-0 z-10 hidden md:block" on:click={() => menuOpen = true}>
       <Icon data={mdiMenu} />
     </button>
-  {/if}
 
-  <div class="drawer w-full h-full relative">
-    <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
-    
-    <div class="absolute z-50 bottom-1 right-1 flex flex-col gap-2">
+    <div class="fixed bottom-20 md:bottom-1 right-1 z-50 flex flex-col gap-2">
       {#each $alerts as alert}
         <div class="alert shadow-lg {alert.classes}">
           {#if alert.icon !== undefined}
@@ -473,9 +469,12 @@
         </div>
       {/each}
     </div>
+  {/if}
 
+  <div class="drawer w-full h-full relative">
+    <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
+    
     <div class="drawer-content">
-      
       <slot></slot>
     </div>
 
