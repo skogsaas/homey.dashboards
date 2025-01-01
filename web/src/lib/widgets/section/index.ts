@@ -9,7 +9,7 @@ const info: WidgetInfo = {
     type: 'section', 
     label: 'Section',
     icon: mdiTableColumn,
-    category: 'layout',
+    category: 'component',
     widget: SectionWidget, 
     editor: SectionEditor,
     scopes: [],

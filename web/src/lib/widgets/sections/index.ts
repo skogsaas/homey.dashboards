@@ -7,7 +7,7 @@ import SectionsWidget from './SectionsWidget.svelte';
 
 const info: WidgetInfo = {
     type: 'sections', 
-    label: 'Section layout',
+    label: 'Sections',
     icon: mdiViewColumnOutline,
     category: 'layout',
     widget: SectionsWidget, 
