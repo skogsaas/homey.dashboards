@@ -26,6 +26,7 @@
     // Utils
     import { v4 as uuid } from 'uuid';
     import { saveTemplate } from '$lib/api/webhook';
+    import { alerts } from '$lib/stores/alerting';
     
     let templates: TemplateMap;
     let template: Template_v1 | undefined;
@@ -57,9 +58,14 @@
     async function onSave() {
         if(template !== undefined) {
             if(storeId !== undefined) {
-                await saveTemplate($homey!.id, storeId, template);
+                try {
+                    await saveTemplate($homey!.id, storeId, template);
+                    alerts.success('Saved!', 'The template was saved.', 5000);
+                } catch(error) {
+                    alerts.error('Error!', 'Could not save template: ' + error, 10000)
+                }
             } else {
-                // This is a new dashboard, need to select a store first.
+                // This is a new template, need to select a store first.
                 storeOpen = true;
             }
         }
@@ -67,7 +73,13 @@
 
     async function onStoreSelect(_storeId: string) {
         storeId = _storeId;
-        await saveTemplate($homey!.id, storeId, template!);
+        
+        try {
+            await saveTemplate($homey!.id, storeId, template!);
+            alerts.success('Saved!', 'The template was saved.', 5000);
+        } catch(error) {
+            alerts.error('Error!', 'Could not save template: ' + error, 10000)
+        }
     }
 
     function onRoot(_root: WidgetSettings_v1 | undefined) {

@@ -81,6 +81,8 @@
             if(storeId !== undefined) {
                 try {
                     await saveDashboard($homey!.id, storeId, dashboard);
+                    alerts.success('Saved!', 'The dashboard was saved.', 5000);
+
                     editing.set(false);
                 } catch(error) {
                     alerts.error('Error!', 'Could not save dashboard: ' + error, 10000);
@@ -97,6 +99,8 @@
         
         try {
             await saveDashboard($homey!.id, storeId, dashboard!);
+            alerts.success('Saved!', 'The dashboard was saved.', 5000);
+            
             editing.set(false);
         } catch(error) {
             alerts.error('Error!', 'Could not save dashboard: ' + error, 10000);
