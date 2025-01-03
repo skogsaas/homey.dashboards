@@ -149,7 +149,7 @@
   <title>{dashboard !== undefined ? dashboard.title : 'Dashboard'}</title>
 </svelte:head>
 
-<div class="w-full h-full">
+<div class="w-full h-full pb-16 md:pb-0">
     {#if $homey === undefined || $dashboardsLoading}
         <div class="flex justify-center m-2">
             <div class="card w-full max-w-md mt-8 bg-base-300">
