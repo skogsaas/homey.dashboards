@@ -32,7 +32,6 @@
     let dashboard: Dashboard_v2 | undefined;
     let root: WidgetSettings_v1 | undefined;
 
-    let storeId: string | undefined;
     let storeOpen: boolean = false;
 
     let migrated: boolean = false;
@@ -68,16 +67,16 @@
 
             dashboard = d;
             root = d.root;
-            storeId = Object.values($stores).find(store => store.dashboards.some(dash => dash?.id === dashboard?.id))?.id;
         } else if(_dashboardId === null) {
             dashboard = undefined;
             root = undefined;
-            storeId = undefined;
         }
     }
 
     async function onSave() {
         if(dashboard !== undefined) {
+            const storeId = Object.values($stores).find(store => store.dashboards.some(dash => dash?.id === dashboard?.id))?.id;
+
             if(storeId !== undefined) {
                 try {
                     await saveDashboard($homey!.id, storeId, dashboard);
@@ -94,9 +93,7 @@
         }
     }
 
-    async function onStoreSelect(_storeId: string) {
-        storeId = _storeId;
-        
+    async function onStoreSelect(storeId: string) {        
         try {
             await saveDashboard($homey!.id, storeId, dashboard!);
             alerts.success('Saved!', 'The dashboard was saved.', 5000);
@@ -108,12 +105,18 @@
     }
 
     async function onDelete() {
-        if(dashboard !== undefined && storeId !== undefined) {
-            try {
-                await deleteDashboard($homey!.id, storeId, dashboard);
-                await goto(base + '/board/');
-            } catch(error) {
-                alerts.error('Error!', 'Could not delete dashboard: ' + error, 10000);
+        if(dashboard !== undefined) {
+            const storeId = Object.values($stores).find(store => store.dashboards.some(dash => dash?.id === dashboard?.id))?.id;
+
+            if(storeId !== undefined) {
+                try {
+                    await deleteDashboard($homey!.id, storeId, dashboard);
+                    await goto(base + '/board/');
+                } catch(error) {
+                    alerts.error('Error!', 'Could not delete dashboard: ' + error, 10000);
+                }
+            } else {
+                alerts.error('Error!', 'Could not find store for dashboard', 10000);
             }
         }
     }

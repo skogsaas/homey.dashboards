@@ -32,7 +32,6 @@
     let template: Template_v1 | undefined;
     let root: WidgetSettings_v1 | undefined;
 
-    let storeId: string | undefined;
     let storeOpen: boolean = false;
 
     $: templateId = $page.url.searchParams.get('id');
@@ -51,12 +50,13 @@
         if(_template !== undefined && (template === undefined || (template !== _template && !$editing))) {
             template = _template;
             root = template?.root;
-            storeId = Object.values($stores).find(store => store.templates.some(t => t.id === templateId))?.id;
         }
     }
 
     async function onSave() {
         if(template !== undefined) {
+            const storeId = Object.values($stores).find(store => store.templates.some(t => t.id === templateId))?.id;
+
             if(storeId !== undefined) {
                 try {
                     await saveTemplate($homey!.id, storeId, template);
@@ -71,9 +71,7 @@
         }
     }
 
-    async function onStoreSelect(_storeId: string) {
-        storeId = _storeId;
-        
+    async function onStoreSelect(storeId: string) {
         try {
             await saveTemplate($homey!.id, storeId, template!);
             alerts.success('Saved!', 'The template was saved.', 5000);
@@ -122,7 +120,7 @@
     {#if template !== undefined}
         <WidgetEditor
             title={template?.title ?? 'Template title'}
-            saveTitle={storeId !== undefined ? 'Save' : 'Save as'}
+            saveTitle="Save"
             settingsTitle="Template"
             settingsIcon={mdiPostageStamp}
             root={root}
