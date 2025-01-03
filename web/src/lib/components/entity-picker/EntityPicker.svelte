@@ -230,7 +230,7 @@
                 </div>
 
                 <VirtualList items={viewItems} height="50vh" let:item>
-                    <ItemElement {item} on:click={() => select(item)} />
+                    <ItemElement {item} on:click={() => onItem(item)} />
                 </VirtualList>
             {/if}
         </div>
