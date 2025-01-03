@@ -5,16 +5,15 @@
     // Stores
     import { favorite } from '$lib/stores/favorite';
     import { base } from '$app/paths';
+    import { dashboardsLoading } from '$lib/stores/homey';
 
-    $: run();
+    $: run($favorite, $dashboardsLoading);
 
-    async function run() {
-        const favorite = $favorite;
-
-        if(favorite !== undefined && favorite !== null) {
-            await goto(base + "/board/?id=" + favorite);
-        } else {
-            await goto(base + "/board/");
+    async function run(_favorite: string, _loading: boolean) {
+        if(_favorite === undefined) {
+            await goto(base);
+        } else if(_favorite !== undefined && !_loading) {
+            await goto(base + "/board/?id=" + _favorite);
         }
     }
 </script>
