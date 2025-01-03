@@ -24,7 +24,7 @@
     $: fontBlur = settings?.fontBlur ?? false;
 </script>
 
-<div class="relative w-full h-full">
+<div class="relative w-full">
     {#if device === undefined || image === undefined}
         {#if device === undefined && settings.deviceId !== undefined}
             <span>Device not found</span>
@@ -41,7 +41,7 @@
             </div>
         {/if}
 
-        {#await $baseUrl}
+        {#await $homey.baseUrl}
             ...
         {:then url}
             <img class="w-full h-full" src={url + image.imageObj.url + '?v=' + refreshSlug} alt={image.title + ' refreshed: ' + refreshSlug} />
