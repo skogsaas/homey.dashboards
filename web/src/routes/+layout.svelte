@@ -60,13 +60,10 @@
     }
 
     $: fullscreenSupported = document.fullscreenEnabled;
+    $: connectHomey();
 
     let menuOpen: boolean = false;
     let dashboardMenuOpen: boolean = false;
-
-    onMount(async () => {
-      await connectHomey();
-    });
 
     async function onWindowVisibilityChange() {      
       if($homey !== undefined && heartbeat < (Date.now() - heartbeatInterval * 2)) {
