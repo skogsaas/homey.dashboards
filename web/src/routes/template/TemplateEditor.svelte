@@ -134,6 +134,7 @@
             placeholder="JSON"
             class="textarea textarea-bordered w-full max-w-xs h-max"
             value={JSON.stringify(template)}
+            rows="10"
         ></textarea>
     </div>
 </div>

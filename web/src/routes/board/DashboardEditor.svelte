@@ -45,12 +45,27 @@
     }
 </script>
 
-<TextPicker bind:value={title} label="Title" placeholder="Title" />
+<div role="tablist" class="tabs tabs-bordered tabs-lg">
+    <input type="radio" name="tabs" role="tab" class="tab" aria-label="Settings" checked={true} />
+    <div role="tabpanel" class="tab-content pt-2">
+        <TextPicker bind:value={title} label="Title" placeholder="Title" />
 
-<IconPicker bind:iconId={iconId} />
+        <IconPicker bind:iconId={iconId} />
 
-<div class="alert">
-    <span class="text-error">Danger!</span>
-    <input type="checkbox" class="checkbox checkbox-error" bind:checked={enableDelete} />
-    <button class="btn btn-error" disabled={!enableDelete} on:click={e => deleteDashboard()}>Delete dashboard</button>
+        <div class="alert">
+            <span class="text-error">Danger!</span>
+            <input type="checkbox" class="checkbox checkbox-error" bind:checked={enableDelete} />
+            <button class="btn btn-error" disabled={!enableDelete} on:click={e => deleteDashboard()}>Delete dashboard</button>
+        </div>
+    </div>
+
+    <input type="radio" name="tabs" role="tab" class="tab" aria-label="JSON" />
+    <div role="tabpanel" class="tab-content pt-2">
+        <textarea
+            placeholder="JSON"
+            class="textarea textarea-bordered w-full max-w-xs h-max"
+            value={JSON.stringify(settings)}
+            rows="10"
+        ></textarea>
+    </div>
 </div>
