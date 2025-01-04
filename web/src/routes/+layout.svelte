@@ -38,7 +38,8 @@
     import { AlertManager } from '$lib/services/AlertManager';
     import { alerts } from '$lib/stores/alerting';
     import { HomeyManager } from '$lib/services/HomeyManager';
-    import { version } from '$app/environment';
+    import { version as packageVersion } from '$app/environment';
+    import { version } from '$lib/stores/version';
 
     let homeyManager: HomeyManager | undefined;
     let alertManager: AlertManager = new AlertManager();
@@ -54,6 +55,7 @@
         heartbeatClear = setInterval(() => { heartbeat = Date.now(); }, heartbeatInterval);
     }
 
+    $: notifyVersion();
     $: fullscreenSupported = document.fullscreenEnabled;
     $: connecting = connectHomey();
 
@@ -65,6 +67,15 @@
         console.log('reconnecting');
         
         await connectHomey();
+      }
+    }
+
+    function notifyVersion() {
+      const v = $version;
+
+      if(v !== packageVersion) {
+        alerts.info('🥰 Upgraded', `The app has been upgraded to ${packageVersion}`, 15000);
+        version.set(packageVersion);
       }
     }
 
@@ -339,7 +350,7 @@
             </li>
           </ul>
 
-          <div class="text-sm m-8">Version: {version}</div>
+          <div class="text-sm m-8">Version: {packageVersion}</div>
         </div>
       </div>
     </div>
