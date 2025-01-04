@@ -38,11 +38,10 @@
     function handleDndFinalize(_items: any[], info: any) {
         modifying = false;
 
-        /*
         if(info.trigger === 'droppedOutsideOfAny') {
-            _items = _items.filter(i => i.id !== info.id);
+            // When dropped outside of any zone, set the items back to the original list of items
+            _items = items ?? [];
         }
-        */
 
         if(info.trigger === 'droppedIntoAnother' && items !== undefined) {
             for (let index = 0; index < _items.length; index++) {
