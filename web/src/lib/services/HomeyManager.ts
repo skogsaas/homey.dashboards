@@ -1,5 +1,5 @@
 import { alerts } from "$lib/stores/alerting";
-import { advancedFlows, advancedFlowsLoading, basicFlows, basicFlowsLoading, connection, devices, devicesLoading, flowFolders, flowFoldersLoading, images, imagesLoading, insights, insightsLoading, session, sessionLoading, variables, variablesLoading, zones, zonesLoading } from "$lib/stores/homey";
+import { advancedFlows, basicFlows, connection, devices, flowFolders, images, insights, session, variables, zones, } from "$lib/stores/homey";
 import type { AdvancedFlow, BasicFlow, CapabilityEvent, Homey, VariableEvent } from "$lib/types/Homey";
 
 export class HomeyManager {
@@ -32,18 +32,17 @@ export class HomeyManager {
 
     async loadAsync() {
         await this.loadSessionAsync();
+        const t1 = this.loadDevicesAsync();
+        const t2 = this.loadFlowsAsync();
+        const t3 = this.loadInsightsAsync();
+        const t4 = this.loadVariablesAsync();
+        const t5 = this.loadZonesAsync();
+        const t6 = this.loadImagesAsync();
 
-        this.loadDevicesAsync();
-        this.loadFlowsAsync();
-        this.loadInsightsAsync();
-        this.loadVariablesAsync();
-        this.loadZonesAsync();
-        this.loadImagesAsync();
+        await Promise.all([t1, t2, t3, t4, t5, t6]);
     }
 
     private async loadSessionAsync() {
-        sessionLoading.set(true);
-
         try {
             const s = await this.homey.sessions.getSessionMe();
             session.set(s);
@@ -53,13 +52,9 @@ export class HomeyManager {
         } catch (error) {
             alerts.error('Error!', 'Could not get current session: ' + error, 10000);
         } 
-
-        sessionLoading.set(false);
     }
   
     private async loadDevicesAsync() {
-        devicesLoading.set(true);
-
         try {
             if(this.scopes.includes('homey') || 
                 this.scopes.includes('homey.device') || 
@@ -94,13 +89,9 @@ export class HomeyManager {
         } catch(error) {
             alerts.error('Error!', 'Could not load devices: ' + error, 10000);
         }
-    
-        devicesLoading.set(false);
     }
   
-    private async loadVariablesAsync() {
-        variablesLoading.set(true);
-        
+    private async loadVariablesAsync() {        
         try {
             if(this.scopes.includes('homey') || 
                 this.scopes.includes('homey.logic') || 
@@ -116,15 +107,9 @@ export class HomeyManager {
         } catch(error) {
             alerts.error('Error!', 'Could not load variables: ' + error, 10000);
         }
-
-        variablesLoading.set(false);
     }
   
     private async loadFlowsAsync() {
-        flowFoldersLoading.set(true);
-        basicFlowsLoading.set(true);
-        advancedFlowsLoading.set(true);
-        
         try {
             if(this.scopes.includes('homey') || 
                 this.scopes.includes('homey.flow') || 
@@ -154,15 +139,9 @@ export class HomeyManager {
         } catch(error) {
             alerts.error('Error!', 'Could not load flows: ' + error, 10000);
         }
-
-        flowFoldersLoading.set(false);
-        basicFlowsLoading.set(false);
-        advancedFlowsLoading.set(false);
     }
   
     private async loadInsightsAsync() {
-        insightsLoading.set(true);
-
         try {
             if(this.scopes.includes('homey') || 
                 this.scopes.includes('homey.insights') || 
@@ -182,13 +161,9 @@ export class HomeyManager {
         } catch(error) {
             alerts.error('Error!', 'Could not load insight logs: ' + error, 10000);
         }
-
-        insightsLoading.set(false);
     }
   
-    private async loadImagesAsync() {
-        imagesLoading.set(true);
-        
+    private async loadImagesAsync() {        
         try {
             if(this.scopes.includes('homey') || 
                 this.scopes.includes('homey.insights') || 
@@ -202,13 +177,9 @@ export class HomeyManager {
         } catch(error) {
             alerts.error('Error!', 'Could not load images: ' + error, 10000);
         }
-
-        imagesLoading.set(false);
     }
   
     private async loadZonesAsync() {
-        zonesLoading.set(true);
-
         try {
             if(this.scopes.includes('homey') || 
                 this.scopes.includes('homey.zone') || 
@@ -228,7 +199,5 @@ export class HomeyManager {
         } catch(error) {
             alerts.error('Error!', 'Could not load zones: ' + error, 10000);
         }
-
-        zonesLoading.set(false);
     }
 }

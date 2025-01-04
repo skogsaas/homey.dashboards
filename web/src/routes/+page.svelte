@@ -34,17 +34,17 @@
         if (pwaInfo) {
             const { registerSW } = await import('virtual:pwa-register')
             registerSW({
-            immediate: true,
-            onRegistered(r: any) {
-                r && setInterval(() => {
-                console.log('Checking for sw update')
-                r.update()
-                }, 60*60000) // Every 1 hour
-                console.log(`SW Registered: ${r}`)
-            },
-            onRegisterError(error: any) {
-                console.log('SW registration error', error)
-            }
+                immediate: true,
+                onRegistered(r: any) {
+                    r && setInterval(() => {
+                    console.log('Checking for sw update')
+                    r.update()
+                    }, 60*60000) // Every 1 hour
+                    console.log(`SW Registered: ${r}`)
+                },
+                onRegisterError(error: any) {
+                    console.log('SW registration error', error)
+                }
             })
         }
         
@@ -75,14 +75,13 @@
             const url = localHosting ? $baseUrl : 'https://' + localHomeyId + '.connect.athom.com';
 
             const props = {
-            token: localKey,
-            debug: function debug() { },
-            baseUrl: url,
-            strategy: []
-          };
+                token: localKey,
+                debug: function debug() { },
+                baseUrl: url,
+                strategy: []
+            };
 
-          const instance: Homey = new HomeyAPIV3Local(props);
-
+            const instance: Homey = new HomeyAPIV3Local(props);
             return instance;
         }
         catch(e) {

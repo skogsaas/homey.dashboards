@@ -6,7 +6,7 @@
     import { page } from '$app/stores';
 
     // Stores
-    import { dashboardsLoading, homey, dashboards as homeyDashboards, stores } from '$lib/stores/homey';
+    import { homey, dashboards as homeyDashboards, stores } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import { editing } from '$lib/stores/editing';
 
@@ -14,12 +14,12 @@
     import WidgetEditor from '$lib/components/WidgetEditor.svelte';
     import DashboardEditor from './DashboardEditor.svelte';
     import Widget from '$lib/widgets/Widget.svelte';
-    import { mdiEmoticonSadOutline, mdiViewDashboard } from '$lib/components/icons';
+    import { mdiViewDashboard } from '$lib/components/icons';
     import StoreDialog from '$lib/components/StoreDialog.svelte';
 
     // Types
     import type { WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
-    import type { DashboardMap, Dashboard_v2, Store_v1 } from '$lib/types/Store';
+    import type { DashboardMap, Dashboard_v2 } from '$lib/types/Store';
 
     // Utils
     import { migrate as migrateDashboard } from '$lib/widgets/migrations';
@@ -150,65 +150,51 @@
 </svelte:head>
 
 <div class="w-full h-full pb-16 md:pb-0">
-    {#if $homey === undefined || $dashboardsLoading}
-        <div class="flex justify-center m-2">
-            <div class="card w-full max-w-md mt-8 bg-base-300">
-                <div class="card-body">
-                    <h1 class="card-title">🤖 Bzzt!</h1>
-                    <p class="py-1">Loading dashboard...</p>
-                    <div class="w-full mt-8 text-center">
-                        <span class="loading loading-infinity w-40 text-primary"></span>
-                    </div>
-                </div>
-            </div>
+    {#if $editing && dashboard !== undefined}
+        <WidgetEditor
+            title={dashboard?.title ?? 'Dashboard title'}
+            settingsTitle="Dashboard"
+            settingsIcon={mdiViewDashboard}
+            root={root}
+            on:root={e => onRoot(e.detail)}
+            on:save={e => onSave()}
+        >
+            <DashboardEditor settings={dashboard} on:settings={e => onSettings(e.detail)} on:delete={e => onDelete()} />
+        </WidgetEditor>
+
+        <StoreDialog bind:open={storeOpen} on:storeId={e => onStoreSelect(e.detail)} />
+    {:else if root !== undefined}
+        <div class="p-2">
+            <Widget settings={root} {context} />
         </div>
-    {:else if $homey !== undefined}
-        {#if $editing && dashboard !== undefined}
-            <WidgetEditor
-                title={dashboard?.title ?? 'Dashboard title'}
-                settingsTitle="Dashboard"
-                settingsIcon={mdiViewDashboard}
-                root={root}
-                on:root={e => onRoot(e.detail)}
-                on:save={e => onSave()}
-            >
-                <DashboardEditor settings={dashboard} on:settings={e => onSettings(e.detail)} on:delete={e => onDelete()} />
-            </WidgetEditor>
+    {:else}
+        <div class="flex min-h-screen justify-center">
+            <DashboardListHero>
+                <div class="p-4">
+                    {#if dashboard !== undefined}
+                        <h1 class="text-5xl font-bold">🤷 Empty!</h1>
+                        <p class="py-6">This dashboard is empty.</p>
 
-            <StoreDialog bind:open={storeOpen} on:storeId={e => onStoreSelect(e.detail)} />
-        {:else if root !== undefined}
-            <div class="p-2">
-                <Widget settings={root} {context} />
-            </div>
-        {:else}
-            <div class="flex min-h-screen justify-center">
-                <DashboardListHero>
-                    <div class="p-4">
-                        {#if dashboard !== undefined}
-                            <h1 class="text-5xl font-bold">🤷 Empty!</h1>
-                            <p class="py-6">This dashboard is empty.</p>
-
-                            <button class="btn btn-primary" on:click={() => (editing.set(true))}>Edit 🪚</button>
-                        {:else if dashboardId !== null}
-                            <h1 class="text-5xl font-bold">🤖 Does not compute!</h1>
-                            <p class="py-6">
-                                Cannot find the dashboard with id: <code>{dashboardId}</code>
-                            </p>
-                            
-                            <div class="w-full mt-8 text-center">
-                                <span class="text-5xl">🤷</span>
-                            </div>
-                        {:else}
-                            <h1 class="text-5xl font-bold">👋 Hello there!</h1>
-                            <p class="py-6">Want to create a new dashboard?</p>
-                            
-                            <div class="w-full text-center">
-                                <button class="btn btn-primary" on:click={() => create()}>Hell yeah! 🎸</button>
-                            </div>
-                        {/if}
-                    </div>
-                </DashboardListHero>
-            </div>
-        {/if}
+                        <button class="btn btn-primary" on:click={() => (editing.set(true))}>Edit 🪚</button>
+                    {:else if dashboardId !== null}
+                        <h1 class="text-5xl font-bold">🤖 Does not compute!</h1>
+                        <p class="py-6">
+                            Cannot find the dashboard with id: <code>{dashboardId}</code>
+                        </p>
+                        
+                        <div class="w-full mt-8 text-center">
+                            <span class="text-5xl">🤷</span>
+                        </div>
+                    {:else}
+                        <h1 class="text-5xl font-bold">👋 Hello there!</h1>
+                        <p class="py-6">Want to create a new dashboard?</p>
+                        
+                        <div class="w-full text-center">
+                            <button class="btn btn-primary" on:click={() => create()}>Hell yeah! 🎸</button>
+                        </div>
+                    {/if}
+                </div>
+            </DashboardListHero>
+        </div>
     {/if}
 </div>

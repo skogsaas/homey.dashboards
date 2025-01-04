@@ -4,7 +4,7 @@
     import { deleteDashboard as apiDelete } from '$lib/api/webhook';
     import { favorite } from '$lib/stores/favorite';
     
-    import { dashboardsLoading, dashboards as homeyDashboards } from '$lib/stores/homey';
+    import { dashboards as homeyDashboards } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import type { Dashboard_v2 } from '$lib/types/Store';
     import Icon from './Icon.svelte';
@@ -28,48 +28,42 @@
             <slot></slot>
         </div>
         <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-            {#if $dashboardsLoading}
-                <div class="w-full mt-8 text-center">
-                    <span class="loading loading-infinity w-40 text-primary"></span>
-                </div>
-            {:else} 
-                {#if dashboards !== undefined && dashboards.length > 0}
-                    <div class="card w-96 bg-base-100 shadow-xl">
-                        <div class="card-body">
-                            {#each dashboards as dashboard, i}
-                                <div class="flex flex-row items-center">
-                                    <button class="btn btn-ghost flex-1 flex justify-start" on:click={() => goto(base + '/board/?id=' + dashboard.id)}>
-                                        <Icon data={getIcon(dashboard.iconId ?? 'view-dashboard')} />
-                                        {dashboard.title}
-                                    </button>
-                                    {#if $favorite === dashboard.id}
-                                        <Icon data={mdiStar} />
-                                    {/if}
-
-                                    <details class="dropdown">
-                                        <summary class="btn btn-ghost">
-                                            <Icon data={mdiDotsVertical} />
-                                        </summary>
-                                        <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
-                                            <li><a on:click={e => favoriteDashboard(dashboard)}><Icon data={mdiStar} />Favorite</a></li>
-                                            <!--<li><a class="text-error" on:click={e => deleteDashboard(dashboard)}><Icon data={mdiTrashCan} />Delete</a></li>-->
-                                        </ul>
-                                    </details>
-                                    
-                                </div>
-                                
-                                {#if i < (dashboards.length - 1)}
-                                    <div class="divider divider-neutral my-1"></div>
+            {#if dashboards !== undefined && dashboards.length > 0}
+                <div class="card w-96 bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        {#each dashboards as dashboard, i}
+                            <div class="flex flex-row items-center">
+                                <button class="btn btn-ghost flex-1 flex justify-start" on:click={() => goto(base + '/board/?id=' + dashboard.id)}>
+                                    <Icon data={getIcon(dashboard.iconId ?? 'view-dashboard')} />
+                                    {dashboard.title}
+                                </button>
+                                {#if $favorite === dashboard.id}
+                                    <Icon data={mdiStar} />
                                 {/if}
-                            {/each}
-                        </div>
+
+                                <details class="dropdown">
+                                    <summary class="btn btn-ghost">
+                                        <Icon data={mdiDotsVertical} />
+                                    </summary>
+                                    <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+                                        <li><a on:click={e => favoriteDashboard(dashboard)}><Icon data={mdiStar} />Favorite</a></li>
+                                        <!--<li><a class="text-error" on:click={e => deleteDashboard(dashboard)}><Icon data={mdiTrashCan} />Delete</a></li>-->
+                                    </ul>
+                                </details>
+                                
+                            </div>
+                            
+                            {#if i < (dashboards.length - 1)}
+                                <div class="divider divider-neutral my-1"></div>
+                            {/if}
+                        {/each}
                     </div>
-                {:else}
-                    <div class="text-center py-2">
-                        <span class="text-6xl p-4 block">🐳</span>
-                        <p>Here's a whale to look at, because you have no dashboards yet anyway 🤷</p>
-                    </div>
-                {/if}
+                </div>
+            {:else}
+                <div class="text-center py-2">
+                    <span class="text-6xl p-4 block">🐳</span>
+                    <p>Here's a whale to look at, because you have no dashboards yet anyway 🤷</p>
+                </div>
             {/if}
         </div>
     </div>

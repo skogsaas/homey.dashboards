@@ -13,13 +13,8 @@
       dashboards,
       homey, 
       homeys,
-      user,
-
-      sessionLoading
-
-
+      user
     } from '$lib/stores/homey';
-    import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import { editing } from '$lib/stores/editing';
     import { apiKey, homeyId } from '$lib/stores/auth';
 
@@ -60,7 +55,7 @@
     }
 
     $: fullscreenSupported = document.fullscreenEnabled;
-    $: connectHomey();
+    $: connecting = connectHomey();
 
     let menuOpen: boolean = false;
     let dashboardMenuOpen: boolean = false;
@@ -73,7 +68,7 @@
       }
     }
 
-    async function connectHomey() {
+    async function connectHomey() : Promise<void> {
       if($homey === undefined) {
         if($apiKey !== undefined) {
           // Local Homey API-key exists
@@ -111,18 +106,8 @@
             const instance = await firstHomey.authenticate();
 
             homeyManager = new HomeyManager(instance);
-
+            
             user.set(usr);
-
-            /*
-            // TODO:  Create some kind of HomeyManager that is responsible for connecting to an Homey
-            //        and reading data from it. Also add `homey` as an parameter to 
-            for(const h of homeys) {
-              const instance = await h.authenticate();
-
-              homeys.add(instance);
-            }
-            */
 
             homeys.add(instance);
             homey.set(instance);
@@ -180,175 +165,185 @@
 
 <svelte:window on:visibilitychange={e => onWindowVisibilityChange()} />
 
-{#if $sessionLoading}
-  <div class="w-full mt-8 text-center">
-    <span class="loading loading-infinity w-40 text-primary"></span>
-  </div>
-{:else if $homey !== undefined}
-  {#if menuOpen === false && $editing === false}
-    <div class="btm-nav btm-nav-md bg-base-300 md:hidden z-10">
-      <button on:click={e => menuOpen = !menuOpen}>
-        <Icon data={mdiMenu} />
-        <span class="btm-nav-label">Menu</span>
-      </button>
-
-      <button disabled>
-        <Icon data={mdiMap} />
-        <span class="btm-nav-label">Explore</span>
-      </button>
-      
-      <button class="dropdown dropdown-top dropdown-end">
-        <button tabindex="0"><Icon data={mdiViewDashboard} /><span class="btm-nav-label block">Dashboards</span></button>
-        <ul
-          tabindex="0"
-          class="dropdown-content menu menu-lg bg-base-300 rounded-box my-2 gap-1 w-72 p-2 shadow"
-        >
-          {#each Object.values($dashboards) as dashboard}
-            <li>
-              <a href="{base + '/board/?id=' + dashboard.id}" class="overflow-hidden overflow-ellipsis">
-                {#if dashboard.iconId !== undefined}
-                  <Icon data={getIcon(dashboard.iconId)} />
-                {/if}
-                <span>{dashboard.title}</span>
-              </a>
-            </li>
-          {/each}
-        </ul>
-      </button>
-      
-    </div>
-    
-    <button class="btn btn-circle fixed top-0 z-10 hidden md:block" on:click={() => menuOpen = true}>
-      <Icon data={mdiMenu} />
-    </button>
-
-    <div class="fixed bottom-20 md:bottom-1 right-1 z-50 flex flex-col gap-2">
-      {#each $alerts as alert}
-        <div class="alert shadow-lg {alert.classes}">
-          {#if alert.icon !== undefined}
-            <Icon data={getIcon(alert.icon)} />
-          {/if}
-          <div class="w-40">
-            <span class="font-bold">{alert.title}</span>
-            <div class="text-sm">{alert.text}</div>
-          </div>
+{#await connecting}
+  <div class="flex justify-center m-2">
+    <div class="card w-full max-w-md mt-8 bg-base-300">
+        <div class="card-body">
+            <h1 class="card-title">Bzzt! 🛸</h1>
+            <p class="py-1">Beaming down to your Homey! 👽</p>
+            <div class="w-full mt-8 text-center">
+                <span class="loading loading-infinity w-40 text-primary"></span>
+            </div>
         </div>
-      {/each}
     </div>
-  {/if}
+  </div>
+{:then _loaded} 
+  {#if $homey !== undefined}
+    {#if menuOpen === false && $editing === false}
+      <div class="btm-nav btm-nav-md bg-base-300 md:hidden z-10">
+        <button on:click={e => menuOpen = !menuOpen}>
+          <Icon data={mdiMenu} />
+          <span class="btm-nav-label">Menu</span>
+        </button>
 
-  <div class="drawer w-full h-full relative">
-    <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
-    
-    <div class="drawer-content">
-      <slot></slot>
-    </div>
+        <button disabled>
+          <Icon data={mdiMap} />
+          <span class="btm-nav-label">Explore</span>
+        </button>
+        
+        <button class="dropdown dropdown-top dropdown-end">
+          <button tabindex="0"><Icon data={mdiViewDashboard} /><span class="btm-nav-label block">Dashboards</span></button>
+          <ul
+            tabindex="0"
+            class="dropdown-content menu menu-lg bg-base-300 rounded-box my-2 gap-1 w-72 p-2 shadow"
+          >
+            {#each Object.values($dashboards) as dashboard}
+              <li>
+                <a href="{base + '/board/?id=' + dashboard.id}" class="overflow-hidden overflow-ellipsis">
+                  {#if dashboard.iconId !== undefined}
+                    <Icon data={getIcon(dashboard.iconId)} />
+                  {/if}
+                  <span>{dashboard.title}</span>
+                </a>
+              </li>
+            {/each}
+          </ul>
+        </button>
+        
+      </div>
+      
+      <button class="btn btn-circle fixed top-0 z-10 hidden md:block" on:click={() => menuOpen = true}>
+        <Icon data={mdiMenu} />
+      </button>
 
-    <div class="drawer-side">
-      <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+      <div class="fixed bottom-20 md:bottom-1 right-1 z-50 flex flex-col gap-2">
+        {#each $alerts as alert}
+          <div class="alert shadow-lg {alert.classes}">
+            {#if alert.icon !== undefined}
+              <Icon data={getIcon(alert.icon)} />
+            {/if}
+            <div class="w-40">
+              <span class="font-bold">{alert.title}</span>
+              <div class="text-sm">{alert.text}</div>
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
 
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-      <div class="w-full max-w-xs min-h-full bg-base-200">
-        <ul class="menu w-full">
-          <!-- Support for multiple Homeys -->
-          {#if $user !== undefined}
-            <li class="flex items-center cursor-pointer">
-              <div class="avatar">
-                <img class="w-24 mask mask-circle" src={$user.avatar.small} alt={$user.fullname} />
+    <div class="drawer w-full h-full relative">
+      <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
+      
+      <div class="drawer-content">
+        <slot></slot>
+      </div>
+
+      <div class="drawer-side">
+        <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+        <div class="w-full max-w-xs min-h-full bg-base-200">
+          <ul class="menu w-full">
+            <!-- Support for multiple Homeys -->
+            {#if $user !== undefined}
+              <li class="flex items-center cursor-pointer">
+                <div class="avatar">
+                  <img class="w-24 mask mask-circle" src={$user.avatar.small} alt={$user.fullname} />
+                </div>
+                <div class="space-y-1 font-medium">
+                  <div>{$user.firstname}</div>
+                  <div class="text-sm">{$user.email}</div>
+                </div>
+              </li>
+
+              {#if $user.homeys.length > 1}
+                <li>
+                  <a>Homeys</a>
+                  <ul>
+                    {#each $user.homeys as h}
+                      <li on:click={() => selectHomey(h)}>
+                        <div class="flex items-center">
+                          <div class="flex-shrink-0">
+                            <Icon class="w-8 h-8 rounded-full invert" data={mdiDeathStarVariant} />
+                          </div>
+                          <div class="flex-1 min-w-0 ml-2">
+                            <p class="text-sm font-medium">{h.name}</p>
+                            <p class="text-sm capitalize">{h.modelName}</p>
+                          </div>
+                        </div>
+                      </li>
+                    {/each}
+                  </ul>
+                </li>
+              {/if}
+            {/if}
+
+            <li on:click={_ => goto(base + '/board/')}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboard} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Dashboards</p>
+                </div>
               </div>
-              <div class="space-y-1 font-medium">
-                <div>{$user.firstname}</div>
-                <div class="text-sm">{$user.email}</div>
+              
+              <ul>
+                {#each Object.values($dashboards) as dashboard}
+                  <li on:click|stopPropagation={() => openDashboard(dashboard)}>
+                    <div class="flex items-center">
+                      {#if dashboard.iconId !== undefined}
+                        <Icon class="w-8 h-8 rounded-full invert" data={getIcon(dashboard.iconId)} />
+                      {/if}
+                      <div class="flex-1 min-w-0 ml-2">
+                        <p class="text-sm font-medium">{dashboard.title}</p>
+                      </div>
+                    </div>
+                  </li>
+                {/each}
+              </ul>
+            </li>
+
+            <li on:click={_ => goto(base + '/template/')}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiPostageStamp} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Templates</p>
+                </div>
               </div>
             </li>
 
-            {#if $user.homeys.length > 1}
-              <li>
-                <a>Homeys</a>
-                <ul>
-                  {#each $user.homeys as h}
-                    <li on:click={() => selectHomey(h)}>
-                      <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                          <Icon class="w-8 h-8 rounded-full invert" data={mdiDeathStarVariant} />
-                        </div>
-                        <div class="flex-1 min-w-0 ml-2">
-                          <p class="text-sm font-medium">{h.name}</p>
-                          <p class="text-sm capitalize">{h.modelName}</p>
-                        </div>
-                      </div>
-                    </li>
-                  {/each}
-                </ul>
-              </li>
-            {/if}
-          {/if}
+            <li on:click={() => toggleEdit()}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboardEdit} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Edit dashboard</p>
+                </div>
+              </div>
+            </li>
 
-          <li on:click={_ => goto(base + '/board/')}>
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboard} />
+            <li on:click={() => logout()}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiLogout} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Logout</p>
+                </div>
               </div>
-              <div class="flex-1 min-w-0 ml-2">
-                <p class="text-sm font-medium">Dashboards</p>
-              </div>
-            </div>
-            
-            <ul>
-              {#each Object.values($dashboards) as dashboard}
-                <li on:click|stopPropagation={() => openDashboard(dashboard)}>
-                  <div class="flex items-center">
-                    {#if dashboard.iconId !== undefined}
-                      <Icon class="w-8 h-8 rounded-full invert" data={getIcon(dashboard.iconId)} />
-                    {/if}
-                    <div class="flex-1 min-w-0 ml-2">
-                      <p class="text-sm font-medium">{dashboard.title}</p>
-                    </div>
-                  </div>
-                </li>
-              {/each}
-            </ul>
-          </li>
+            </li>
+          </ul>
 
-          <li on:click={_ => goto(base + '/template/')}>
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <Icon class="w-8 h-8 rounded-full invert" data={mdiPostageStamp} />
-              </div>
-              <div class="flex-1 min-w-0 ml-2">
-                <p class="text-sm font-medium">Templates</p>
-              </div>
-            </div>
-          </li>
-
-          <li on:click={() => toggleEdit()}>
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboardEdit} />
-              </div>
-              <div class="flex-1 min-w-0 ml-2">
-                <p class="text-sm font-medium">Edit dashboard</p>
-              </div>
-            </div>
-          </li>
-
-          <li on:click={() => logout()}>
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <Icon class="w-8 h-8 rounded-full invert" data={mdiLogout} />
-              </div>
-              <div class="flex-1 min-w-0 ml-2">
-                <p class="text-sm font-medium">Logout</p>
-              </div>
-            </div>
-          </li>
-        </ul>
-
-        <div class="text-sm m-8">Version: {version}</div>
+          <div class="text-sm m-8">Version: {version}</div>
+        </div>
       </div>
     </div>
-  </div>
-{:else}
-  <slot></slot>
-{/if}
+  {:else}
+    <slot></slot>
+  {/if}  
+{/await}
