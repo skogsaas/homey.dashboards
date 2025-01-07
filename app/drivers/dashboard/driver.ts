@@ -33,13 +33,16 @@ export class DashboardDriver extends Homey.Driver {
       templates: [...((existing as Store_v1).templates ?? [])]
     }
 
-    if(existing.hasOwnProperty('items')) { // Dashboard_v1
+    if(existing.hasOwnProperty('items') && 
+      !existing.hasOwnProperty('dashboards') &&
+      !existing.hasOwnProperty('templates')
+    ) { // Dashboard_v1
       store.dashboards.push(existing)
       
       this.log('Converting to store.');
     }
 
-    const index = store.dashboards.findIndex(d => d?.id === dashboardId);
+    const index = store.dashboards.findIndex(dashboard => dashboard?.id === dashboardId);
 
     if(index == -1) {
       store.dashboards.push(settings);
@@ -63,13 +66,16 @@ export class DashboardDriver extends Homey.Driver {
       templates: (existing as Store_v1).templates ?? []
     }
 
-    if(existing.hasOwnProperty('items')) { // Dashboard_v1
+    if(existing.hasOwnProperty('items') && 
+      !existing.hasOwnProperty('dashboards') &&
+      !existing.hasOwnProperty('templates')
+    ) { // Dashboard_v1
       store.dashboards.push(existing)
 
       this.log('Converting to store.');
     }
 
-    const index = store.templates.findIndex(d => d?.id === templateId);
+    const index = store.templates.findIndex(template => template?.id === templateId);
 
     if(index == -1) {
       store.templates.push(settings);
