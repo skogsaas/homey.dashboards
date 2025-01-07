@@ -23,6 +23,7 @@ import TextInfo from './text';
 import ToggleInfo from './toggle';
 import UnknownInfo from './unknown';
 import VariableInfo from './variable';
+import DialogInfo from './dialog';
 
 export const widgets: WidgetInfo[] = [
     CapabilityInfo,
@@ -46,6 +47,7 @@ export const widgets: WidgetInfo[] = [
     TextInfo,
     VariableInfo,
     DeviceInfo,
+    DialogInfo,
 ];
 
 export const categories: WidgetCategory[] = [
