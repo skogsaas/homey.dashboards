@@ -1,6 +1,6 @@
 {
   "name": "skogsaas.dashboards.svelte",
-  "version": "1.0.0-pre.91",
+  "version": "1.0.0-pre.92",
   "private": true,
   "scripts": {
     "dev": "vite dev",
@@ -29,7 +29,7 @@
     "daisyui": "^4.12.10",
     "eslint": "^8.57.0",
     "eslint-plugin-svelte": "^2.43.0",
-    "homey-api": "^3.6.2",
+    "homey-api": "^3.11.1",
     "postcss": "^8.4.41",
     "postcss-load-config": "^4.0.2",
     "svelte": "^4.2.18",
