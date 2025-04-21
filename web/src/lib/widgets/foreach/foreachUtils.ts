@@ -1,6 +1,5 @@
 import { v4 as uuid } from 'uuid';
 import type { DeviceMap, Zone, ZoneMap } from "$lib/types/Homey";
-import type { TemplateSettings_v1 } from "../template/TemplateSettings";
 import type { ForeachCondition_v1, ForeachSettings_v1 } from "./ForeachSettings";
 
 export function generateItems(devices: DeviceMap, zones: ZoneMap, settings: ForeachSettings_v1) : any[] {
@@ -76,69 +75,3 @@ function getZones(zones: ZoneMap, zoneId: string) : Zone[] {
         .flatMap(zone => [zone, ...getZones(zones, zone.id)]);
 }
 
-export function transform(item: any, data: any, slug: string) : any {
-    if(item === undefined) return undefined;
-
-    if(Array.isArray(item)) {
-        return (item as any[]).map(a => transform(a, data, slug));
-    } else if(typeof item === 'object') {
-        const copy = { ...item };
-
-        if(isWidget(copy)) {
-            // Replace the ID of all sub widgets, as multiple instances of the sub widgets might collide if 
-            // they have the same IDs.
-            copy.id = uuid();
-
-            if(copy.type === 'template') {
-                // Stop recursion if a template widget is detected. Instead only populate/replace template 
-                // arguments with arguments from this template.
-
-                (copy as TemplateSettings_v1).arguments = ((copy as TemplateSettings_v1).arguments ?? []).map(a => ({
-                    argId: a.argId,
-                    value: transform(a.value, data, slug)
-                }));
-
-                return copy;
-            }
-        }
-
-        Object.keys(copy).forEach(key => copy[key] = transform(copy[key], data, slug));
-
-        return copy;
-    } else if(typeof item === 'string') {
-        let copy = item as string;
-
-        // Replace any template arguments being used.
-        const variableRegex = /\$\{([^}]+)\.([^}]+)\}/g;
-        const matches: string[][] = [...copy.matchAll(variableRegex)];
-
-        for(const match of matches) {
-            const fullMatch = match[0];
-            const matchSlug = match[1];
-            const itemKey = match[2];
-
-            // Require the variable to be in the form ${slug.property}
-            if(matchSlug !== slug) continue;
-
-            if(Object.hasOwn(data, itemKey)) {
-                const itemValue = data[itemKey];
-                
-                if(copy === fullMatch) {
-                    copy = itemValue;
-                } else {
-                    copy = copy.replaceAll(fullMatch, itemValue);
-                }
-            }
-        }
-
-        return copy;
-    } else {
-        return item;
-    }
-}
-
-function isWidget(element: any) : boolean {
-    return Object.hasOwn(element, 'id') &&
-        Object.hasOwn(element, 'type') &&
-        Object.hasOwn(element, 'version');
-}

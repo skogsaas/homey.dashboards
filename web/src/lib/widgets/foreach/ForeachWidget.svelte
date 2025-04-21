@@ -7,7 +7,8 @@
     import Widget from '$lib/widgets/Widget.svelte';
     import { devices, zones } from '$lib/stores/homey';
     import DndSingle from '$lib/components/DndSingle.svelte';
-    import { generateItems, transform } from './foreachUtils';
+    import { generateItems } from './foreachUtils';
+    import { transform } from '../template/templateUtils';
     
     export let context: WidgetContext;
     export let settings: ForeachSettings_v1;
@@ -29,14 +30,14 @@
     }
 
     function onItem(_item: WidgetSettings_v1) {
-        child = { ..._item };
+        child = _item ? { ..._item } : undefined;
         settings = { ...settings, item: child };
 
         dispatch('settings', settings);
     }
 
     function updateWidget(_item: WidgetSettings_v1) {
-        child = { ..._item };
+        child = _item ? { ..._item } : undefined;
         settings = { ...settings, item: child };
 
         dispatch('settings', settings);

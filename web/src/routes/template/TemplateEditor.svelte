@@ -110,8 +110,9 @@
                             <option value="string">String</option>
                             <option value="number">Number</option>
                             <option value="boolean">Boolean</option>
-                            <option value="capabilityUri">Capability</option>
+                            <option value="zoneId">Zone</option>
                             <option value="deviceId">Device</option>
+                            <option value="capabilityUri">Capability</option>
                             <option value="imageId">Image</option>
                             <option value="iconId">Icon</option>
                         </select>

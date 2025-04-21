@@ -10,8 +10,8 @@
     import CapabilityPicker from '$lib/components/CapabilityPicker.svelte';
     import DevicePicker from '$lib/components/DevicePicker.svelte';
     import IconPicker from '$lib/components/IconPicker.svelte';
+    import ZonePicker from '$lib/components/ZonePicker.svelte';
     
-
     export let settings: TemplateSettings_v1;
 
     const dispatch = createEventDispatcher();
@@ -67,6 +67,12 @@
             label={templateArg.label ?? templateArg.id}
             checked={getValue(templateArg.id) ?? templateArg.default} 
             on:checked={e => setValue(templateArg.id, e.detail)} 
+        />
+    {:else if templateArg.type === 'zoneId'}
+        <ZonePicker 
+            label={templateArg.label ?? templateArg.id}
+            zoneId={getValue(templateArg.id) ?? templateArg.default}
+            on:zoneId={e => setValue(templateArg.id, e.detail)} 
         />
     {:else if templateArg.type === 'capabilityUri'}
         <CapabilityPicker 

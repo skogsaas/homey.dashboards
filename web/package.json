@@ -1,6 +1,6 @@
 {
   "name": "skogsaas.dashboards.svelte",
-  "version": "1.0.0-pre.90",
+  "version": "1.0.0-pre.91",
   "private": true,
   "scripts": {
     "dev": "vite dev",

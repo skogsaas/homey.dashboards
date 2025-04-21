@@ -80,54 +80,58 @@
     }
 
     async function connectHomey() : Promise<void> {
-      if($homey === undefined) {
-        if($apiKey !== undefined) {
-          // Local Homey API-key exists
-          const props = {
-            token: $apiKey,
-            debug: function debug() { },
-            baseUrl: $baseUrl,
-            strategy: [],
-            properties: {
-              id: $homeyId
-            }
-          };
+      try {
+        if($homey === undefined) {
+          if($apiKey !== undefined) {
+            // Local Homey API-key exists
+            const props = {
+              token: $apiKey,
+              debug: function debug() { },
+              baseUrl: $baseUrl,
+              strategy: [],
+              properties: {
+                id: $homeyId
+              }
+            };
 
-          //const instance = await HomeyAPI.createLocalAPI({
-          //  address: $baseUrl,
-          //  token: $apiKey,
-          //});
+            //const instance = await HomeyAPI.createLocalAPI({
+            //  address: $baseUrl,
+            //  token: $apiKey,
+            //});
 
-          const instance: Homey = new HomeyAPIV3Local(props);
-          homeyManager = new HomeyManager(instance);
-
-          homeys.add(instance);
-          homey.set(instance);
-        } else {
-          const cloudApi = new AthomCloudAPI({
-            clientId,
-            clientSecret
-          });
-
-          const loggedIn = await cloudApi.isLoggedIn();
-
-          if (loggedIn) {
-            const usr = await cloudApi.getAuthenticatedUser();
-            const firstHomey = await usr.getFirstHomey();
-            const instance = await firstHomey.authenticate();
-
+            const instance: Homey = new HomeyAPIV3Local(props);
             homeyManager = new HomeyManager(instance);
-            
-            user.set(usr);
 
             homeys.add(instance);
             homey.set(instance);
+          } else {
+            const cloudApi = new AthomCloudAPI({
+              clientId,
+              clientSecret
+            });
+
+            const loggedIn = await cloudApi.isLoggedIn();
+
+            if (loggedIn) {
+              const usr = await cloudApi.getAuthenticatedUser();
+              const firstHomey = await usr.getFirstHomey();
+              const instance = await firstHomey.authenticate();
+
+              homeyManager = new HomeyManager(instance);
+              
+              user.set(usr);
+
+              homeys.add(instance);
+              homey.set(instance);
+            }
           }
         }
-      }
 
-      if(homeyManager !== undefined) {
-        await homeyManager.loadAsync();
+        if(homeyManager !== undefined) {
+          await homeyManager.loadAsync();
+        } 
+      } catch(error) {
+        alerts.error('Error!', 'Error while connecting: ' + error, 10000);
       }
     }
 
@@ -356,5 +360,17 @@
     </div>
   {:else}
     <slot></slot>
-  {/if}  
+  {/if}
+{:catch _error}
+  <div class="flex justify-center m-2">
+    <div class="card w-full max-w-md mt-8 bg-base-300">
+        <div class="card-body">
+            <h1 class="card-title">Au! 🤯</h1>
+            <p class="py-1">Something went wrong while connecting 🤕</p>
+            <div class="w-full mt-8 text-center">
+                {_error}
+            </div>
+        </div>
+    </div>
+  </div>
 {/await}

@@ -42,7 +42,7 @@ export interface Template_v1 {
 export interface TemplateArgument_v1 {
     id: string;
     label: string | undefined;
-    type: 'string' | 'number' | 'boolean' | 'capabilityUri' | 'deviceId' | 'imageId' | 'iconId';
+    type: 'string' | 'number' | 'boolean' | 'zoneId' | 'capabilityUri' | 'deviceId' | 'imageId' | 'iconId';
     default: any | undefined;
 }
 

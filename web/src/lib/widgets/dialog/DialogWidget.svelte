@@ -1,13 +1,11 @@
 <script lang="ts">
-    import type { DialogSettings_v1, ListSettings_v1 } from './DialogSettings';
+    import type { DialogSettings_v1 } from './DialogSettings';
     import Widget from '$lib/widgets/Widget.svelte';
     import type { WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
-    import DndList from '$lib/components/DndList.svelte';
     import { createEventDispatcher } from 'svelte';
     import DndSingle from '$lib/components/DndSingle.svelte';
-    import { editing } from '$lib/stores/editing';
-    
-    export let settings: ListSettings_v1;
+        
+    export let settings: DialogSettings_v1;
     export let context: WidgetContext; 
 
     const dispatch = createEventDispatcher();
@@ -22,24 +20,18 @@
     function onSettings(_settings: DialogSettings_v1) {
         summary = _settings.summary;
         details = _settings.details;
-
-        console.log(_settings);
     }
 
     function onSummaryItem(_item: WidgetSettings_v1) {
-        summary = { ..._item };
+        summary = _item ? { ..._item } : undefined;
         settings = { ...settings, summary };
-
-        console.log('summary', settings);
 
         dispatch('settings', settings);
     }
 
     function onDetailsItem(_item: WidgetSettings_v1) {
-        details = { ..._item };
+        details = _item ? { ..._item } : undefined;
         settings = { ...settings, details };
-
-        console.log('details', settings);
 
         dispatch('settings', settings);
     }
@@ -52,7 +44,7 @@
         item={summary}
         on:item={e => onSummaryItem(e.detail)} 
         editable={context.editable}
-        class="w-full {context.editable ? 'min-h-[50px] min-w-[100px]' : ''}"
+        class="w-full {context.editable ? 'min-h-[50px] min-w-[100px]' : ''} {summary === undefined ? 'border border-dashed' : ''}"
         let:item
     >
         <Widget {context} settings={item} on:settings={e => onSummaryItem(e.detail)} />
@@ -78,7 +70,7 @@
                 item={details}
                 on:item={e => onDetailsItem(e.detail)} 
                 editable={context.editable}
-                class="w-full {context.editable ? 'min-h-[50px]' : ''}"
+                class="w-full {context.editable ? 'min-h-[50px]' : ''} {details === undefined ? 'border border-dashed' : ''}"
                 let:item
             >
                 <Widget {context} settings={item} on:settings={e => onDetailsItem(e.detail)} />

@@ -9,10 +9,11 @@
     import Icon from '$lib/components/Icon.svelte';
     import ZonePicker from '$lib/components/ZonePicker.svelte';
     import RandomObjectDropdown from '$lib/components/RandomObjectDropdown.svelte';
-    import { generateItems, transform } from './foreachUtils';
+    import { generateItems } from './foreachUtils';
     import { devices, zones } from '$lib/stores/homey';
     import type { ListSettings_v1 } from '../list/ListSettings';
     import StackInfo from '../list';
+    import { transform } from '../template/templateUtils';
     
     export let settings: ForeachSettings_v1;
 
