@@ -2,33 +2,20 @@
     import { onMount, createEventDispatcher } from 'svelte';
 
     import type TextSettings from "./TextSettings";
-    
-    import TextArea from "stwui/text-area";
-    import Select from "stwui/select";
 
     export let settings: TextSettings;
 
     const dispatch = createEventDispatcher();
 
-    interface Option {
-        value: string;
-        label: string;
-    }
-
     let text: string = '';
-    let size: Option;
-
-    const sizes = [
-        { value: '', label: 'Text'},
-        ...[...Array(6).keys()].map(key => ({ value: '' + (key + 1), label: '' + (key + 1) }))
-    ];
+    let size: number;
 
     $: onText(text);
     $: onSize(size);
 
     onMount(() => {
         text = settings?.text ?? '';
-        size = sizes.find(s => s.value === '')!;
+        size = settings?.size ?? 0;
     });
 
     function onText(value: string | undefined) {
@@ -39,32 +26,28 @@
         dispatch('settings', { ...settings, text: value });
     }
 
-    function onSize(option: Option | undefined) {
-        if(option === undefined || Number(option.value) === settings.size) {
+    function onSize(_size: number) {
+        if(_size === settings.size) {
             return;
         }
 
-        dispatch('settings', { ...settings, size: Number(option.value) });
+        dispatch('settings', { ...settings, size: _size });
     }
 </script>
 
-<div style="margin-top: 20px">
-    <TextArea  
-        bind:value={text} 
-        name="text"
-        placeholder="Text"
-        class="w-full"
-    />
+<textarea placeholder="Text" class="textarea w-full"></textarea>
 
-    <Select 
-        bind:value={size} 
-        placeholder="Font size"
-        name="size"
-    >
-        <Select.Options slot="options">
-            {#each sizes as option}
-                <Select.Options.Option {option} />
-            {/each}
-        </Select.Options>
-    </Select>
-</div>
+<label class="form-control w-full">
+    <div class="label">
+        <span class="label-text">Size</span>
+    </div>
+    <select class="select w-full" bind:value={size}>
+        <option value=0>Text</option>
+        <option value=1>1</option>
+        <option value=2>2</option>
+        <option value=3>3</option>
+        <option value=4>4</option>
+        <option value=5>5</option>
+        <option value=6>6</option>
+    </select>
+</label>

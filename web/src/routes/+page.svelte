@@ -1,28 +1,24 @@
 <script lang="ts">
-    import { baseUrl, dashboards as homeyDashboards, homey, homeys } from '$lib/stores/homey';
-    import { dashboards as localDashboards } from '$lib/stores/localstorage';
+    import { pwaInfo } from 'virtual:pwa-info'; 
+
+    import { baseUrl, homey } from '$lib/stores/homey';
     import type { Homey } from '$lib/types/Homey';
-    import { apiKey } from '$lib/stores/auth';
+    import { apiKey, homeyId } from '$lib/stores/auth';
     
     import { goto } from '$app/navigation';
     import { base } from '$app/paths';
 
     import { clientId, clientSecret } from '$lib/constants';
 
-    import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
+    import HomeyAPIV3Local from 'homey-api/lib/HomeyAPI/HomeyAPIV3Local';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
 
     // Tailwind
-    import Card from "stwui/card";
-    import List from "stwui/list";
-    import Button from 'stwui/button';
-    import Input from 'stwui/input';
-    import Icon from 'stwui/icon';
-    import Progress from 'stwui/progress';
-    import Tabs from 'stwui/tabs';
-    import { mdiEmoticonSadOutline } from '$lib/components/icons';
+    import Icon from '$lib/components/Icon.svelte'
+    import { mdiAccount, mdiKey } from '$lib/components/icons';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
+    import DashboardListHero from '$lib/components/DashboardListHero.svelte';
     
     let active = import.meta.env.VITE_DEFAULT_LOGIN ?? '#online';
 
@@ -32,12 +28,33 @@
     let localHosting: boolean = false;
     let localHomeyId: string = '';
 
-    $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
+    $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : ''
 
     onMount(async () => {
+        if (pwaInfo) {
+            const { registerSW } = await import('virtual:pwa-register')
+            registerSW({
+                immediate: true,
+                onRegistered(r: any) {
+                    r && setInterval(() => {
+                    console.log('Checking for sw update')
+                    r.update()
+                    }, 60*60000) // Every 1 hour
+                    console.log(`SW Registered: ${r}`)
+                },
+                onRegisterError(error: any) {
+                    console.log('SW registration error', error)
+                }
+            })
+        }
+        
         const apiKey = $page.url.searchParams.get('api-key');
 
-        if($page.url.origin.includes('.homey.homeylocal.com') || $page.url.origin.includes('.connect.athom.com') || import.meta.env.VITE_HOMEY_URL){
+        if($page.url.origin.includes('.homey.homeylocal.com') || 
+            $page.url.origin.includes('.connect.athom.com') || 
+            $page.url.hostname.includes('.local') || 
+            import.meta.env.VITE_HOMEY_URL
+        ){
             localHosting = true;
         }
 
@@ -57,11 +74,14 @@
         try {
             const url = localHosting ? $baseUrl : 'https://' + localHomeyId + '.connect.athom.com';
 
-            const instance: Homey = await HomeyAPI.createLocalAPI({
-                address: url,
+            const props = {
                 token: localKey,
-            });
+                debug: function debug() { },
+                baseUrl: url,
+                strategy: []
+            };
 
+            const instance: Homey = new HomeyAPIV3Local(props);
             return instance;
         }
         catch(e) {
@@ -70,11 +90,8 @@
     }
 
     async function setHomey(instance: Homey) {
-        if(!localHosting) {
-            localStorage.homeyId = localHomeyId;
-        }
-
         apiKey.set(localKey);
+        homeyId.set(localHomeyId);
         homey.set(instance);
 
         await goto(base + '/');
@@ -107,113 +124,163 @@
     }
 </script>
 
-<div class="flex flex-col justify-center mx-auto max-w-md">
+<svelte:head>
+  <title>Home</title>
+  {@html webManifestLink} 
+</svelte:head>
+
+<div class="flex flex-col justify-center mx-auto w-full">
     {#if $homey !== undefined}
-        <h1 class="inline text-center pt-8 pb-8">Welcome!</h1>
-
-        {#if dashboards !== undefined && dashboards.length > 0}
-            <Card>
-                <Card.Content>
-                    <List>
-                        {#each dashboards as dashboard}
-                            <List.Item on:click={() => goto(base + '/board/?id=' + dashboard.id)} class="cursor-pointer">   
-                                {dashboard.title}
-                            </List.Item>
-                        {/each}
-                    </List>
-                </Card.Content>
-            </Card>
-        {:else}
-            <h5>Oh no, you have no dashboards! <Icon data={mdiEmoticonSadOutline} /></h5>
-            <p>Add one by navigating Menu -> New</p>
-            <p>
-                Or by adding a dashboard device on your homey.<br/>
-                <span style="color: orange;">NOTE:</span> Requires installed app.
-            </p>
-        {/if}
+        <div class="flex min-h-screen justify-center">
+            <DashboardListHero>
+                <span class="text-5xl font-bold">Dashboards</span>
+                <p class="py-6">
+                    A dashboard store can be created by using the native Homey App. This is required in order to have a place to store your dashboards.<br />
+                    <span class="text-warning">NOTE:</span> This requires you to install the Dashboards companion app.
+                </p>
+            </DashboardListHero>
+        </div>
     {:else}
-        <h1 class="inline text-center pt-8 pb-8">Login</h1>
-        
-        <Card>
-            <Card.Content>
-                <Tabs currentTab={active} variant="full-width">
-                    <Tabs.Tab key="#direct" href="#direct" on:click={() => (active = '#direct')}>
-                        Direct
-                    </Tabs.Tab>
-                    <Tabs.Tab key="#online" href="#online" on:click={() => (active = '#online')}>
-                        Online
-                    </Tabs.Tab>
-                 </Tabs>
+        <div class="hero min-h-screen bg-base-200">
+            {#if active === '#direct'}
+                <div class="hero-content flex-col lg:flex-row-reverse">
+                    <div class="text-center lg:text-left max-w-xs">
+                        <h1 class="text-5xl font-bold">Welcome!</h1>
+                        <p class="py-6">
+                            Direct authentication can only be used on the Homey Pro 2023 model. Older models do not have the API-Key feature.
+                        </p>
+                        <button class="btn btn-secondary" on:click={() => active = '#online'}>
+                            <Icon data={mdiAccount} />
+                            Login using Athom credentials instead
+                        </button>
+                    </div>
+                    <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
+                        <form class="card-body max-w-xs">    
+                            <p class="pt-6">
+                                You can obtain the Homey-ID by navigating to:
+                            </p>
+                            <div class="text-sm breadcrumbs">
+                                <ul>
+                                    <li>Homey</li> 
+                                    <li>Settings</li> 
+                                    <li>General</li>
+                                    <li>Cloud</li>
+                                </ul>
+                            </div>
 
-                 <div class="pt-8">
-                    {#if active === '#direct'}
-                        <p>Direct authentication can only be used on the Homey Pro 2023 model. Older models do not have the API-Key feature.</p>
+                            <div class="form-control">
+                                <label class="label" for="localHomeyId">
+                                    <span class="label-text">Homey ID</span>
+                                </label>
+                                <input type="text" id="localHomeyId" class="input input-primary" bind:value={localHomeyId} />
+                                {#if localHomeyId.length > 0 && localHomeyId.length !== 24}
+                                    <label class="label" for="localHomeyId">
+                                        <span class="label-text-alt">Must be 24 characters</span>
+                                    </label>
+                                {/if}
+                            </div>
 
-                        {#if !localHosting}
-                            <p class="pt-8">Obtain the Homey-ID by navigating to <b>Homey -> Settings -> General</b> and scroll down to the Cloud section.</p>
-                            <Input name="local-homey-id" bind:value={localHomeyId} error={localHomeyId.length > 0 && localHomeyId.length !== 24 ? 'Must be 24 characters' : ''} label="Homey ID">
-                                <Input.Label slot="label">Homey ID</Input.Label>
-                            </Input>
-                        {/if}
-
-                        <p class="pt-8">Obtain an API-Key by navigating to <b>my.homey.app -> Settings -> API Keys</b>.</p>
-                        <Input name="local-key" bind:value={localKey} error={localKeyError} label="Homey API-Key">
-                            <Input.Label slot="label">Homey API-key</Input.Label>
-                        </Input>
-
-                        <Button type="primary" disabled={localKey === '' || (!localHosting && localHomeyId.length != 24)} on:click={verifyApiKey}>Verify</Button>
-                        
-                        {#await localKeyLoading}
-                            <Progress size="xs" indeterminate value={0} />
-                        {:then instance}
-                            {#if instance !== undefined}
-                                {#await instance.system.getSystemName() then name}
-                                    <p>... connected to <b>{name}</b></p>
-                                {/await}
-
-                                {#await instance.sessions.getSessionMe() then session}
-                                    <p>... logged in as <b>{session.userName}</b></p>
-                                    <p>... with <b>{session.type} {session.clientName}</b></p>
-                                    <p>... scopes <b>{session.scopes}</b></p>
-
-                                    {#if session.scopes.includes('homey.app') || session.scopes.includes('homey')}
-                                        {#await instance.apps.getApp({ id: 'skogsaas.dashboards' })}
-                                            ... looking for the Dashboard app
-                                        {:then app}
-                                            ... the Dashboard app is installed
-                                        {:catch}
-                                            <p>
-                                                <span style="color: red;">Error:</span> The dashboard app is not installed. 
-                                                Without this app, dashboards will be loaded and stored locally in your browser.
-                                            </p>
-                                        {/await}
-                                    {:else}
-                                        <p>
-                                            <span style="color: orange;">Warning:</span> Missing scopes to resolve installed
-                                            apps. If the Dashboard app is not installed, all dashboards will be loaded and stored
-                                            locally in your browser.
-                                        </p>
-                                    {/if}
-                                {/await}
-
-                                <p>
-                                    <Button type="primary" on:click={() => setHomey(instance)}>Continue</Button>
+                            <div class="divider"></div>
+    
+                            {#if localHomeyId.length === 24}
+                                <p class="pt-6">
+                                    You can then create a API-key at:
                                 </p>
+                                <div class="text-sm breadcrumbs">
+                                    <ul>
+                                        <li><a href="https://my.homey.app" target="_blank">my.homey.app</a></li> 
+                                        <li>Settings</li> 
+                                        <li>API Keys</li>
+                                    </ul>
+                                </div>
+        
+                                <div class="form-control">
+                                    <label class="label" for="localKey">
+                                        <span class="label-text">Homey API-Key</span>
+                                    </label>
+                                    <input type="text" id="localKey" class="input input-primary" bind:value={localKey} />
+                                    {#if localKeyError !== undefined}
+                                        <label class="label" for="localKey">
+                                            <span class="label-text-alt">{localKeyError}</span>
+                                        </label>
+                                    {/if}
+                                </div>
                             {/if}
-                        {:catch error}
-                            <p style="color: red;">{error}</p>
-                        {/await}
-                    {:else if active === '#online'}
-                        <p>Online authentication can be used with both the newer Homey Pro 2023 and older models.</p>
-                        <p>
+                                
+                            <button 
+                                class="btn btn-primary mt-6" 
+                                disabled={localKey === '' || localHomeyId.length != 24} 
+                                on:click={verifyApiKey}
+                            >
+                                Verify
+                            </button>
+                            
+                            {#await localKeyLoading}
+                                <span class="loading loading-infinity loading-lg"></span>
+                            {:then instance}
+                                {#if instance !== undefined}
+                                    {#await instance.system.getSystemName() then name}
+                                        <p>... connected to <b>{name}</b></p>
+                                    {/await}
+    
+                                    {#await instance.sessions.getSessionMe() then session}
+                                        <p>... logged in as <b>{session.userName}</b></p>
+                                        <p>... with <b>{session.type} {session.clientName}</b></p>
+                                        <p>... scopes <b>{session.scopes}</b></p>
+    
+                                        {#if session.scopes.includes('homey.app') || session.scopes.includes('homey')}
+                                            {#await instance.apps.getApp({ id: 'skogsaas.dashboards' })}
+                                                ... looking for the Dashboard app
+                                            {:then app}
+                                                ... the Dashboard app is installed
+                                            {:catch}
+                                                <p>
+                                                    <span style="color: red;">Error:</span> The dashboard app is not installed. 
+                                                    Without this app, dashboards will be loaded and stored locally in your browser.
+                                                </p>
+                                            {/await}
+                                        {:else}
+                                            <p>
+                                                <span style="color: orange;">Warning:</span> Missing scopes to resolve installed
+                                                apps. If the Dashboard app is not installed, all dashboards will be loaded and stored
+                                                locally in your browser.
+                                            </p>
+                                        {/if}
+                                    {/await}
+    
+                                    <p>
+                                        <button class="btn btn-primary" on:click={() => setHomey(instance)}>Continue</button>
+                                    </p>
+                                {/if}
+                            {:catch error}
+                                <p style="color: red;">{error}</p>
+                            {/await}
+                        </form>
+                    </div>
+                </div>
+            {:else}
+                <div class="hero-content flex-col lg:flex-row">
+                    <div class="text-center lg:text-left max-w-xs">
+                        <h1 class="text-5xl font-bold">Welcome!</h1>
+                        <p class="py-6">
+                            Online authentication can be used with both the newer Homey Pro 2023 and older models.
+                        </p>
+
+                        <button class="btn btn-ghost" on:click={() => active = '#direct'}>
+                            <Icon data={mdiKey} />
+                            Login using an API-key instead
+                        </button>
+                    </div>
+                    <div class="card shrink-0 w-full max-w-sm shadow-2xl bg-base-100 p-4">
+                        <p class="pb-6">
                             With online authentication, scopes cannot be selected individually. If you want to limit access, 
                             use local login with API-key, only available for Homey Pro 2023.
                         </p>
                         
-                        <Button type="primary" on:click={oauthLogin}>Sign in</Button>
-                    {/if}
+                        <button class="btn btn-primary" on:click={oauthLogin}>Head over to Athom to sign in</button>
+                    </div>
                 </div>
-            </Card.Content>
-        </Card>
+            {/if}
+        </div>
     {/if}
 </div>

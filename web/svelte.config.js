@@ -1,5 +1,4 @@
-//import adapter from '@sveltejs/adapter-auto';
-import adapter from "@sveltejs/adapter-static";
+import staticAdapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/kit/vite";
 
 import { readFileSync } from 'fs';
@@ -16,7 +15,7 @@ const config = {
   preprocess: [vitePreprocess({})],
 
   kit: {
-    adapter: adapter({
+    adapter: staticAdapter({
       fallback: "index.html",
       precompress: true,
     }),
@@ -25,6 +24,9 @@ const config = {
     },
     version: {
       name: pkg.version,
+    },
+    serviceWorker: {
+      register: false
     }
   },
 };

@@ -1,5 +1,6 @@
 <script lang="ts">
     import './sentry';
+    import { pwaInfo } from 'virtual:pwa-info'; 
 
     // Svelte
     import { onMount } from 'svelte';
@@ -7,227 +8,130 @@
     import { base } from '$app/paths';
 
     // Stores
-    import { homey, user, devices, dashboards as homeyDashboards, baseUrl, flowFolders, basicFlows, advancedFlows, session, scopes, zones, insights, homeys, variables } from '$lib/stores/homey';
-    import { dashboards as localDashboards } from '$lib/stores/localstorage';
-    import { dashboard, editing } from '$lib/stores/dashboard';
-    import { apiKey } from '$lib/stores/auth';
+    import { 
+      baseUrl, 
+      dashboards,
+      homey, 
+      homeys,
+      user
+    } from '$lib/stores/homey';
+    import { editing } from '$lib/stores/editing';
+    import { apiKey, homeyId } from '$lib/stores/auth';
 
     // UI components
-    import Drawer from "$lib/components/Drawer.svelte";
-    import AddDashboardDialog from '$lib/AddDashboardDialog.svelte';
-    import IconButton from '$lib/components/IconButton.svelte';
+    import Icon from '$lib/components/Icon.svelte'
 
     // Tailwind
-    import "../app.postcss";
-    import Progress from 'stwui/progress';
-    import Button from 'stwui/button';
-    import Dropdown from 'stwui/dropdown';
-    import List from 'stwui/list';
-    import Divider from 'stwui/divider';
-    import Toggle from 'stwui/toggle';
-    import Media from 'stwui/media';
-    import Icon from 'stwui/icon';
+    import "../app.css";
 
-    import { mdiCog, mdiMenu, mdiPlus, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant } from "$lib/components/icons";
+    import { mdiMenu, mdiViewDashboard, mdiViewDashboardEdit, mdiDeathStarVariant, mdiLogout, mdiPostageStamp, mdiMap, mdiInformation } from "$lib/components/icons";
 
     // Types
-    import type { AdvancedFlow, BasicFlow, CapabilityEvent, VariableEvent, Homey } from '$lib/types/Homey';
-    import type Dashboard from '$lib/types/Dashboard';
+    import type { Homey, OAuthHomey } from '$lib/types/Homey';
+    import type { Dashboard_v2 } from '$lib/types/Store';
 
     import { clientId, clientSecret } from '$lib/constants';
 
-    import { v4 as uuid } from 'uuid';
-    import HomeyAPI from 'homey-api/lib/HomeyAPI/HomeyAPI';
+    import HomeyAPIV3Local from 'homey-api/lib/HomeyAPI/HomeyAPIV3Local';
     import AthomCloudAPI from 'homey-api/lib/AthomCloudAPI';
+    import { getIcon } from '$lib/components/icons/utils';
+    import { AlertManager } from '$lib/services/AlertManager';
+    import { alerts } from '$lib/stores/alerting';
+    import { HomeyManager } from '$lib/services/HomeyManager';
+    import { version as packageVersion } from '$app/environment';
+    import { version } from '$lib/stores/version';
 
-    let loading: boolean = true;
-    let error: any | undefined = undefined;
+    let homeyManager: HomeyManager | undefined;
+    let alertManager: AlertManager = new AlertManager();
+    
+    let heartbeat: number;
+    let heartbeatInterval = 1000;
+    let heartbeatClear: any | undefined;
 
-    $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
-    $: fullscreenSupported = document.fullscreenEnabled;
+    // Heartbeat logic to check for page frozen
+    $: {
+        if(heartbeatClear !== undefined) clearInterval(heartbeatClear);
 
-    let menuOpen: boolean = false;
-    let toolbarOpen: boolean = false;
-    let dashboardMenuOpen: boolean = false;
-    let addDashboardOpen: boolean = false;
-
-    onMount(async () => {
-      // TODO
-      //document.body.setAttribute('data-theme', 'dark');
-      await loadData()
-    });
-
-    async function loadData() {
-      loading = true;
-
-      await connectHomey();
-
-      if($homey !== undefined) {
-        await loadSession();
-
-        await loadDevices();
-        await loadVariables();
-        await loadFlows();
-        await loadZones();
-        await loadInsights();
-      }
-
-      loading = false;
+        heartbeatClear = setInterval(() => { heartbeat = Date.now(); }, heartbeatInterval);
     }
 
-    async function connectHomey() {
-      if($homey === undefined) {
-        if($apiKey !== undefined) {
-          // Local Homey API-key exists
-          const instance: Homey = await HomeyAPI.createLocalAPI({
-            address: $baseUrl,
-            token: $apiKey,
-          });
+    $: notifyVersion();
+    $: fullscreenSupported = document.fullscreenEnabled;
+    $: connecting = connectHomey();
 
-          homeys.add(instance);
-          homey.set(instance);
-        } else {
-          const cloudApi = new AthomCloudAPI({
-            clientId,
-            clientSecret
-          });
+    let menuOpen: boolean = false;
+    let dashboardMenuOpen: boolean = false;
 
-          const loggedIn = await cloudApi.isLoggedIn();
+    async function onWindowVisibilityChange() {      
+      if($homey !== undefined && heartbeat < (Date.now() - heartbeatInterval * 2)) {
+        console.log('reconnecting');
+        
+        await connectHomey();
+      }
+    }
 
-          if (loggedIn) {
-            const usr = await cloudApi.getAuthenticatedUser();
-            const firstHomey = await usr.getFirstHomey();
-            const instance = await firstHomey.authenticate();
+    function notifyVersion() {
+      const v = $version;
 
-            user.set(usr);
+      if(v !== packageVersion) {
+        alerts.info('🥰 Upgraded', `The app has been upgraded to ${packageVersion}`, 15000);
+        version.set(packageVersion);
+      }
+    }
 
-            /*
-            // TODO:  Create some kind of HomeyManager that is responsible for connecting to an Homey
-            //        and reading data from it. Also add `homey` as an parameter to 
-            for(const h of homeys) {
-              const instance = await h.authenticate();
+    async function connectHomey() : Promise<void> {
+      try {
+        if($homey === undefined) {
+          if($apiKey !== undefined) {
+            // Local Homey API-key exists
+            const props = {
+              token: $apiKey,
+              debug: function debug() { },
+              baseUrl: $baseUrl,
+              strategy: [],
+              properties: {
+                id: $homeyId
+              }
+            };
 
-              homeys.add(instance);
-            }
-            */
+            //const instance = await HomeyAPI.createLocalAPI({
+            //  address: $baseUrl,
+            //  token: $apiKey,
+            //});
+
+            const instance: Homey = new HomeyAPIV3Local(props);
+            homeyManager = new HomeyManager(instance);
 
             homeys.add(instance);
             homey.set(instance);
+          } else {
+            const cloudApi = new AthomCloudAPI({
+              clientId,
+              clientSecret
+            });
+
+            const loggedIn = await cloudApi.isLoggedIn();
+
+            if (loggedIn) {
+              const usr = await cloudApi.getAuthenticatedUser();
+              const firstHomey = await usr.getFirstHomey();
+              const instance = await firstHomey.authenticate();
+
+              homeyManager = new HomeyManager(instance);
+              
+              user.set(usr);
+
+              homeys.add(instance);
+              homey.set(instance);
+            }
           }
         }
-      }
-    }
 
-    async function loadSession() {
-      try {
-        const s = await $homey.sessions.getSessionMe();
-        session.set(s);
-      } catch (e) {
-        error = 'Session: ' + e;
-      } 
-
-      loading = false;
-    }
-
-    async function loadDevices() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.device') || $scopes.includes('homey.device.readonly') || $scopes.includes('homey.device.control')) {
-          await $homey.devices.connect();
-          const d = await $homey.devices.getDevices();
-
-          $homey.devices.on('device.update', (patch: any) => devices.onDevice(patch));
-          
-          Object.values(d).forEach(async (device) => {
-            await device.connect();
-            device.on('capability', (event: CapabilityEvent) => {
-              const capability = device.capabilitiesObj[event.capabilityId];
-
-              if(capability !== undefined) {
-                capability.value = event.value;
-                capability.lastUpdated = event.transactionTime; 
-              }
-            });
-          });
-
-          devices.set(d);
-        }
-      } catch(e) {
-        error = 'Devices: ' + e;
-      }
-    }
-
-    async function loadVariables() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.logic') || $scopes.includes('homey.logic.readonly')) {
-          await $homey.logic.connect();
-          const v = await $homey.logic.getVariables();
-
-          $homey.logic.on('variable.update', (event: VariableEvent) => variables.onUpdate(event));
-
-          variables.set(v);
-        }
-      } catch(e) {
-        error = 'Variables: ' + e;
-      }
-    }
-
-    async function loadFlows() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.flow') || $scopes.includes('homey.flow.readonly') || $scopes.includes('homey.flow.start')) {
-          await $homey.flow.connect();
-          const folders = await $homey.flow.getFlowFolders();
-          const basic = await $homey.flow.getFlows();
-          const advanced = await $homey.flow.getAdvancedFlows();
-
-          flowFolders.set(folders);
-          basicFlows.set(basic);
-          advancedFlows.set(advanced);
-
-          $homey.flow.on('flow.create', (e: BasicFlow) => basicFlows.onCreate(e));
-          $homey.flow.on('flow.delete', (e: BasicFlow) => basicFlows.onDelete(e));
-          $homey.flow.on('advancedflow.create', (e: AdvancedFlow) => advancedFlows.onCreate(e));
-          $homey.flow.on('advancedflow.delete', (e: AdvancedFlow) => advancedFlows.onDelete(e));
-        }
-      } catch(e) {
-        error = 'Flows: ' + e;
-      }
-    }
-
-    async function loadInsights() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.insights') || $scopes.includes('homey.insights.readonly')) {
-          await $homey.insights.connect();
-          const logs = await $homey.insights.getLogs();
-
-          insights.set(logs);
-
-          /*
-          $homey.insights.on('log.create', (e: Log) => insights.onCreate(e));
-          $homey.insights.on('log.update', (e: Log) => insights.onUpdate(e));
-          $homey.insights.on('log.delete', (e: Log) => insights.onDelete(e));
-          */
-        }
-      } catch(e) {
-        error = 'Flows: ' + e;
-      }
-    }
-
-    async function loadZones() {
-      try {
-        if($scopes.includes('homey') || $scopes.includes('homey.zone') || $scopes.includes('homey.zone.readonly')) {
-          await $homey.zones.connect();
-          const z = await $homey.zones.getZones();
-
-          zones.set(z);
-
-          /*
-          $homey.zones.on('zone.create', (e: Zone) => zones.onCreate(e));
-          $homey.zones.on('zone.delete', (e: Zone) => zones.onDelete(e));
-          $homey.zones.on('zone.update', (e: Zone) => zones.onUpdate(e));
-          */
-        }
-      } catch(e) {
-        error = 'Zones: ' + e;
+        if(homeyManager !== undefined) {
+          await homeyManager.loadAsync();
+        } 
+      } catch(error) {
+        alerts.error('Error!', 'Error while connecting: ' + error, 10000);
       }
     }
 
@@ -236,44 +140,22 @@
       menuOpen = false;
     }
 
-    async function addDashboard(title: string) : Promise<void> {
-      const d: Dashboard = {
-        id: uuid(),
-        source: 'localstorage',
-        title,
-        items: []
-      };
-
-      localDashboards.update(d);
-      
-      await goto(base + '/board/?id=' + d.id);
-    }
-
-    function openDashboard(dash: Dashboard) : Promise<void> {
+    function openDashboard(dash: Dashboard_v2) : Promise<void> {
       menuOpen = false;
       dashboardMenuOpen = false;
-      return goto(base + '/board/?id=' + dash.id)
-    }
-
-    function openDashboardSettings(dash: Dashboard) : Promise<void> {
-      menuOpen = false;
-      return goto(base + '/board/settings/?id=' + dash.id)
-    }
-
-    function openAddDashboard() {
-      menuOpen = false;
-      addDashboardOpen = true;
+      return goto(base + '/board/?id=' + dash.id);
     }
 
     async function selectHomey(h: OAuthHomey) {
       const instance = await h.authenticate();
 
       homey.set(instance);
-      dashboard.set(undefined);
+      homeyManager = new HomeyManager(instance);
+      await homeyManager.loadAsync();
 
       // Navigate to home-screen after switching
       await goto(base + '/');
-      menuOpen = false;
+      menuOpen = true;
     }
 
     async function logout() {
@@ -288,182 +170,207 @@
         await cloudApi.logout();
       }
 
-      $homey.set(undefined);
+      homey.set(undefined);
+      homeyManager?.destroy();
 
       return goto(base + '/');
     }
 
 </script>
 
-<svelte:head>
-  <title>{$dashboard !== undefined ? $dashboard.title : 'Dashboard'}</title>
-</svelte:head>
+<svelte:window on:visibilitychange={e => onWindowVisibilityChange()} />
 
-<div 
-  class="w-full min-h-full text-content overflow-y-scroll bg-fixed bg-no-repeat bg-cover" 
-  style={$dashboard?.backgroundImage && $dashboard.backgroundImage.length > 0 ? `background-image: url(${$dashboard.backgroundImage})` : ''} 
->
-  {#if loading}
-    <div class="w-full">
-        <Progress size="xs" indeterminate value={0} />
-    </div>
-  {:else if $homey !== undefined}
-    {#if menuOpen == false && toolbarOpen == false}
-      <IconButton data={mdiMenu} on:click={() => menuOpen = true} class="absolute left-0 top-0 z-10 text-primary-content bg-primary rounded-none rounded-br-3xl" size="32px" />
-    {/if}
-
-    <AddDashboardDialog bind:open={addDashboardOpen} on:value={(v) => addDashboard(v.detail)} />
-
-    <Drawer bind:open={menuOpen} position="left" size="xs" class="overflow-auto">
-      {#if $user !== undefined}
-        <Media>
-          <Media.Avatar src={$user.avatar.small} />
-          <Media.Content>
-              <Media.Content.Title>{$user.firstname}</Media.Content.Title>
-              <Media.Content.Description>{$user.email}</Media.Content.Description>
-          </Media.Content>
-        </Media>
-
-        {#if $user.homeys.length > 1}
-          <Divider>
-            <Divider.Label slot="label">Homeys</Divider.Label>
-          </Divider>
-          <List>
-            {#each $user.homeys as h}
-              <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => selectHomey(h)}>
-                <List.Item.Leading slot="leading">
-                  <List.Item.Leading.Icon slot="icon" data={mdiDeathStarVariant} />
-                </List.Item.Leading>
-                <List.Item.Content slot="content">
-                  <List.Item.Content.Title slot="title">{h.name}</List.Item.Content.Title>
-                </List.Item.Content>
-              </List.Item>
-            {/each}
-          </List>
-        {/if}
-      {/if}
-
-      <Divider>
-        <Divider.Label slot="label">Dashboards</Divider.Label>
-      </Divider>
-      <List>
-        {#each dashboards as d}
-          <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openDashboard(d)}>
-            <List.Item.Leading slot="leading">
-              <List.Item.Leading.Icon slot="icon" data={mdiViewDashboard} />
-            </List.Item.Leading>
-            <List.Item.Content slot="content">
-              <List.Item.Content.Title slot="title">{d.title}</List.Item.Content.Title>
-            </List.Item.Content>
-          </List.Item>
-        {/each}
-      </List>
-
-      <Divider>
-        <Divider.Label slot="label">Tools</Divider.Label>
-      </Divider>
-
-      <List>
-          {#if $dashboard !== undefined}
-            <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => toggleEdit()}>
-              <List.Item.Leading slot="leading">
-                <List.Item.Leading.Icon slot="icon" data={mdiViewDashboardEdit} />
-              </List.Item.Leading>
-              <List.Item.Content slot="content">
-                <List.Item.Content.Title slot="title">Edit widgets</List.Item.Content.Title>
-              </List.Item.Content>
-            </List.Item>
-
-            <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openDashboardSettings($dashboard)}>
-              <List.Item.Leading slot="leading">
-                <List.Item.Leading.Icon slot="icon" data={mdiCog} />
-              </List.Item.Leading>
-              <List.Item.Content slot="content">
-                <List.Item.Content.Title slot="title">Dashboard settings</List.Item.Content.Title>
-              </List.Item.Content>
-            </List.Item>
-          {/if}
-
-          <List.Item class="pt-2 pb-2 cursor-pointer" on:click={() => openAddDashboard()}>
-            <List.Item.Leading slot="leading">
-              <List.Item.Leading.Icon slot="icon" data={mdiPlus} />
-            </List.Item.Leading>
-            <List.Item.Content slot="content">
-              <List.Item.Content.Title slot="title">Add local dashboard</List.Item.Content.Title>
-            </List.Item.Content>
-          </List.Item>
-      </List>
-
-      <Divider>
-        <Divider.Label slot="label"></Divider.Label>
-      </Divider>
-
-      <Toggle
-        name="toolbarOpen"
-        bind:on={toolbarOpen}
-      >
-        <Toggle.ContentLeft slot="content-left" class="ml-3">
-          <Toggle.ContentLeft.Label slot="label">Toolbar open</Toggle.ContentLeft.Label>
-        </Toggle.ContentLeft>
-      </Toggle>
-
-      {#if fullscreenSupported}
-        <Button on:click={() => document.documentElement.requestFullscreen()} class="mt-4">
-          Enter fullscreen
-        </Button>
-      {/if}
-
-      <Divider>
-        <Divider.Label slot="label"></Divider.Label>
-      </Divider>
-
-      <Button on:click={() => logout()} class="mt-4">
-        Sign out
-      </Button>
-    </Drawer>
-
-    {#if toolbarOpen}
-      <header class="w-full sticky z-0 drop-shadow-lg p-4 bg-primary flex flex-row">
-        <Button on:click={() => menuOpen = true}>
-          <Icon slot="icon" data={mdiMenu} />
-        </Button>
-        
-        <Dropdown bind:visible={dashboardMenuOpen}>
-          <Button slot="trigger" on:click={() => dashboardMenuOpen = !dashboardMenuOpen}>
-            <Button.Icon slot="icon" data={mdiViewDashboard} />
-          </Button>
-          <Dropdown.Items slot="items">
-            {#each dashboards as d}
-              {#if $dashboard === undefined || $dashboard.id !== d.id}
-                <Dropdown.Items.Item on:click={() => openDashboard(d)} label={d.title} />
-              {/if}
-            {/each}
-          </Dropdown.Items>
-        </Dropdown>
-        
-        {#if $dashboard !== undefined}
-          <Button on:click={() => goto(base + '/board/?id=' + $dashboard.id)}>{$dashboard.title}</Button>
-        {/if}
-
-        <div class="flex flex-grow justify-end">
-          <Button on:click={() => (addDashboardOpen = true)}>
-            <Button.Icon slot="icon" data={mdiPlus} />
-          </Button>
-
-          {#if $dashboard !== undefined}
-            <Button on:click={() => toggleEdit()}>
-              <Button.Icon slot="icon" data={mdiViewDashboardEdit} />
-            </Button>
-            <Button on:click={() => goto(base + '/board/settings/?id=' + $dashboard.id)}>
-              <Button.Icon slot="icon" data={mdiCog} />
-            </Button>
-          {/if}
+{#await connecting}
+  <div class="flex justify-center m-2">
+    <div class="card w-full max-w-md mt-8 bg-base-300">
+        <div class="card-body">
+            <h1 class="card-title">Bzzt! 🛸</h1>
+            <p class="py-1">Beaming down to your Homey! 👽</p>
+            <div class="w-full mt-8 text-center">
+                <span class="loading loading-infinity w-40 text-primary"></span>
+            </div>
         </div>
-      </header>
+    </div>
+  </div>
+{:then _loaded} 
+  {#if $homey !== undefined}
+    {#if menuOpen === false && $editing === false}
+      <div class="btm-nav btm-nav-md bg-base-300 md:hidden z-10">
+        <button on:click={e => menuOpen = !menuOpen}>
+          <Icon data={mdiMenu} />
+          <span class="btm-nav-label">Menu</span>
+        </button>
+
+        <button disabled>
+          <Icon data={mdiMap} />
+          <span class="btm-nav-label">Explore</span>
+        </button>
+        
+        <button class="dropdown dropdown-top dropdown-end">
+          <button tabindex="0"><Icon data={mdiViewDashboard} /><span class="btm-nav-label block">Dashboards</span></button>
+          <ul
+            tabindex="0"
+            class="dropdown-content menu menu-lg bg-base-300 rounded-box my-2 gap-1 w-72 p-2 shadow"
+          >
+            {#each Object.values($dashboards) as dashboard}
+              <li>
+                <a href="{base + '/board/?id=' + dashboard.id}" class="overflow-hidden overflow-ellipsis">
+                  {#if dashboard.iconId !== undefined}
+                    <Icon data={getIcon(dashboard.iconId)} />
+                  {/if}
+                  <span>{dashboard.title}</span>
+                </a>
+              </li>
+            {/each}
+          </ul>
+        </button>
+        
+      </div>
+      
+      <button class="btn btn-circle fixed top-0 z-10 hidden md:block" on:click={() => menuOpen = true}>
+        <Icon data={mdiMenu} />
+      </button>
+
+      <div class="fixed bottom-20 md:bottom-1 right-1 z-50 flex flex-col gap-2">
+        {#each $alerts as alert}
+          <div class="alert shadow-lg {alert.classes}">
+            {#if alert.icon !== undefined}
+              <Icon data={getIcon(alert.icon)} />
+            {/if}
+            <div class="w-40">
+              <span class="font-bold">{alert.title}</span>
+              <div class="text-sm">{alert.text}</div>
+            </div>
+          </div>
+        {/each}
+      </div>
     {/if}
-    
-    <slot></slot>
+
+    <div class="drawer w-full h-full relative">
+      <input id="main-drawer" type="checkbox" class="drawer-toggle" bind:checked={menuOpen} />
+      
+      <div class="drawer-content">
+        <slot></slot>
+      </div>
+
+      <div class="drawer-side">
+        <label for="main-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+        <div class="w-full max-w-xs min-h-full bg-base-200">
+          <ul class="menu w-full">
+            <!-- Support for multiple Homeys -->
+            {#if $user !== undefined}
+              <li class="flex items-center cursor-pointer">
+                <div class="avatar">
+                  <img class="w-24 mask mask-circle" src={$user.avatar.small} alt={$user.fullname} />
+                </div>
+                <div class="space-y-1 font-medium">
+                  <div>{$user.firstname}</div>
+                  <div class="text-sm">{$user.email}</div>
+                </div>
+              </li>
+
+              {#if $user.homeys.length > 1}
+                <li>
+                  <a>Homeys</a>
+                  <ul>
+                    {#each $user.homeys as h}
+                      <li on:click={() => selectHomey(h)}>
+                        <div class="flex items-center">
+                          <div class="flex-shrink-0">
+                            <Icon class="w-8 h-8 rounded-full invert" data={mdiDeathStarVariant} />
+                          </div>
+                          <div class="flex-1 min-w-0 ml-2">
+                            <p class="text-sm font-medium">{h.name}</p>
+                            <p class="text-sm capitalize">{h.modelName}</p>
+                          </div>
+                        </div>
+                      </li>
+                    {/each}
+                  </ul>
+                </li>
+              {/if}
+            {/if}
+
+            <li on:click={_ => goto(base + '/board/')}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboard} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Dashboards</p>
+                </div>
+              </div>
+              
+              <ul>
+                {#each Object.values($dashboards) as dashboard}
+                  <li on:click|stopPropagation={() => openDashboard(dashboard)}>
+                    <div class="flex items-center">
+                      {#if dashboard.iconId !== undefined}
+                        <Icon class="w-8 h-8 rounded-full invert" data={getIcon(dashboard.iconId)} />
+                      {/if}
+                      <div class="flex-1 min-w-0 ml-2">
+                        <p class="text-sm font-medium">{dashboard.title}</p>
+                      </div>
+                    </div>
+                  </li>
+                {/each}
+              </ul>
+            </li>
+
+            <li on:click={_ => goto(base + '/template/')}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiPostageStamp} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Templates</p>
+                </div>
+              </div>
+            </li>
+
+            <li on:click={() => toggleEdit()}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiViewDashboardEdit} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Edit dashboard</p>
+                </div>
+              </div>
+            </li>
+
+            <li on:click={() => logout()}>
+              <div class="flex items-center">
+                <div class="flex-shrink-0">
+                  <Icon class="w-8 h-8 rounded-full invert" data={mdiLogout} />
+                </div>
+                <div class="flex-1 min-w-0 ml-2">
+                  <p class="text-sm font-medium">Logout</p>
+                </div>
+              </div>
+            </li>
+          </ul>
+
+          <div class="text-sm m-8">Version: {packageVersion}</div>
+        </div>
+      </div>
+    </div>
   {:else}
     <slot></slot>
   {/if}
-</div>
+{:catch _error}
+  <div class="flex justify-center m-2">
+    <div class="card w-full max-w-md mt-8 bg-base-300">
+        <div class="card-body">
+            <h1 class="card-title">Au! 🤯</h1>
+            <p class="py-1">Something went wrong while connecting 🤕</p>
+            <div class="w-full mt-8 text-center">
+                {_error}
+            </div>
+        </div>
+    </div>
+  </div>
+{/await}

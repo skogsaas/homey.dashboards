@@ -1,45 +1,37 @@
 import Homey from 'homey';
 
-import * as Sentry from "@sentry/node"
 import { DashboardDriver } from './drivers/dashboard/driver'
+import { Readable } from 'stream';
 
 export class DashboardApp extends Homey.App {
   private dashboards!: DashboardDriver;
+  private webhook!: Homey.CloudWebhook;
 
   async onInit() {
-    await this.configureSentry();
     await this.updateSettings();
     await this.subscribeWebhook();
   }
 
   async onUninit() : Promise<void> {
-    await Sentry.flush();
+    await this.homey.cloud.unregisterWebhook(this.webhook)
   }
 
-  public async setDashboardSettings(dashboardId: string, settings: any) : Promise<void> {
+  public async setDashboardSettings(storeId: string, dashboardId: string, settings: any) : Promise<void> {
     try {
-      const driver = this.getDashboardDriver();
-      await driver.setDashboardSettings(dashboardId, settings);
+      const driver = this.getStoreDriver();
+      await driver.setDashboardSettings(storeId, dashboardId, settings);
     } catch(e) {
       this.log(e);
-      Sentry.captureException(e);
     }
   }
 
-  private async configureSentry() {
-    Sentry.init({
-      dsn: Homey.env.SENTRY_DSN,
-      tracesSampleRate: 1.0,
-    });
-
-    const homeyId = await this.homey.cloud.getHomeyId();
-
-    Sentry.setTags({
-      appId: Homey.manifest.id,
-      appVersion: Homey.manifest.version,
-      homeyVersion: this.homey.version,
-      homeyId: homeyId
-    });
+  public async setTemplateSettings(storeId: string, dashboardId: string, settings: any) : Promise<void> {
+    try {
+      const driver = this.getStoreDriver();
+      await driver.setTemplateSettings(storeId, dashboardId, settings);
+    } catch(e) {
+      this.log(e);
+    }
   }
 
   private async updateSettings() {
@@ -61,25 +53,93 @@ export class DashboardApp extends Homey.App {
     const secret = Homey.env.WEBHOOK_SECRET;
     const data = {};
 
-    const webhook = await this.homey.cloud.createWebhook(id, secret, data);
+    this.webhook = await this.homey.cloud.createWebhook(id, secret, data);
 
-    webhook.on('message', args => {
-      this.log('Webhook', args);
-
+    this.webhook.on('message', (args: any) => {
       const operation = args.query.operation;
 
-      if(operation === 'save_dashboard') {
-        const dashboardId = args.query.dashboardId;
-        const settings = JSON.parse(args.body);
+      switch(operation) {
+        case 'save_dashboard': 
+          this.saveDashboard(args);
+          break;
 
-        this.setDashboardSettings(dashboardId, settings);
-      } else if(operation === 'active_dashboard') {
-        // TODO: Implement dashboard is active or inactive
+        case 'delete_dashboard': 
+          this.deleteDashboard(args);
+          break;
+
+        case 'save_template': 
+          this.saveTemplate(args);
+          break;
+
+        case 'delete_template': 
+          this.deleteTemplate(args);
+          break;
+        
+        case 'active_dashboard':
+          // TODO: Implement dashboard is active or inactive
+          break;
+
+        case 'save_image':
+          this.saveImage(args);
+          break;
+
+        case 'delete_image':
+          this.deleteImage(args);
+          break;
       }
     });
   }
 
-  private getDashboardDriver() : DashboardDriver {
+  private async saveDashboard(args: any) : Promise<void> {
+    const storeId = args.query.storeId;
+    const dashboardId = args.query.dashboardId;
+    const settings = JSON.parse(args.body);
+
+    await this.setDashboardSettings(storeId, dashboardId, settings);
+  }
+
+  private async deleteDashboard(args: any) : Promise<void> {
+    const storeId = args.query.storeId;
+    const dashboardId = args.query.dashboardId;
+    const settings = null; // Indicate that this dashboard should be deleted.
+
+    await this.setDashboardSettings(storeId, dashboardId, settings);
+  }
+
+  private async saveTemplate(args: any) : Promise<void> {
+    const storeId = args.query.storeId;
+    const templateId = args.query.templateId;
+    const settings = JSON.parse(args.body);
+
+    await this.setTemplateSettings(storeId, templateId, settings);
+  }
+
+  private async deleteTemplate(args: any) : Promise<void> {
+    const storeId = args.query.storeId;
+    const templateId = args.query.templateId;
+    const settings = null; // Indicate that this template should be deleted.
+
+    await this.setTemplateSettings(storeId, templateId, settings);
+  }
+
+  private async saveImage(args: any) : Promise<void> {
+    const buffer = Buffer.from(args.body, 'base64');
+    const stream = Readable.from(buffer);
+
+    const image = await this.homey.images.createImage();
+    image.setStream((s: any) => stream.pipe(s));
+  }
+
+  private async deleteImage(args: any) : Promise<void> {
+    const imageId = args.query.imageId;
+    const image = await this.homey.images.getImage(imageId);
+
+    if(image !== undefined) {
+      await image.unregister();
+    }
+  }
+
+  private getStoreDriver() : DashboardDriver {
     if(this.dashboards === undefined) {
       this.dashboards = (this.homey.drivers.getDriver('dashboard') as DashboardDriver);
     }

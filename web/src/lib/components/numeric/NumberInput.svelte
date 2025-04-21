@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { InputNumber, Slider } from 'stwui';
-    import IconButton from '../IconButton.svelte';
-    import { mdiArrowDown, mdiArrowUp, mdiMinus, mdiMinusCircle, mdiPlus, mdiPlusCircle } from '../icons';
+    import { mdiMinus, mdiPlus } from '../icons';
+    import Icon from '../Icon.svelte';
 
     export let value: number;
     export let disabled: boolean;
@@ -11,8 +10,6 @@
     export let step: number | undefined = undefined;
 
     export let unit: string | undefined = undefined;
-    
-    export let color: string | undefined = undefined;
 
     function increment() {
         let v = value + (step ?? 1);
@@ -39,8 +36,12 @@
     }
 </script>
 
-<IconButton on:click={() => decrement()} data={mdiPlus} />
+<button class="btn" on:click={() => decrement()} >
+    <Icon data={mdiMinus} />
+</button>
 
 <span class="ml-1 mr-1 whitespace-nowrap">{value} {unit ?? ''}</span>
 
-<IconButton on:click={() => increment()} data={mdiMinus} />
+<button class="btn" on:click={() => decrement()} >
+    <Icon data={mdiPlus} />
+</button>

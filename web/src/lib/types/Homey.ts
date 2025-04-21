@@ -1,6 +1,8 @@
-export interface Homey {
+export interface Homey extends HomeyEmitter {
     id: string;
     baseUrl: Promise<string>;
+
+    __io: any;
 
     apps: AppManager;
     devices: DeviceManager;
@@ -74,7 +76,7 @@ export interface ZoneManager extends Manager {
     updateZone() : Promise<any>;
 }
 
-export interface Manager extends Emitter {
+export interface Manager extends HomeyEmitter {
     uri: string;
 }
 
@@ -86,20 +88,24 @@ export type FlowFolderMap = { [key: string]: FlowFolder; }
 export type BasicFlowMap = { [key: string]: BasicFlow; }
 export type AdvancedFlowMap = { [key: string]: AdvancedFlow; }
 export type ZoneMap = { [key: string]: Zone; }
+export type ImageMap = { [key: string]: ImageObj; }
 export type LogMap = { [key: string]: Log; }
 export type VariableMap = { [key: string]: Variable; }
 
 export interface Emitter {
-    homey: Homey;
-    
-    connect() : Promise<void>;
-    disconnect(): void;
     on(event: string, callback: any) : void;
     off(event: string, callback: any) : void;
     once(event: string, callback: any) : void;
 }
 
-export interface AppObj extends Emitter {
+export interface HomeyEmitter extends Emitter {
+    homey: Homey;
+    
+    connect() : Promise<void>;
+    disconnect(): void;
+}
+
+export interface AppObj extends HomeyEmitter {
     id: string;
     uri: string;
 
@@ -116,7 +122,7 @@ export interface AppSettingsObj {
     on(event: string, callback: any) : void;
 }
 
-export interface DeviceObj extends Emitter {
+export interface DeviceObj extends HomeyEmitter {
     id: string;
     uri: string;
     driverId: string;
@@ -151,11 +157,12 @@ export interface DeviceObj extends Emitter {
     color: string;
 
     setCapabilityValue(opts: { capabilityId: string, deviceId: string, value: string|number|boolean, transactionId?: string, transactionTime?: number }) : Promise<any>;
+    makeCapabilityInstance(capabilityId: string, callback: any) : DeviceCapability;
 }
 
 export interface CapabilityObj {
     id: string;
-    type: string;
+    type: 'boolean' | 'number' | 'string' | 'enum';
     iconObj: IconObj;
     title: string;
     getable: boolean;
@@ -171,6 +178,16 @@ export interface CapabilityObj {
     step: number;
     lastUpdated: number;
     values: ({ id: string; title: string; })[];
+}
+
+export interface DeviceCapability extends HomeyEmitter {
+    id: string;
+    device: DeviceObj;
+
+    lastChanged: Date | null;
+    value: any | null;
+    
+    destroy() : void;
 }
 
 export interface EnergyObj {
@@ -195,6 +212,7 @@ export interface Image {
 
 export interface ImageObj {
     id: string;
+    uri: string;
     ownerUri: string;
     url: string;
     lastUpdated: number;
@@ -231,15 +249,15 @@ export interface VariableEvent {
     value: string;
 }
 
-export interface Variable extends Emitter {
+export interface Variable extends HomeyEmitter {
     id: string;
     uri: string;
     name: string;
-    type: string;
+    type: 'boolean'|'number'|'string';
     value: string|boolean|number;
 }
 
-export interface Log extends Emitter {
+export interface Log extends HomeyEmitter {
     id: string;
     uri: string;
     ownerId: string;
@@ -269,7 +287,7 @@ export interface LogEntry {
     v: number;
 }
 
-export interface Flow extends Emitter {
+export interface Flow extends HomeyEmitter {
     id: string;
     name: string;
     enabled: boolean;
@@ -278,7 +296,7 @@ export interface Flow extends Emitter {
     folder: string;
 }
 
-export interface FlowFolder extends Emitter {
+export interface FlowFolder extends HomeyEmitter {
     id: string;
     name: string;
     parent: string;
@@ -307,7 +325,7 @@ export interface Session {
     clientName: string
 }
 
-export interface Zone extends Emitter {
+export interface Zone extends HomeyEmitter {
     id: string;
     uri: string;
     name: string;
@@ -342,7 +360,7 @@ export interface OAuthDevice {
     platform: string;
     publicKey: string;
     token: string;
-    updateD: string;
+    updated: string;
 }
 
 export interface OAuthHomey {

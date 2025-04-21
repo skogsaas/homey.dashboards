@@ -1,202 +1,67 @@
 import type { ComponentType } from 'svelte';
+import type { WidgetCategory, WidgetInfo, WidgetSettings_v1 } from '$lib/types/Widgets';
 
-import { v4 as uuid } from 'uuid';
-
-import CapabilityEditor from "./capability/CapabilityEditor.svelte";
-import CapabilityWidget from "./capability/CapabilityWidget.svelte";
-import { 
-    create as createCapability,
-    migrate as migrateCapability 
-} from './capability/CapabilitySettings';
-
-import DeviceWidget from './device/DeviceWidget.svelte';
-import DeviceEditor from './device/DeviceEditor.svelte';
-
-import VariableWidget from './variable/VariableWidget.svelte';
-import VariableEditor from './variable/VariableEditor.svelte';
-import { 
-    create as createVariable,
-    migrate as migrateVariable 
-} from './variable/VariableSettings';
-
-import DashboardLinkEditor from './dashboard-link/DashboardLinkEditor.svelte';
-import DashboardLinkWidget from './dashboard-link/DashboardLinkWidget.svelte';
-
-import FlowEditor from "./flow/FlowEditor.svelte";
-import FlowWidget from "./flow/FlowWidget.svelte";
-
-import IframeWidget from './iframe/IframeWidget.svelte';
-import IframeEditor from './iframe/IframeEditor.svelte';
-
-import ImageWidget from "./image/ImageWidget.svelte";
-import ImageEditor from "./image/ImageEditor.svelte";
-
-import InsightWidget from "./insight/InsightWidget.svelte";
-import InsightEditor from "./insight/InsightEditor.svelte";
-import { 
-    create as createInsight,
-    migrate as migrateInsight 
-} from './insight/InsightSettings';
-
-import SliderEditor from './slider/SliderEditor.svelte';
-import SliderWidget from './slider/SliderWidget.svelte';
-import { 
-    create as createSlider,
-    migrate as migrateSlider 
-} from './slider/SliderSettings';
-
-import TextEditor from "./text/TextEditor.svelte";
-import TextWidget from "./text/TextWidget.svelte";
-
-import UnknownWidget from '$lib/widgets/unknown/UnknownWidget.svelte';
-import UnknownEditor from '$lib/widgets/unknown/UnknownEditor.svelte';
-import type { WidgetSettings } from '$lib/types/Widgets';
-
-// Icons
-import { mdiArrowLeftRight, mdiChartLine, mdiImage, mdiImageFrame, mdiMeterElectric, mdiPlay, mdiTextBoxEdit, mdiTune, mdiVariable, mdiViewDashboard } from "$lib/components/icons";
-
-export interface WidgetInfo {
-    type: string;
-    label: string;
-    icon: string;
-    widget: ComponentType;
-    editor: ComponentType | undefined;
-    view: ComponentType | undefined;
-    scopes: { oneOf: string[] }[];
-    create: () => WidgetSettings;
-    migration: (e: WidgetSettings) => WidgetSettings;
-}
+import CapabilityInfo from './capability';
+import CardInfo from './card';
+import DashboardLinkInfo from './dashboard-link';
+import DeviceInfo from './device';
+import FlowInfo from './flow';
+import ForeachInfo from './foreach';
+import GridInfo from './grid';
+import IframeInfo from './iframe';
+import ImageInfo from './image';
+import InsightInfo from './insight';
+import ListInfo from '$lib/widgets/list';
+import SectionInfo from '$lib/widgets/section';
+import SectionsInfo from '$lib/widgets/sections';
+import SensorInfo from '$lib/widgets/sensor';
+import SliderInfo from './slider';
+import StatisticInfo from './statistic';
+import SwitchInfo from './switch';
+import TemplateInfo from './template';
+import TextInfo from './text';
+import ToggleInfo from './toggle';
+import UnknownInfo from './unknown';
+import VariableInfo from './variable';
+import DialogInfo from './dialog';
 
 export const widgets: WidgetInfo[] = [
-    {
-        type: 'capability', 
-        label: 'Capability',
-        icon: mdiTune,
-        widget: CapabilityWidget, 
-        editor: CapabilityEditor,
-        view: undefined,
-        scopes: [
-            { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] }
-        ],
-        create: createCapability,
-        migration: migrateCapability
-    },
-    {
-        type: 'device', 
-        label: 'Device',
-        icon: mdiMeterElectric,
-        widget: DeviceWidget, 
-        editor: DeviceEditor,
-        view: undefined,
-        scopes: [],
-        create: () => ({ id: uuid(), type: 'device', version: 1 }),
-        migration: (e: WidgetSettings) => e
-    },
-    {
-        type: 'dashboard-link', 
-        label: 'Dashboard',
-        icon: mdiViewDashboard,
-        widget: DashboardLinkWidget, 
-        editor: DashboardLinkEditor,
-        view: undefined,
-        scopes: [],
-        create: () => ({ id: uuid(), type: 'dashboard-link', version: 1 }),
-        migration: (e: WidgetSettings) => e
-    },
-    {
-        type: 'flow', 
-        label: 'Flow',
-        icon: mdiPlay,
-        widget: FlowWidget, 
-        editor: FlowEditor,
-        view: undefined,
-        scopes: [
-            { oneOf: ['homey', 'homey.flow', 'homey.flow.start'] }
-        ],
-        create: () => ({ id: uuid(), type: 'flow', version: 1 }),
-        migration: (e: WidgetSettings) => e
-    },
-    {
-        type: 'iframe', 
-        label: 'Iframe',
-        icon: mdiImageFrame,
-        widget: IframeWidget, 
-        editor: IframeEditor,
-        view: undefined,
-        scopes: [],
-        create: () => ({ id: uuid(), type: 'iframe', version: 1 }),
-        migration: (e: WidgetSettings) => e
-    },
-    {
-        type: 'image', 
-        label: 'Image',
-        icon: mdiImage,
-        widget: ImageWidget, 
-        editor: ImageEditor,
-        view: ImageWidget,
-        scopes: [
-            { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] }
-        ],
-        create: () => ({ id: uuid(), type: 'image', version: 1 }),
-        migration: (e: WidgetSettings) => e
-    },
-    {
-        type: 'insight', 
-        label: 'Insight',
-        icon: mdiChartLine,
-        widget: InsightWidget, 
-        editor: InsightEditor,
-        view: undefined,
-        scopes: [
-            { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] },
-            { oneOf: ['homey', 'homey.insights.readonly'] }
-        ],
-        create: createInsight,
-        migration: migrateInsight
-    },
-    {
-        type: 'text', 
-        label: 'Text',
-        icon: mdiTextBoxEdit,
-        widget: TextWidget, 
-        editor: TextEditor,
-        view: undefined,
-        scopes: [],
-        create: () => ({ id: uuid(), type: 'text', version: 1 }),
-        migration: (e: WidgetSettings) => e
-    },
-    {
-        type: 'slider', 
-        label: 'Slider',
-        icon: mdiArrowLeftRight,
-        widget: SliderWidget, 
-        editor: SliderEditor,
-        view: undefined,
-        scopes: [
-            { oneOf: ['homey', 'homey.device', 'homey.device.readonly', 'homey.device.control'] }
-        ],
-        create: createSlider,
-        migration: migrateSlider
-    },
-    {
-        type: 'variable', 
-        label: 'Variable',
-        icon: mdiVariable,
-        widget: VariableWidget, 
-        editor: VariableEditor,
-        view: undefined,
-        scopes: [
-            { oneOf: ['homey', 'homey.logic', 'homey.logic.readonly'] }
-        ],
-        create: createVariable,
-        migration: migrateVariable
-    }
+    CapabilityInfo,
+    CardInfo,
+    DashboardLinkInfo,
+    FlowInfo,
+    ForeachInfo,
+    GridInfo,
+    IframeInfo,
+    ImageInfo,
+    InsightInfo,
+    ListInfo,
+    SectionInfo,
+    SectionsInfo,
+    SensorInfo,
+    SliderInfo,
+    //StatisticInfo,
+    SwitchInfo,
+    TemplateInfo,
+    ToggleInfo,
+    TextInfo,
+    VariableInfo,
+    DeviceInfo,
+    DialogInfo,
 ];
 
-export function findLabel(type: string) : string | undefined {
-    const label = widgets.find(widget => widget.type === type)?.label;
+export const categories: WidgetCategory[] = [
+    { id: 'layout', label: 'Layouts' },
+    { id: 'logic', label: 'Logic' },
+    { id: 'component', label: 'Components' },
+];
 
-    return label;
+export function findInfo(type: string) : WidgetInfo | undefined {
+    return widgets.find(widget => widget.type === type);
+}
+
+export function findLabel(type: string) : string | undefined {
+    return widgets.find(widget => widget.type === type)?.label;
 }
 
 export function findWidget(type: string) : ComponentType {
@@ -206,7 +71,7 @@ export function findWidget(type: string) : ComponentType {
         return component;
     }
 
-    return UnknownWidget
+    return UnknownInfo.widget;
 }
 
 export function findEditor(type: string) : ComponentType {
@@ -216,22 +81,16 @@ export function findEditor(type: string) : ComponentType {
         return editor;
     }
 
-    return UnknownEditor
+    return UnknownInfo.editor;
 }
 
-export function findView(type: string) : ComponentType | undefined {
-    const view = widgets.find(widget => widget.type === type)?.view;
-
-    return view;
-}
-
-export function findMigration(type: string) : ((settings: WidgetSettings) => WidgetSettings) | undefined {
+export function findMigration(type: string) : ((settings: WidgetSettings_v1) => WidgetSettings_v1) | undefined {
     const migration = widgets.find(widget => widget.type === type)?.migration;
 
     return migration;
 }
 
-export function findCreate(type: string) : (() => WidgetSettings) | undefined {
+export function findCreate(type: string) : (() => WidgetSettings_v1) | undefined {
     const create = widgets.find(widget => widget.type === type)?.create;
 
     return create;

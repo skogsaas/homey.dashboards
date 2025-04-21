@@ -1,8 +1,7 @@
 <script lang="ts">
-    import { editing } from '$lib/stores/dashboard';
+    import { editing } from '$lib/stores/editing';
     import type { Variable } from '$lib/types/Homey';
     
-    import {Input } from 'stwui';
     import type { VariableSettings_v2 } from '../VariableSettings';
     import { homey } from '$lib/stores/homey';
     import IconButton from '$lib/components/IconButton.svelte';

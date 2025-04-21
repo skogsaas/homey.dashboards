@@ -1,2 +1,4 @@
 app/assets/dashboard/*
 web/src/mock/*
+web/dev-dist/sw.js
+web/dev-dist/workbox-b5f7729d.js

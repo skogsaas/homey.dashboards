@@ -5,17 +5,17 @@
     import type { DeviceObj } from '$lib/types/Homey';
     import { getIcon } from '$lib/components/icons/utils';
 
-    import Icon from 'stwui/icon';
+    import Icon from '$lib/components/Icon.svelte'
     import type { WidgetContext } from '$lib/types/Widgets';
 
-    export let settings: DeviceSettings_v1;
     export let context: WidgetContext;
+    export let settings: DeviceSettings_v1;
 
     let device: DeviceObj;
     $: device = $devices[settings.deviceId ?? ''];
 </script>
 
-<div class="flex items-center">
+<div class="flex items-center gap-1">
     {#if device === undefined}
         {#if settings?.deviceId !== undefined}
             <span>Device not found</span>
@@ -24,7 +24,7 @@
         {/if}
     {:else}
         {#if settings.iconId !== undefined}
-            <Icon data={getIcon(settings.iconId)} class="m-1" size="32px" />
+            <Icon data={getIcon(settings.iconId)} />
         {:else}
             {#await $homey.baseUrl}
                 ...

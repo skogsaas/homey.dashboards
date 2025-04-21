@@ -2,8 +2,8 @@
     import type { WidgetContext } from '$lib/types/Widgets';
     import type TextSettings from './TextSettings';
     
-    export let settings: TextSettings;
     export let context: WidgetContext;
+    export let settings: TextSettings;
 
     $: text = settings?.text;
     $: size = settings?.size;

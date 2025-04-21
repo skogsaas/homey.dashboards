@@ -17,5 +17,23 @@ function createApiKey() {
     };
 }
 
+function createHomeyId() {
+    const { subscribe, set } = writable(localStorage.homeyId);
+    
+    return {
+        subscribe,
+        set: (homeyId: string|undefined) => {
+            if(homeyId !== undefined) {
+                localStorage.homeyId = homeyId;
+            } else {
+                delete localStorage.homeyId;
+            }
+            
+            set(homeyId); 
+        }
+    };
+}
+
 export const apiKey = createApiKey();
+export const homeyId = createHomeyId();
 //export const oauth = createOauth();

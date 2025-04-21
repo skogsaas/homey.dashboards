@@ -1,6 +1,6 @@
 {
   "id": "skogsaas.dashboards",
-  "version": "0.15.2",
+  "version": "1.0.0",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "platforms": [
@@ -44,7 +44,19 @@
     },
     "putDashboards": {
       "method": "PUT",
-      "path": "/dashboards/:dashboardId"
+      "path": "/dashboards/:storeId/:dashboardId"
+    },
+    "deleteDashboards": {
+      "method": "DELETE",
+      "path": "/dashboards/:storeId/:dashboardId"
+    },
+    "putTemplates": {
+      "method": "PUT",
+      "path": "/templates/:storeId/:templateId"
+    },
+    "deleteTemplates": {
+      "method": "DELETE",
+      "path": "/templates/:storeId/:templateId"
     },
     "dashboardHeartbeat": {
       "method": "POST",
@@ -52,6 +64,8 @@
     }
   }
 }
+
+
 
 
 

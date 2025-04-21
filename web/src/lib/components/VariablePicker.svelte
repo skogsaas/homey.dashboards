@@ -3,16 +3,11 @@
 
     import { createEventDispatcher } from "svelte";
 
-    import Portal from 'stwui/portal';
-    import Modal from 'stwui/modal';
-    import Input from 'stwui/input';
-    import Button from 'stwui/button';
-    import List from 'stwui/list';
-    import Icon from 'stwui/icon';
+    import Icon from '$lib/components/Icon.svelte'
 
     import { variables } from "$lib/stores/homey";
-    import IconButton from "./IconButton.svelte";
-    import { mdiClose, mdiDelete, mdiVariable } from "./icons";
+    import { mdiClose, mdiDelete, mdiMagnify, mdiVariable } from "./icons";
+    import VirtualList from "./VirtualList.svelte";
 
     export let variableId: string | undefined;
     export let placeholder: string = 'Select variable';
@@ -24,6 +19,8 @@
     let search: string = '';
     let filtered: Variable[] = [];
     let selected: Variable | undefined;
+
+    let modal: HTMLDialogElement;
     
     $: flatVariables = Object.values($variables).filter(variable => variableFilter ? variableFilter(variable) : true);
     $: sorted = (flatVariables ?? [])
@@ -59,51 +56,48 @@
     }
 </script>
 
-<Button on:click={() => open = true} class="w-full justify-start border border-border">
-    <span class="mr-1">Variable:</span>
-
-    {#if selected !== undefined}
-        <Icon data={mdiVariable} class="h-6 w-6 mr-2" />
-
-        <span class="mr-auto">{selected.name}</span>
-        <IconButton data={mdiDelete} size="14px" on:click={() => variableId = undefined} />
-    {:else if variableId !== undefined}
-        Variable not found
+<div class="join w-full flex">
+    {#if selected}
+        <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
+            <Icon data={mdiVariable} class="h-6 w-6 mr-2" />
+        </button>
+        
+        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Variable" value={selected.name}/>
     {:else}
-        {placeholder}
+        <button class="btn join-item rounded-r-full" on:click={() => modal.showModal()}>
+            <Icon data={mdiMagnify} />
+        </button>
+        <input readonly type="text" class="input input-bordered join-item flex-grow" placeholder="Variable"/>
     {/if}
-</Button>
+</div>
 
-<Portal>
-    {#if open}
-        <Modal handleClose={() => open = false}>
-            <Modal.Content slot="content">
-                <Modal.Content.Body slot="body" class="h-full">
-                    <div class="relative w-full">
-                        <div class="absolute -top-4 -right-5 z-10">
-                            <IconButton data={mdiClose} on:click={() => open = false} />
-                        </div>
+<dialog bind:this={modal} class="modal">
+    <div class="modal-box flex flex-col">
+        <div class="flex-shrink-0 mb-2">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+                    <Icon data={mdiClose} />
+                </button>
+            </form>
+            
+            <input type="text" class="input w-full input-primary" bind:value={search} name="search" placeholder="Search" />
+        </div>
+        <div class="flex-grow overflow-auto">
+            <VirtualList items={filtered} height="50vh" let:item>
+                <button class="btn btn-ghost w-full" on:click={() => onVariable(item)}>
+                    <h3 class="w-full flex justify-start">
+                        <Icon data={mdiVariable} class="h-6 w-6 mr-2" />
+                        {item.name}
+                    </h3>
+    
+                    <div class="w-full flex justify-between">
+                        <span>{item.type}</span>
+                        <span>{item.value}</span>
                     </div>
-                    <div>
-                        <Input bind:value={search} name="search" placeholder="Search" />
-                    </div>
-                    <div class="flex-grow overflow-auto">
-                        <List>
-                            {#each filtered as variable}
-                                <List.Item class="cursor-pointer" on:click={() => onVariable(variable)}>
-                                    <List.Item.Content slot="content">
-                                        <List.Item.Content.Title slot="title" class="flex">
-                                            <Icon data={mdiVariable} class="h-6 w-6 mr-2" />
-                                            
-                                            {variable.name}
-                                        </List.Item.Content.Title>
-                                    </List.Item.Content>
-                                </List.Item>
-                            {/each}
-                        </List>
-                    </div>
-                </Modal.Content.Body>
-            </Modal.Content>
-        </Modal>
-    {/if}
-</Portal>
+                </button>
+
+                <div class="divider divider-neutral my-1"></div>
+            </VirtualList>
+        </div>
+    </div>
+</dialog>

@@ -1,11 +1,11 @@
-import type { Threshold, WidgetSettings } from "../../types/Widgets";
+import type { Threshold, WidgetSettings_v1 } from "../../types/Widgets";
 import { v4 as uuid } from 'uuid';
 
 export interface VariableSettings_v3 extends VariableSettings_v2 {
     iconId: string | undefined;
 }
 
-export interface VariableSettings_v2 extends WidgetSettings {
+export interface VariableSettings_v2 extends WidgetSettings_v1 {
     variableId: string | undefined;
     title: string | undefined;
 
@@ -33,7 +33,7 @@ export interface VariableSettings_v2 extends WidgetSettings {
     };
 }
 
-export interface VariableSettings_v1 extends WidgetSettings {
+export interface VariableSettings_v1 extends WidgetSettings_v1 {
     variableId: string | undefined;
     title: string | undefined;
     iconId: string | undefined;
@@ -46,7 +46,7 @@ export interface VariableSettings_v1 extends WidgetSettings {
     }
 }
 
-export function create() : WidgetSettings {
+export function create() : WidgetSettings_v1 {
     return { 
         id: uuid(), 
         type: 'variable', 

@@ -7,6 +7,7 @@
     import { base } from "$app/paths";
     import { homey } from "$lib/stores/homey";
     import { clientId, clientSecret } from "$lib/constants";
+    import { alerts } from "$lib/stores/alerting";
 
     let code: string | null;
     $: code = $page.url.searchParams.get('code');
@@ -15,10 +16,11 @@
         if(code != null) {
             const cloudApi = new AthomCloudAPI({
                 clientId,
-                clientSecret
+                clientSecret // It's bullshit that the client secret must be provided for a public client. This basically makes the secret publicly known.
             });
 
             const loggedIn = await cloudApi.isLoggedIn();
+
             if (!loggedIn) {
                 if (cloudApi.hasAuthorizationCode()) {
                     const token = await  cloudApi.authenticateWithAuthorizationCode();
@@ -28,7 +30,7 @@
 
                     homey.set(homeyApi);
                 } else {
-                    // TODO: Display some error
+                    alerts.error('Error!', 'No authorization code found.', 10000);
                 }
             }
         }

@@ -1,60 +1,59 @@
 <script lang="ts">
+    import { findLabel, findWidget } from '$lib/widgets';
+    import type { WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
     import { createEventDispatcher } from 'svelte';
-    
-    import { editing, dashboard } from '$lib/stores/dashboard';
-    
-    import Card from 'stwui/card';
+    import { dragHandle } from 'svelte-dnd-action';
+    import Icon from '$lib/components/Icon.svelte';
+    import { mdiCursorMove } from '$lib/components/icons';
+    import type { TemplateSettings_v1 } from './template/TemplateSettings';
+    import { templates } from '$lib/stores/homey';
 
-    import {  mdiArrowTopLeftBottomRight, mdiCog, mdiCursorMove, mdiDelete, mdiLock, mdiLockOpenVariant } from '$lib/components/icons';
-    import IconButton from '$lib/components/IconButton.svelte';
-    import { findWidget } from '$lib/widgets';
-    import type { WidgetSettings } from '$lib/types/Widgets';
+    export let settings: WidgetSettings_v1;
+    export let context: WidgetContext;
+
+    $: breadcrumbs = [ ...context.breadcrumbs, { settings, update } ]
+    $: childContext = { ...context, breadcrumbs };
 
     const dispatch = createEventDispatcher();
 
-    export let settings: WidgetSettings[];
-    export let fixed: boolean;
-    export let move: any;
-    export let resize: any;
-
-    $: context = { editing: false, mode: 'card' };
-
-    function onEdit() {
-        dispatch('edit');
+    function select() {
+        context.select(breadcrumbs);
     }
 
-    function onFixed() {
-        dispatch('fixed', !fixed);
+    function update(_settings: WidgetSettings_v1) {
+        settings = _settings;
+        dispatch('settings', settings);
     }
 
-    function onDelete() {
-        dispatch('delete');
+    function getLabel() {
+        if(settings.type === 'template') {
+            return $templates[(settings as TemplateSettings_v1).templateId]?.title ?? findLabel(settings.type);
+        }
+
+        return findLabel(settings.type);
     }
 </script>
 
-<Card on:click class="h-full w-full overflow-hidden flex flex-col">
-    {#if $editing}
-        <div class="absolute z-10 -top-4 left-0 flex w-full">
-            <IconButton on:click={onEdit} data={mdiCog} size="18px" />
-            <IconButton on:click={onFixed} data={fixed ? mdiLock : mdiLockOpenVariant} size="18px" />
-            
-            {#if !fixed}
-                <IconButton on:pointerdown={move} data={mdiCursorMove} class="touch-none" size="18px" />
-            {/if}
-
-            <IconButton on:click={onDelete} data={mdiDelete} class="ml-auto" color="red" size="18px" />
-        </div>
-
-        {#if !fixed}
-            <IconButton on:pointerdown={resize} data={mdiArrowTopLeftBottomRight} class="absolute z-10 -right-3 -bottom-3 touch-none" size="18px" />
-        {/if}
-    {/if}
-
-    {#each settings as s(s.id)}
+{#if context.editable}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <fieldset on:click|stopPropagation={() => select()} class="border-dashed border m-0.5">
+        <legend use:dragHandle class="ml-2 cursor-grab">
+            <Icon data={mdiCursorMove} class="inline-block w-5 h-5 dark:invert" />
+            {getLabel()}
+        </legend>
+        
         <svelte:component 
-            this={findWidget(s.type)}
-            settings={s}
-            {context}
+            this={findWidget(settings.type)}
+            settings={settings}
+            on:settings={e => update(e.detail)}
+            context={childContext}
         />
-    {/each}
-</Card>
+    </fieldset>
+{:else}
+    <svelte:component 
+        this={findWidget(settings.type)}
+        {settings}
+        {context}
+    />
+{/if}

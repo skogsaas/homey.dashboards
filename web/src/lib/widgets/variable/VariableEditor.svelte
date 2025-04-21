@@ -7,9 +7,6 @@
     import VariablePicker from '$lib/components/VariablePicker.svelte';
     import ColorPicker from '$lib/components/ColorPicker.svelte';
 
-    // Tailwind
-    import { Input, InputNumber, Select } from "stwui";
-
     // Stores
     import { variables } from '$lib/stores/homey';
 

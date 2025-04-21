@@ -14,9 +14,11 @@
     import { onDestroy, } from 'svelte';
     import { dateFnsLocale } from '$lib/stores/i18n';
     import type { Threshold, WidgetContext } from '$lib/types/Widgets';
+    import type { GridStackWidget } from 'gridstack';
+    import { alerts } from '$lib/stores/alerting';
     
-    export let settings: InsightSettings_v5;
     export let context: WidgetContext;
+    export let settings: InsightSettings_v5;
 
     let resolution: string;
     let series: Series_v5[];
@@ -96,7 +98,10 @@
             load = true;
         }
 
-        if(series === undefined || series.length != s.series?.length || JSON.stringify(series) !== JSON.stringify(s.series)) {
+        if(series === undefined || 
+            series.length != s.series?.length || 
+            JSON.stringify(series) !== JSON.stringify(s.series)
+        ) {
             if(s?.series !== undefined) {
                 series = [...s.series];
                 load = true;
@@ -160,8 +165,8 @@
                 }
             }
         }
-        catch(e) {
-            // Ignore for now.
+        catch(error) {
+            alerts.warn('Error!', 'Could not load series: ' + error, 5000);
         }
 
         if(data.datasets.length > series.length) {
@@ -191,7 +196,7 @@
         const sampleRate = series.sampleRate ?? 60;
 
         try {
-            const entries = await $homey.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
+            const entries = await $homey!.insights.getLogEntries({ id: log.id, uri: log.uri, resolution });
             const timeSeries = resample(entries, aggregation, sampleRate, log.decimals);
 
             const yAxis = 'y' + log.units;
@@ -210,8 +215,8 @@
 
             return Math.max(entries.step - entries.updatesIn, 10_000);
         }
-        catch(e) {
-            // Do nothing for now.
+        catch(error) {
+            alerts.warn('Error!', 'Could not load series: ' + error, 5000);
         }
 
         return 30_000; // By default refresh every 30 seconds
@@ -346,13 +351,13 @@
 {#if series === undefined || series.length === 0}
     <span>Insights not configured</span>
 {:else}
-    <div class="w-full min-h-0" class:flex-1={context.mode !== 'view'} class:h-96={context.mode === 'view'}>
-        <Chart 
-            bind:chart 
-            type="line" 
-            {data} 
-            {options} 
-            {plugins}
-        />
-    </div>
+<div style="height: {settings.height ?? 200}px;">
+    <Chart 
+        bind:chart 
+        type="line" 
+        {data} 
+        {options} 
+        {plugins}
+    />
+</div>
 {/if}

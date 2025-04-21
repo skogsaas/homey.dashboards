@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { devices, homey } from '$lib/stores/homey';
-    import type { WidgetContext } from '$lib/types/Widgets';
+    import { baseUrl, devices, homey } from '$lib/stores/homey';
 
     import type ImageSettings from './ImageSettings';
+    import type { WidgetContext } from '$lib/types/Widgets';
     
-    export let settings: ImageSettings;
     export let context: WidgetContext;
+    export let settings: ImageSettings;
 
     let refreshSlug = 0;
     let refreshClear: number | undefined;
@@ -24,7 +24,7 @@
     $: fontBlur = settings?.fontBlur ?? false;
 </script>
 
-<div class="relative w-full h-full">
+<div class="relative w-full">
     {#if device === undefined || image === undefined}
         {#if device === undefined && settings.deviceId !== undefined}
             <span>Device not found</span>

@@ -1,6 +1,6 @@
 {
   "name": "skogsaas.dashboards",
-  "version": "0.6.1",
+  "version": "1.0.0",
   "main": "app.ts",
   "scripts": {
     "build": "tsc",
@@ -16,6 +16,6 @@
   },
   "dependencies": {
     "@sentry/node": "^7.60.0",
-    "homey-api": "^3.0.9"
+    "homey-api": "^3.11.1"
   }
 }
