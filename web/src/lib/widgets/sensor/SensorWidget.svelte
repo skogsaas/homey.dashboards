@@ -95,6 +95,7 @@
 
         label = capability.title;
         value = capability.value;
+        values = capability.values ?? [];
         type = capability.type;
         unit = capability.units;
         iconUrl = capability.iconObj?.url;
