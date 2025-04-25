@@ -19,6 +19,8 @@ export function migrate(dashboard: any) : any {
         dashboard = migrateOnce(dashboard);
     }
 
+    dashboard = cleanV1(dashboard);
+
     return dashboard;
 }
 
@@ -30,6 +32,27 @@ export function migrateOnce(dashboard: any) : any {
         default: return migrate_v1_v2(dashboard as Dashboard_v1);
     }
 }
+
+function cleanV1(dashboard: any) : any {
+    if(dashboard.dashboards !== undefined) {
+        delete dashboard.dashboards;
+    }
+
+    if(dashboard.templates !== undefined) {
+        delete dashboard.templates;
+    }
+
+    if(dashboard.backgroundImage !== undefined) {
+        delete dashboard.backgroundImage;
+    }
+
+    if(dashboard.items !== undefined) {
+        delete dashboard.items;
+    }
+
+    return dashboard;
+}
+
 
 function migrate_v1_v2(v1: Dashboard_v1) : Dashboard_v2 {
     const items = (v1.items ?? []).map(item => migrateGridItem_v1_v2(item));
