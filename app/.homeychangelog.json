@@ -76,5 +76,8 @@
   },
   "0.15.4": {
     "en": "Add option to login with .local and add attempt for auto-refresh."
+  },
+  "1.0.0": {
+    "en": "Initial public release with dashboards and templates"
   }
 }
