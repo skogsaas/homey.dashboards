@@ -26,9 +26,12 @@ import VariableInfo from './variable';
 import DialogInfo from './dialog';
 
 export const widgets: WidgetInfo[] = [
+    //StatisticInfo,
     CapabilityInfo,
     CardInfo,
     DashboardLinkInfo,
+    DeviceInfo,
+    DialogInfo,
     FlowInfo,
     ForeachInfo,
     GridInfo,
@@ -40,14 +43,11 @@ export const widgets: WidgetInfo[] = [
     SectionsInfo,
     SensorInfo,
     SliderInfo,
-    //StatisticInfo,
     SwitchInfo,
     TemplateInfo,
-    ToggleInfo,
     TextInfo,
+    ToggleInfo,
     VariableInfo,
-    DeviceInfo,
-    DialogInfo,
 ];
 
 export const categories: WidgetCategory[] = [
