@@ -14,7 +14,6 @@
     import { onDestroy, } from 'svelte';
     import { dateFnsLocale } from '$lib/stores/i18n';
     import type { Threshold, WidgetContext } from '$lib/types/Widgets';
-    import type { GridStackWidget } from 'gridstack';
     import { alerts } from '$lib/stores/alerting';
     
     export let context: WidgetContext;

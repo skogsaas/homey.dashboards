@@ -1,8 +1,9 @@
 <script lang="ts">
     export let data: string | undefined;
     export let viewBox = '0 0 24 24';
+    export let size = 6;
     
-    let classes = "inline-block w-6 h-6 dark:invert";
+    let classes = "inline-block dark:fill-base-content" + " w-" + size + " h-" + size;
 	export { classes as class };
 
     export let extraClass = "";

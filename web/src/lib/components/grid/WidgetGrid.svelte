@@ -150,12 +150,12 @@
         dispatch('items', items);
     }
 
-    function getSettings(index: number) : WidgetSettings_v1 {
-        return items[index].settings;
-    }
-
     function addToGrid(element: HTMLDivElement, item: GridItem_v2) {
         grid.makeWidget(element, { id: item.id, ...item.position, settings: item.settings });
+    }
+
+    function childContext(index: number) {
+        return { ...context, update: (_s: WidgetSettings_v1) => update(index, _s) };
     }
 </script>
 
@@ -165,7 +165,7 @@
             <div class="grid-stack-item flex" use:addToGrid={item}>
                 <div class="grid-stack-item-content flex-grow">
                     {#if item.settings !== undefined}
-                        <Widget settings={item.settings} on:settings={(e) => update(index, e.detail)} {context} />
+                        <Widget settings={item.settings} context={childContext(index)} />
                     {/if}
                 </div>
             </div>

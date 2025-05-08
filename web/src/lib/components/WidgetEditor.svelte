@@ -8,6 +8,8 @@
     import WidgetTypeList from "./WidgetTypeList.svelte";
     import DndSingle from "./DndSingle.svelte";
     import DndTrash from "./DndTrash.svelte";
+    import { selection } from "$lib/stores/editing";
+    import WidgetSingle from "./WidgetSingle.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -22,7 +24,7 @@
     let preview: boolean = false;
 
     let drawerOpen: boolean = false;
-    let drawerContent: string = 'settings';
+    let drawerContent: 'settings' | 'widgets' = 'settings';
     
     let breadcrumbs: WidgetBreadcrumb[] = [];
     let breadcrumb: WidgetBreadcrumb | undefined;
@@ -30,17 +32,47 @@
     let context: WidgetContext;
     $: context = { 
         editable: !preview, 
-        readonly: true, 
-        breadcrumbs: [],
-        select: onBreadrumbs
+        readonly: true,
+        selected: breadcrumb?.settings.id,
+        select: select,
+        update: updateRoot,
+        remove: remove
     };
 
     function save() {
         dispatch('save');
     }
 
-    function select(_breadcrumb: WidgetBreadcrumb | undefined) {
+    function select(_breadcrumbs: WidgetBreadcrumb[]) {
+        breadcrumbs = _breadcrumbs;
+
+        if(breadcrumbs.length > 0) {
+            breadcrumb = breadcrumbs[breadcrumbs.length - 1];
+        } else {
+            breadcrumb = undefined;
+        }
+
+        selection.set(breadcrumb?.settings.id);
+
+        drawerContent = 'settings';
+        drawerOpen = false;
+    }
+
+    function updateRoot(_root: WidgetSettings_v1 | undefined) {
+        root = _root;
+        dispatch('root', root);
+    }
+
+    function remove(id: string) {
+        if(root?.id) {
+            updateRoot(undefined);
+        }
+    }
+
+    function edit(_breadcrumb: WidgetBreadcrumb | undefined) {
         breadcrumb = _breadcrumb;
+
+        selection.set(breadcrumb?.settings.id);
 
         drawerContent = 'settings';
         drawerOpen = true;
@@ -50,32 +82,14 @@
         preview = _preview;
     }
 
-    function onBreadrumbs(_breadcrumbs: WidgetBreadcrumb[]) {
-        breadcrumbs = _breadcrumbs;
-
-        if(breadcrumbs.length > 0) {
-            breadcrumb = breadcrumbs[breadcrumbs.length - 1];
-        } else {
-            breadcrumb = undefined;
-        }
-
-        drawerContent = 'settings';
-        drawerOpen = true;
-    }
-
     function onDragging(dragging: boolean) {
         if(dragging) {
             drawerOpen = false;
         }
     }
 
-    function onRoot(_root: WidgetSettings_v1 | undefined) {
-        root = _root;
-        dispatch('root', root);
-    }
-
-    function updateWidget(updated: WidgetSettings_v1) {
-        breadcrumb!.update(updated);
+    function updateSelected(updated: WidgetSettings_v1) {
+        breadcrumb?.context.update(updated);
     }
 </script>
 
@@ -134,7 +148,7 @@
                     <li>
                         <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <!-- svelte-ignore a11y-missing-attribute -->
-                        <a on:click={() => select(undefined)}>
+                        <a on:click={() => edit(undefined)}>
                             <Icon data={settingsIcon} />
                             {settingsTitle}
                         </a>
@@ -146,7 +160,7 @@
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
                             <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <!-- svelte-ignore a11y-missing-attribute -->
-                            <a on:click={() => select(b)}>
+                            <a on:click={() => edit(b)}>
                                 <Icon data={findInfo(b.settings.type)?.icon} />
                                 {findLabel(b.settings.type)}
                             </a>
@@ -158,11 +172,13 @@
 
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <div class="flex flex-row justify-center p-2" on:click={() => onBreadrumbs([])}>
+        <div class="flex flex-row justify-center p-2" on:click={() => select([])}>
             <div class="w-full">
-                <DndSingle editable={context.editable} item={root} on:item={e => onRoot(e.detail)} let:item>
-                    <Widget settings={item} {context} on:settings={e => onRoot(e.detail)} />
-                </DndSingle>
+                <WidgetSingle
+                    {context}
+                    item={root}
+                    updateItem={updateRoot}
+                />
             </div>
         </div>
     </div>
@@ -180,7 +196,7 @@
                     <svelte:component 
                         this={findEditor(breadcrumb.settings.type)}
                         settings={breadcrumb.settings}
-                        on:settings={e => updateWidget(e.detail)}
+                        on:settings={e => updateSelected(e.detail)}
                     />
                 {:else}
                     <div class="text-lg text-center">{settingsTitle} settings</div>

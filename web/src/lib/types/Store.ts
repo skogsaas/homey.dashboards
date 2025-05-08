@@ -17,6 +17,8 @@ export interface Dashboard_v2 {
 
     root: WidgetSettings_v1 | undefined;
 
+    theme: string | undefined;
+
     iconId?: string;
     backgroundImage?: string;
 

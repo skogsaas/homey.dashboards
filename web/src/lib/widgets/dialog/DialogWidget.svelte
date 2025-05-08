@@ -2,19 +2,20 @@
     import type { DialogSettings_v1 } from './DialogSettings';
     import Widget from '$lib/widgets/Widget.svelte';
     import type { WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
-    import { createEventDispatcher } from 'svelte';
     import DndSingle from '$lib/components/DndSingle.svelte';
+    import WidgetSingle from '$lib/components/WidgetSingle.svelte';
         
     export let settings: DialogSettings_v1;
     export let context: WidgetContext; 
-
-    const dispatch = createEventDispatcher();
 
     let modal: HTMLDialogElement;
 
     let summary: WidgetSettings_v1 | undefined;
     let details: WidgetSettings_v1 | undefined;
 
+    $: selected = context.selected === settings.id;
+    $: summaryContext = { ...context, update: updateSummary, insert: summary === undefined ? updateSummary : undefined, remove: removeSummary };
+    $: detailsContext = { ...context, update: updateDetails, insert: details === undefined ? updateDetails : undefined, remove: removeDetails };
     $: onSettings(settings);
 
     function onSettings(_settings: DialogSettings_v1) {
@@ -22,38 +23,50 @@
         details = _settings.details;
     }
 
-    function onSummaryItem(_item: WidgetSettings_v1) {
+    function updateSummary(_item: WidgetSettings_v1 | undefined) {
         summary = _item ? { ..._item } : undefined;
         settings = { ...settings, summary };
 
-        dispatch('settings', settings);
+        context.update(settings);
     }
 
-    function onDetailsItem(_item: WidgetSettings_v1) {
+    function updateDetails(_item: WidgetSettings_v1 | undefined) {
         details = _item ? { ..._item } : undefined;
         settings = { ...settings, details };
 
-        dispatch('settings', settings);
+        context.update(settings);
+    }
+
+    function removeSummary(id: string) {
+        if(summary?.id === id) {
+            updateSummary(undefined);
+        }
+    }
+
+    function removeDetails(id: string) {
+        if(details?.id === id) {
+            updateDetails(undefined);
+        }
     }
 </script>
 
 {#if context.editable}
-    <button class="btn btn-circle btn-sm" on:click|stopPropagation={e => modal.show()}>Open</button>
+    {#if selected}
+        <button class="btn btn-circle btn-sm" on:click|stopPropagation={e => modal.show()}>Open</button>
+    {/if}
 
-    <DndSingle
+    <WidgetSingle
+        id={settings.id}
+        {context}
         item={summary}
-        on:item={e => onSummaryItem(e.detail)} 
-        editable={context.editable}
-        class="w-full {context.editable ? 'min-h-[50px] min-w-[100px]' : ''} {summary === undefined ? 'border border-dashed' : ''}"
-        let:item
-    >
-        <Widget {context} settings={item} on:settings={e => onSummaryItem(e.detail)} />
-    </DndSingle>
+        updateItem={updateSummary}
+        class="w-full {context.editable && summary === undefined ? 'min-w-[100px]' : ''} {summary === undefined ? 'border border-dashed' : ''}"
+    />
 {:else if summary !== undefined}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div on:click|stopPropagation|preventDefault={e => modal.show()}>
-        <Widget {context} settings={summary} />
+        <Widget context={summaryContext} settings={summary} />
     </div>
 {/if}
 
@@ -66,15 +79,13 @@
         on:click|stopPropagation={e => {}}
     >
         <div class="modal-box flex flex-col pointer-events-auto">
-            <DndSingle 
+            <WidgetSingle
+                id={settings.id}
+                {context}
                 item={details}
-                on:item={e => onDetailsItem(e.detail)} 
-                editable={context.editable}
-                class="w-full {context.editable ? 'min-h-[50px]' : ''} {details === undefined ? 'border border-dashed' : ''}"
-                let:item
-            >
-                <Widget {context} settings={item} on:settings={e => onDetailsItem(e.detail)} />
-            </DndSingle>
+                updateItem={updateDetails}
+                class="w-full {details === undefined ? 'border border-dashed' : ''}"
+            />
 
             <div class="modal-action">
                 <form method="dialog">
@@ -87,7 +98,7 @@
     <dialog bind:this={modal} class="modal modal-bottom sm:modal-middle">
         <div class="modal-box flex flex-col">
             {#if details !== undefined}
-                <Widget {context} settings={details} />
+                <Widget context={detailsContext} settings={details} />
             {/if}
         </div>
 

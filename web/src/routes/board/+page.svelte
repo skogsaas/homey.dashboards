@@ -137,7 +137,8 @@
             id: uuid(),
             version: 2,
             title: 'New dashboard',
-            root: undefined, 
+            root: undefined,
+            theme: undefined
         }
 
         root = dashboard.root;
@@ -149,7 +150,7 @@
   <title>{dashboard !== undefined ? dashboard.title : 'Dashboard'}</title>
 </svelte:head>
 
-<div class="w-full h-full pb-16 md:pb-0">
+<div class="w-full h-full pb-16 md:pb-0" data-theme={dashboard?.theme ?? ''}>
     {#if $editing && dashboard !== undefined}
         <WidgetEditor
             title={dashboard?.title ?? 'Dashboard title'}

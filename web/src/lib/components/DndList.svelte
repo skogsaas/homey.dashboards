@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import {dndzone, dragHandleZone} from "svelte-dnd-action";
+    import {dragHandleZone} from "svelte-dnd-action";
     
     export let editable: boolean;
     export let items: any[] | undefined;

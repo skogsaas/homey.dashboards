@@ -26,7 +26,7 @@
         {#if settings.iconId !== undefined}
             <Icon data={getIcon(settings.iconId)} />
         {:else}
-            {#await $homey.baseUrl}
+            {#await $homey?.baseUrl}
                 ...
             {:then url}
                 <img class="w-8 h-8 m-1 dark:invert" src={url + device?.iconObj.url} alt={device?.icon} />

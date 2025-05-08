@@ -5,9 +5,9 @@
     import type { SwitchSettings_v1, SwitchCase_v1 } from './SwitchSettings';
 
     import Widget from '$lib/widgets/Widget.svelte';
-    import { devices, zones } from '$lib/stores/homey';
+    import { devices } from '$lib/stores/homey';
     import type { CapabilityEvent, DeviceObj, HomeyEmitter } from '$lib/types/Homey';
-    import DndSingle from '$lib/components/DndSingle.svelte';
+    import WidgetSingle from '$lib/components/WidgetSingle.svelte';
     
     export let context: WidgetContext;
     export let settings: SwitchSettings_v1;
@@ -24,8 +24,9 @@
     let child: WidgetSettings_v1 | undefined;
 
     $: onSettings(settings);
-    $: selectCase(selectedId)
+    $: selectCase(selectedId);
     $: editable = context.editable && selectedId !== undefined;
+    $: childContext = { ...context, editable };
 
     function onSettings(_settings: SwitchSettings_v1) {
         caseKey = _settings.case;
@@ -131,7 +132,7 @@
         return false;
     }
 
-    function onItem(_item: WidgetSettings_v1 | undefined) {
+    function updateItem(_item: WidgetSettings_v1 | undefined) {
         child = _item;
 
         const index = cases.findIndex(c => c.id === selectedId);
@@ -142,17 +143,6 @@
         dispatch('settings', settings);
 
         selectCase(selectedId);
-    }
-
-    function updateWidget(_item: WidgetSettings_v1) {
-        child = { ..._item };
-
-        const index = cases.findIndex(c => c.id === selectedId);
-        cases[index] = { ...cases[index], item: child };
-        cases = [...cases];
-
-        settings = { ...settings, cases };
-        dispatch('settings', settings);
     }
 
     function selectCase(_selectedId: string | undefined) {
@@ -172,15 +162,14 @@
             </button>
         {/each}
     </div>
-    <DndSingle 
+
+    <WidgetSingle
+        id={settings.id}
+        context={childContext}
         item={child}
-        on:item={e => onItem(e.detail)} 
-        {editable}
-        class="w-full {context.editable ? 'min-h-[50px]' : ''}"
-        let:item
-    >
-        <Widget {context} settings={item} on:settings={e => updateWidget(e.detail)} />
-    </DndSingle>
+        {updateItem}
+        class="w-full"
+    />
 {:else if child !== undefined}
-    <Widget {context} settings={child} />
+    <Widget context={context} settings={child} />
 {/if}

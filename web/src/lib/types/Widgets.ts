@@ -9,13 +9,29 @@ export interface WidgetSettings_v1 {
 export interface WidgetContext {
     editable: boolean;
     readonly: boolean;
-    breadcrumbs: WidgetBreadcrumb[];
+    
+    // Called by widgets to notify the editing context that this widget is selected.
     select: (items: WidgetBreadcrumb[]) => void;
+
+    // Called by widgets and the editor to propagate changes to settings up the tree.
+    update: (settings: WidgetSettings_v1) => void;
+
+    // Optional methods the parent widget can provide to remove a child.
+    remove: ((id: string) => void) | undefined;
 }
 
 export interface WidgetBreadcrumb {
     settings: WidgetSettings_v1;
-    update: (settings: WidgetSettings_v1) => void
+    context: WidgetContext;
+}
+
+export interface WidgetMenuContext {
+    operation: 'cut' | 'copy';
+    settings: WidgetSettings_v1;
+
+    // When the operation is 'cut', the source context can be used to remove the widget from 
+    // the source context.
+    source: WidgetContext | undefined;
 }
 
 export interface WidgetCategory {

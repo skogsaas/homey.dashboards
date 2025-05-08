@@ -1,7 +1,6 @@
 import type { ComponentType } from 'svelte';
 import type { WidgetCategory, WidgetInfo, WidgetSettings_v1 } from '$lib/types/Widgets';
 
-import CapabilityInfo from './capability';
 import CardInfo from './card';
 import DashboardLinkInfo from './dashboard-link';
 import DeviceInfo from './device';
@@ -27,7 +26,6 @@ import DialogInfo from './dialog';
 
 export const widgets: WidgetInfo[] = [
     //StatisticInfo,
-    CapabilityInfo,
     CardInfo,
     DashboardLinkInfo,
     DeviceInfo,

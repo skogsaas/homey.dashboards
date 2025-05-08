@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { GridSettings_v1 } from './GridSettings';
     import type { WidgetContext } from '$lib/types/Widgets';
-    import { createEventDispatcher } from 'svelte';
     import type { GridItem_v2, GridOptions_v1 } from '$lib/types/Grid';
     import WidgetGrid from '$lib/components/grid/WidgetGrid.svelte';
     import Icon from '$lib/components/Icon.svelte';
@@ -10,8 +9,6 @@
     
     export let settings: GridSettings_v1;
     export let context: WidgetContext;
-
-    const dispatch = createEventDispatcher();
 
     let items: GridItem_v2[];
     let options: GridOptions_v1;
@@ -27,7 +24,7 @@
         items = [..._items];
         settings = { ...settings, items };
 
-        dispatch('settings', settings);
+        context.update(settings);
     }
 
     function addCard() {
@@ -37,7 +34,7 @@
         items = [...items, item];
         settings = { ...settings, items };
 
-        dispatch('settings', settings);
+        context.update(settings);
     }
 </script>
 
