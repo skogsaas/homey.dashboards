@@ -5,7 +5,10 @@
     import { copying, selection } from '$lib/stores/editing';
     import { clone } from '$lib/widgets/widgetUtils';
     import Icon from './Icon.svelte';
-    import { mdiPlus } from './icons';
+    import { mdiClose, mdiContentPaste, mdiPlus } from './icons';
+    import WidgetTypePicker from './WidgetTypePicker.svelte';
+    import { findCreate } from '$lib/widgets';
+    import WidgetTypeList from './WidgetTypeList.svelte';
     
     export let id: string;
     export let items: WidgetSettings_v1[];
@@ -18,6 +21,8 @@
     $: selected = id === $selection;
     $: childContext = { ...context, update: updateChild, remove: removeChild };
     $: extraClasses = context.editable && items.length === 0 ? 'min-h-8' : ''
+
+    let modal: HTMLDialogElement;
 
     function onItemList(_items: WidgetSettings_v1[]) {
         items = [..._items];
@@ -59,6 +64,13 @@
 
         insertChild(item);
     }
+
+    function onAdd(type: string) {
+        const item = findCreate(type)!();
+        insertChild(item);
+
+        modal.close();
+    }
 </script>
 
 <DndList 
@@ -71,14 +83,34 @@
     <Widget context={childContext} settings={item} />
 </DndList>
 
-{#if context.editable && $copying !== undefined}
-    <div class="flex flex-col items-center justify-center w-full h-full p-2border-2 border-dashed rounded-lg">
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <!-- svelte-ignore a11y-no-static-element-interactions -->
-        <!-- svelte-ignore a11y-missing-attribute -->
-        <a on:click={e => onPaste()}>
-            <Icon data={mdiPlus} extraClass="stroke-secondary" />
-        </a>
-        <span class="text-[10px]">Add</span>
+{#if context.editable && selected}
+    <div class="join flex flex-row justify-center w-full mt-2">
+        {#if $copying !== undefined}
+            <button class="btn btn-outline btn-ghost btn-sm join-item" on:click={onPaste}>
+                <Icon data={mdiContentPaste} />
+                <span class="text-xs">Paste</span>
+            </button>
+        {/if}
+
+        <button class="btn btn-outline btn-ghost btn-sm join-item" on:click={() => modal.showModal()}>
+            <Icon data={mdiPlus} />
+            <span class="text-xs">Add</span>
+        </button>
     </div>
 {/if}
+
+<dialog bind:this={modal} class="modal">
+    <div class="modal-box flex flex-col">
+        <div class="flex-shrink-0 mb-2">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+                    <Icon data={mdiClose} />
+                </button>
+            </form>
+        </div>
+        
+        <div class="flex-grow overflow-auto">
+            <WidgetTypeList on:click={e => onAdd(e.detail)} mode="click" />
+        </div>
+    </div>
+</dialog>

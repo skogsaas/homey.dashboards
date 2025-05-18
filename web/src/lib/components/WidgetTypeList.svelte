@@ -12,6 +12,8 @@
     import type { TemplateMap } from "$lib/types/Store";
     import { createEventDispatcher } from "svelte";
 
+    export let mode: 'drag' | 'click' = 'drag';
+
     const dispatch = createEventDispatcher();
     const flipDurationMs = 300;    
 
@@ -112,25 +114,47 @@
             dispatch('dragging', false);
         }
     }
+
+    function handleTemplateClick(item: TemplateSettings_v1) {
+        dispatch('click', item.type);
+    }
+
+    function handleWidgetClick(item: WidgetSettings_v1) {
+        dispatch('click', item.type);
+    }
 </script>
 
 <div class="w-full h-full">
     <h2 class="text-xl">Templates</h2>
 
     {#if templateItems.length > 0}
-        <div
-            class="w-full p-2"
-            use:dndzone={{ items: templateItems, flipDurationMs, centreDraggedOnCursor: true, dropFromOthersDisabled: true}}
-            on:consider={e => considerDndTemplates(e.detail.items, e.detail.info.trigger)}
-            on:finalize={e => finalizeDndTemplates(e.detail.items, e.detail.info.trigger)}
-        >
-            {#each templateItems as item(item.id)}
-                <div class="flex flex-row py-1">
-                    <Icon data={mdiPlay} />
-                    <span>{getTemplateLabel(item.templateId)}</span>
-                </div>
-            {/each}
-        </div>
+        {#if mode === 'drag'}
+            <div
+                class="w-full p-2"
+                use:dndzone={{ items: templateItems, flipDurationMs, centreDraggedOnCursor: true, dropFromOthersDisabled: true}}
+                on:consider={e => considerDndTemplates(e.detail.items, e.detail.info.trigger)}
+                on:finalize={e => finalizeDndTemplates(e.detail.items, e.detail.info.trigger)}
+            >
+                {#each templateItems as item(item.id)}
+                    <div class="flex flex-row py-1">
+                        <Icon data={mdiPlay} />
+                        <span>{getTemplateLabel(item.templateId)}</span>
+                    </div>
+                {/each}
+            </div>
+        {:else if mode === 'click'}
+            <div class="w-full p-2 cursor-pointer">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                {#each templateItems as item(item.id)}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <div class="flex flex-row py-1" on:click={() => handleTemplateClick(item)}>
+                        <Icon data={mdiPlay} />
+                        <span>{getTemplateLabel(item.templateId)}</span>
+                    </div>
+                {/each}
+            </div>
+        {/if}
     {:else}
         <div class="w-full p-2">
             <span class="text-warning italic">No templates found.</span>
@@ -139,18 +163,33 @@
 
     {#each widgetItems as items, index}
         <h2 class="text-xl">{categories[index].label}</h2>
-        <div
-            class="w-full p-2"
-            use:dndzone={{ items, flipDurationMs, centreDraggedOnCursor: true, dropFromOthersDisabled: true}}
-            on:consider={e => considerDndWidgets(index, e.detail.items, e.detail.info.trigger)}
-            on:finalize={e => finalizeDndWidgets(index, e.detail.items, e.detail.info.trigger)}
-        >
-            {#each items as item(item.id)}
-                <div class="flex flex-row py-1">
-                    <Icon data={getWidgetIcon(item.type)} />
-                    <span class="ml-2">{getWidgetLabel(item.type)}</span>
-                </div>
-            {/each}
-        </div>
+
+        {#if mode === 'drag'}
+            <div
+                class="w-full p-2"
+                use:dndzone={{ items, flipDurationMs, centreDraggedOnCursor: true, dropFromOthersDisabled: true}}
+                on:consider={e => considerDndWidgets(index, e.detail.items, e.detail.info.trigger)}
+                on:finalize={e => finalizeDndWidgets(index, e.detail.items, e.detail.info.trigger)}
+            >
+                {#each items as item(item.id)}
+                    <div class="flex flex-row py-1">
+                        <Icon data={getWidgetIcon(item.type)} />
+                        <span class="ml-2">{getWidgetLabel(item.type)}</span>
+                    </div>
+                {/each}
+            </div>
+        {:else if mode === 'click'}
+            <div class="w-full p-2 cursor-pointer">
+                <!-- svelte-ignore a11y-click-events-have-key-events -->
+                {#each items as item(item.id)}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    <div class="flex flex-row py-1" on:click={() => handleWidgetClick(item)}>
+                        <Icon data={getWidgetIcon(item.type)} />
+                        <span class="ml-2">{getWidgetLabel(item.type)}</span>
+                    </div>
+                {/each}
+            </div>
+        {/if}
     {/each}
 </div>
