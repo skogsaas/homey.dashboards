@@ -6,7 +6,6 @@
     import { clone } from '$lib/widgets/widgetUtils';
     import Icon from './Icon.svelte';
     import { mdiClose, mdiContentPaste, mdiPlus } from './icons';
-    import WidgetTypePicker from './WidgetTypePicker.svelte';
     import { findCreate } from '$lib/widgets';
     import WidgetTypeList from './WidgetTypeList.svelte';
     

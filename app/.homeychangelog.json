@@ -82,5 +82,8 @@
   },
   "1.1.0": {
     "en": "Refactor editing mode and add support for cut/copy/paste widgets"
+  },
+  "1.2.0": {
+    "en": "Add \"Add\" button to open widget type dialog. This allows for adding without using drag & drop."
   }
 }
