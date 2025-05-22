@@ -289,10 +289,24 @@
         let previous: Threshold | undefined = undefined;
 
         if(thresholds !== undefined) {
+            // Go through all thresholds and get the pixels for each threshold.
+            // This is in order to skip all thresholds that are not in the chart area.
+            const pixels = thresholds
+                .map(threshold => scale.getPixelForValue(threshold.value));
+
+            // Go through all threasholds backwards
             for (let i = thresholds.length - 1; i >= 0; i--) {
                 const threshold = thresholds[i];
+                const pixel = pixels[i];
+
+                // Check if the next pixel is the same as the current pixel.
+                if(i > 0 && pixel === pixels[i - 1]) {
+                    continue;
+                }
                 
-                if(previous === undefined) {                    
+                if(previous === undefined) {
+                    const yPos = scale.getPixelForValue(threshold.value);
+
                     gradient.addColorStop(0, threshold.color); // Base color start
                 } else {
                     const yPos = scale.getPixelForValue(threshold.value);

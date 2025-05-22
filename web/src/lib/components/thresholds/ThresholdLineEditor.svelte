@@ -32,8 +32,7 @@
     }
 
     function onValue(v: number) {
-
-        if(Number.isNaN(v)) {
+        if(Number.isNaN(v) || v === undefined || v === null) {
             error = v + ' is not a valid number';
         } else if (v < min) {
             error = 'Must be greater than ' + min;

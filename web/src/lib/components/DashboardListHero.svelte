@@ -2,13 +2,14 @@
     import { goto } from '$app/navigation';
     import { base } from '$app/paths';
     import { deleteDashboard as apiDelete } from '$lib/api/webhook';
+    import { alerts } from '$lib/stores/alerting';
     import { favorite } from '$lib/stores/favorite';
     
-    import { dashboards as homeyDashboards } from '$lib/stores/homey';
+    import { homey, dashboards as homeyDashboards, stores } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import type { Dashboard_v2 } from '$lib/types/Store';
     import Icon from './Icon.svelte';
-    import { mdiDotsVertical, mdiStar } from './icons';
+    import { mdiDotsVertical, mdiStar, mdiTrashCan } from './icons';
     import { getIcon } from './icons/utils';
 
     $: dashboards = Object.values({ ...$homeyDashboards, ...$localDashboards });
@@ -17,8 +18,18 @@
         favorite.set(dashboard.id);
     }
 
-    function deleteDashboard(dashboard: Dashboard_v2) {
+    async function deleteDashboard(dashboard: Dashboard_v2) {
+        const storeId = Object.values($stores).find(store => store.dashboards.some(dash => dash?.id === dashboard?.id))?.id;
 
+        if (!storeId) {
+            alerts.error('Error', 'Could not find the store for the dashboard', 5000);
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to delete '${dashboard.title}' ?`)) {
+            await apiDelete($homey!.id, storeId, dashboard);
+            alerts.success('Deleted!', 'The dashboard was deleted.', 5000);
+        }
     }
 </script>
 
@@ -47,7 +58,7 @@
                                     </summary>
                                     <ul class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
                                         <li><a on:click={e => favoriteDashboard(dashboard)}><Icon data={mdiStar} />Favorite</a></li>
-                                        <!--<li><a class="text-error" on:click={e => deleteDashboard(dashboard)}><Icon data={mdiTrashCan} />Delete</a></li>-->
+                                        <li><a class="text-error" on:click={e => deleteDashboard(dashboard)}><Icon data={mdiTrashCan} />Delete</a></li>
                                     </ul>
                                 </details>
                                 

@@ -85,5 +85,8 @@
   },
   "1.2.0": {
     "en": "Add \"Add\" button to open widget type dialog. This allows for adding without using drag & drop."
+  },
+  "1.2.1": {
+    "en": "Fixed insight unresponsive bug and insight invalid gradient color when base should not be visible"
   }
 }
