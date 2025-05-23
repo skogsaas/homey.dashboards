@@ -1,28 +1,29 @@
 import type { ComponentType } from 'svelte';
 import type { WidgetCategory, WidgetInfo, WidgetSettings_v1 } from '$lib/types/Widgets';
 
-import CardInfo from './card';
-import DashboardLinkInfo from './dashboard-link';
-import DeviceInfo from './device';
-import FlowInfo from './flow';
-import ForeachInfo from './foreach';
-import GridInfo from './grid';
-import IframeInfo from './iframe';
-import ImageInfo from './image';
-import InsightInfo from './insight';
+import CardInfo from '$lib/widgets/card';
+import DashboardLinkInfo from '$lib/widgets/dashboard-link';
+import DeviceInfo from '$lib/widgets/device';
+import FlowInfo from '$lib/widgets/flow';
+import ForeachInfo from '$lib/widgets/foreach';
+import GridInfo from '$lib/widgets/grid';
+import IframeInfo from '$lib/widgets/iframe';
+import ImageInfo from '$lib/widgets/image';
+import InsightInfo from '$lib/widgets/insight';
 import ListInfo from '$lib/widgets/list';
+import ReadonlyInfo from '$lib/widgets/readonly';
 import SectionInfo from '$lib/widgets/section';
 import SectionsInfo from '$lib/widgets/sections';
 import SensorInfo from '$lib/widgets/sensor';
-import SliderInfo from './slider';
-import StatisticInfo from './statistic';
-import SwitchInfo from './switch';
-import TemplateInfo from './template';
-import TextInfo from './text';
-import ToggleInfo from './toggle';
-import UnknownInfo from './unknown';
-import VariableInfo from './variable';
-import DialogInfo from './dialog';
+import SliderInfo from '$lib/widgets/slider';
+import StatisticInfo from '$lib/widgets/statistic';
+import SwitchInfo from '$lib/widgets/switch';
+import TemplateInfo from '$lib/widgets/template';
+import TextInfo from '$lib/widgets/text';
+import ToggleInfo from '$lib/widgets/toggle';
+import UnknownInfo from '$lib/widgets/unknown';
+import VariableInfo from '$lib/widgets/variable';
+import DialogInfo from '$lib/widgets/dialog';
 
 export const widgets: WidgetInfo[] = [
     //StatisticInfo,
@@ -37,6 +38,7 @@ export const widgets: WidgetInfo[] = [
     ImageInfo,
     InsightInfo,
     ListInfo,
+    ReadonlyInfo,
     SectionInfo,
     SectionsInfo,
     SensorInfo,

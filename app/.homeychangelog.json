@@ -88,5 +88,8 @@
   },
   "1.2.1": {
     "en": "Fixed insight unresponsive bug and insight invalid gradient color when base should not be visible"
+  },
+  "1.3.0": {
+    "en": "Added readonly widget for disabling all child widgets."
   }
 }
