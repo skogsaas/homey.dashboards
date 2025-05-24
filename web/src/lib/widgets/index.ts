@@ -14,6 +14,7 @@ import ListInfo from '$lib/widgets/list';
 import ReadonlyInfo from '$lib/widgets/readonly';
 import SectionInfo from '$lib/widgets/section';
 import SectionsInfo from '$lib/widgets/sections';
+import SecuredInfo from '$lib/widgets/secured';
 import SensorInfo from '$lib/widgets/sensor';
 import SliderInfo from '$lib/widgets/slider';
 import StatisticInfo from '$lib/widgets/statistic';
@@ -41,6 +42,7 @@ export const widgets: WidgetInfo[] = [
     ReadonlyInfo,
     SectionInfo,
     SectionsInfo,
+    SecuredInfo,
     SensorInfo,
     SliderInfo,
     SwitchInfo,
