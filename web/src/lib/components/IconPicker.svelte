@@ -7,6 +7,7 @@
 
     export let iconId: string | undefined;
     export let name: string = 'Icon';
+    export let hideLabel: boolean = false;
 
     const dispatch = createEventDispatcher();
     
@@ -60,9 +61,11 @@
 </script>
 
 <label class="form-control w-full">
-    <div class="label">
-        <span class="label-text">{name}</span>
-    </div>
+    {#if !hideLabel}
+        <div class="label">
+            <span class="label-text">{name}</span>
+        </div>
+    {/if}
     <div class="join flex items-center">
         <input type="text" class="input input-bordered grow join-item" bind:value={iconId} placeholder="Icon"/>
         <button class="btn btn-outline btn-primary join-item" on:click={() => modal.showModal()}>

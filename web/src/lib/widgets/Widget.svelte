@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { findLabel, findWidget } from '$lib/widgets';
-    import type { WidgetBreadcrumb, WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
+    import { findLabel, findMigration, findWidget } from '$lib/widgets';
+    import type { WidgetBreadcrumb, WidgetContext, WidgetDataObject, WidgetSettings_v1 } from '$lib/types/Widgets';
     import { dragHandle } from 'svelte-dnd-action';
     import Icon from '$lib/components/Icon.svelte';
     import { mdiContentCopy, mdiContentCut, mdiCursorMove, mdiDotsVertical, mdiDrag, mdiTrashCan } from '$lib/components/icons';
@@ -14,10 +14,11 @@
     let dropdownOpen = false;
 
     $: selected = settings.id === $selection;
+    $: migrated = migrateWidget(settings);
     $: childContext = { ...context, select };
 
     function select(breadcrumbs: WidgetBreadcrumb[]) {
-        context.select([{ settings, context }, ...breadcrumbs ]);
+        context.select([{ settings, context: childContext }, ...breadcrumbs ]);
     }
 
     function getLabel() {
@@ -56,6 +57,22 @@
         context.select([]); // Select the parent widget before removing child.
 
         context.remove(settings.id);
+    }
+
+    function migrateWidget(_settings: WidgetSettings_v1) : WidgetSettings_v1 {
+        var migration = findMigration(settings.type);
+
+        if(migration === undefined) {
+            return settings;
+        }
+
+        let _migrated = migration(_settings);
+
+        if(_migrated.version !== _settings.version || _migrated.type !== _settings.type) {
+            context.update(_migrated);
+        }
+
+        return _migrated;
     }
 </script>
 
@@ -98,15 +115,15 @@
         {/if}
         
         <svelte:component 
-            this={findWidget(settings.type)}
-            {settings}
+            this={findWidget(migrated.type)}
+            settings={migrated}
             context={childContext}
         />
     </div>
 {:else}
     <svelte:component 
-        this={findWidget(settings.type)}
-        {settings}
+        this={findWidget(migrated.type)}
+        settings={migrated}
         context={childContext}
     />
 {/if}

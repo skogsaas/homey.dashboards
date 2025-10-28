@@ -2,8 +2,18 @@ import { randomUUID } from 'crypto';
 import Homey from 'homey';
 
 interface Store_v1 {
-  dashboards: any[];
-  templates: any[];
+  dashboards: DashboardHeader_v1[];
+  templates: TemplateHeader_v1[];
+}
+
+interface DashboardHeader_v1 {
+  id: string;
+  title: string;
+}
+
+interface TemplateHeader_v1 {
+  id: string;
+  title: string;
 }
 
 export class DashboardDriver extends Homey.Driver {
@@ -14,7 +24,7 @@ export class DashboardDriver extends Homey.Driver {
   async onPairListDevices() {
     return [
       {
-        name: 'Dashboard',
+        name: 'Store',
         data: {
           id: randomUUID(),
         },
@@ -45,13 +55,14 @@ export class DashboardDriver extends Homey.Driver {
     const index = store.dashboards.findIndex(dashboard => dashboard?.id === dashboardId);
 
     if(index == -1) {
+      // Add a new dashboard
       store.dashboards.push(settings);
+    } else if(settings !== null) {
+      // Update the existing dashboard
+      store.dashboards[index] = settings;
     } else {
-      if(settings !== null) {
-        store.dashboards[index] = settings;
-      } else {
-        store.dashboards = store.dashboards.filter((value, i) => i !== index && value !== null);
-      }
+      // Remove the existing dashboard
+      store.dashboards = store.dashboards.filter((value, i) => i !== index && value !== null);
     }
 
     await device.setSettings(store);

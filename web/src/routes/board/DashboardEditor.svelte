@@ -4,6 +4,7 @@
 
     import IconPicker from '$lib/components/IconPicker.svelte';
     import TextPicker from '$lib/components/TextPicker.svelte';
+    import type { WidgetContext } from '$lib/types/Widgets';
 
     export let settings: Dashboard_v2;
 

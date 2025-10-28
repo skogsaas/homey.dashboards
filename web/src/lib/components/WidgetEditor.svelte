@@ -1,15 +1,15 @@
 <script lang="ts">
-    import type { WidgetBreadcrumb, WidgetContext, WidgetSettings_v1 } from "$lib/types/Widgets";
+    import type { WidgetBreadcrumb, WidgetSettings_v1 } from "$lib/types/Widgets";
     import { createEventDispatcher } from "svelte";
     import Icon from "./Icon.svelte";
     import { mdiFloppy, mdiMagnify, mdiMenu, mdiPencil, mdiTrashCan, mdiWidgets } from "./icons";
     import { findEditor, findInfo, findLabel } from "$lib/widgets";
-    import Widget from "$lib/widgets/Widget.svelte";
     import WidgetTypeList from "./WidgetTypeList.svelte";
-    import DndSingle from "./DndSingle.svelte";
     import DndTrash from "./DndTrash.svelte";
     import { selection } from "$lib/stores/editing";
     import WidgetSingle from "./WidgetSingle.svelte";
+    import BindingEditor from "./BindingEditor.svelte";
+    import { dataObjects } from "$lib/stores/homey";
 
     const dispatch = createEventDispatcher();
 
@@ -29,11 +29,11 @@
     let breadcrumbs: WidgetBreadcrumb[] = [];
     let breadcrumb: WidgetBreadcrumb | undefined;
 
-    let context: WidgetContext;
-    $: context = { 
+    $: context = {
         editable: !preview, 
         readonly: true,
         selected: breadcrumb?.settings.id,
+        data: { ...$dataObjects },
         select: select,
         update: updateRoot,
         remove: remove
@@ -175,6 +175,7 @@
         <div class="flex flex-row justify-center p-2" on:click={() => select([])}>
             <div class="w-full">
                 <WidgetSingle
+                    id={root?.id}
                     {context}
                     item={root}
                     updateItem={updateRoot}
@@ -192,9 +193,16 @@
             {:else if drawerContent === 'settings'}
                 {#if breadcrumb !== undefined}
                     <div class="text-lg text-center">{findLabel(breadcrumb.settings.type)} settings</div>
+
+                    <BindingEditor 
+                        settings={breadcrumb.settings}
+                        context={breadcrumb.context} 
+                        on:settings={e => updateSelected(e.detail)}
+                    />
             
                     <svelte:component 
                         this={findEditor(breadcrumb.settings.type)}
+                        context={breadcrumb.context}
                         settings={breadcrumb.settings}
                         on:settings={e => updateSelected(e.detail)}
                     />

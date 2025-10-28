@@ -24,6 +24,7 @@ import type { Dashboard_v2, DashboardMap, Store_v1, StoreMap, Template_v1, Templ
 import { driverId } from '$lib/constants';
 
 import BuiltInTemplates from './builtin-templates.json';
+import type { WidgetDataObject } from '$lib/types/Widgets';
 
 function createHomeys() {
     const { subscribe, set, update } = writable({} as HomeyMap);
@@ -180,6 +181,8 @@ export const advancedFlows = createAdvancedFlows();
 export const zones = createZones();
 export const images = createImages();
 export const insights = writable({} as (LogMap));
+
+export const dataObjects = writable({} as { [key: string]: WidgetDataObject });
 
 export const stores = derived(
     devices, 

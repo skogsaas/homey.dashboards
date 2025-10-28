@@ -71,11 +71,13 @@
         {/if}
 
         {#if mode === 'readonly'}
+        
             <WidgetSingle
                 id={settings.id}
                 context={!locked ? context : readonlyContext}
                 {item} 
                 {updateItem}
+                class="w-full"
             />
         {:else if mode === 'blur'}
             <WidgetSingle

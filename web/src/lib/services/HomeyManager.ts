@@ -1,6 +1,9 @@
 import { alerts } from "$lib/stores/alerting";
-import { advancedFlows, basicFlows, connection, devices, flowFolders, images, insights, session, variables, zones, } from "$lib/stores/homey";
+import { settable, trigger } from "$lib/stores/events";
+import { advancedFlows, basicFlows, connection, dataObjects, devices, flowFolders, images, insights, session, variables, zones, } from "$lib/stores/homey";
 import type { AdvancedFlow, BasicFlow, CapabilityEvent, Homey, VariableEvent } from "$lib/types/Homey";
+import type { WidgetDataObject } from "$lib/types/Widgets";
+import { type Writable, writable } from "svelte/store";
 
 export class HomeyManager {
     private homey: Homey;
@@ -67,9 +70,97 @@ export class HomeyManager {
                 const _devices = await this.homey.devices.getDevices();
                 devices.set(_devices);
 
+                // Map devices to data objects
+                const datas = Object.values(_devices).reduce((acc, d) => {
+                    acc[d.uri] = {
+                        label: d.name,
+                        type: 'device',
+                        parentId: d.zone,
+                        states: {
+                            name: { label: 'Name', type: 'string', writable: true, value: writable(d.name) },
+                            driver: { label: 'Driver', type: 'string', writable: false, value: writable(d.driverId) },
+                            class: { label: 'Class', type: 'string', writable: false, value: writable(d.class) },
+                            virtualClass: { label: 'Virtual Class', type: 'string', writable: false, value: writable(d.class) },
+                            available: { label: 'Available', type: 'boolean', writable: false, value: writable(d.available) },
+                            unavailableMessage: { label: 'Unavailable Message', type: 'string', writable: false, value: writable(d.unavailableMessage) },
+                            warningMessage: { label: 'Warning Message', type: 'string', writable: false, value: writable(d.warningMessage) },
+                            ready: { label: 'Ready', type: 'boolean', writable: false, value: writable(d.ready) },
+                            color: { label: 'Color', type: 'string', writable: false, value: writable(d.color) },
+                        },
+                        events: {},
+                        actions: {}
+                    };
+                    return acc;
+                }, {} as { [key: string]: WidgetDataObject });
+
+                // For each device, add all capabilities as individual data objects.
+                Object.values(_devices).forEach(d => {
+                    Object.values(d.capabilitiesObj).reduce((acc, c) => {
+                        acc[d.uri + ':' + c.id] = { 
+                            label: c.title,
+                            type: 'capability',
+                            parentId: d.uri,
+                            states: {
+                                name: { label: 'Name', type: 'string', writable: false, value: writable<string>(c.title) },
+                                value: { 
+                                    label: 'Value', 
+                                    type: c.type, 
+                                    writable: c.setable, 
+                                    value: settable<any>(c.value, async (v: any) => { 
+                                        if(c.value === v) return v;
+                                        
+                                        console.log('Setting capability', c.id, 'of device', d.id, 'to', v);
+                                        await this.homey.devices.setCapabilityValue({ capabilityId: c.id, deviceId: d.id, value: v }); 
+                                        return v; 
+                                    }),
+                                    enums: c.type === 'enum' ? 
+                                        c.values.reduce((acc, v) => { acc[v.id] = v.title; return acc; }, {} as { [key: string]: string }) : 
+                                        undefined
+                                },
+                                lastUpdated: { label: 'Last Updated', type: 'number', writable: false, value: writable<number>(c.lastUpdated) },
+                                iconUrl: { label: 'Icon URL', type: 'string', writable: false, value: writable<string|undefined>(c.iconObj?.url) }
+                            },
+                            events: {
+                                updated: { 
+                                    label: 'Capability value updated', 
+                                    type: c.type, 
+                                    trigger: trigger<any>()
+                                }
+                            },
+                            actions: {
+                                set: { 
+                                    label: 'Set ' + c.title, 
+                                    arguments: [{ id: 'value', label: 'Value', type: c.type }], 
+                                    action: async (args: any) => {
+                                        try {
+                                            await d.setCapabilityValue({ capabilityId: c.id, deviceId: d.id, value: args.value });
+                                        } catch(error) {
+                                            alerts.error('Error!', 'Could not set capability value: ' + error, 10000);
+                                        }
+                                    }
+                                }
+                            }
+                        };
+                        return acc;
+                    }, datas);
+                });
+
+                dataObjects.update(existing => ({ ...existing, ...datas }));
+
+                console.log('Datas', datas);
+
                 // Subscribe for device updates.
-                this.homey.devices.on('device.update', (patch: any) => devices.onUpdate(patch));
-    
+                this.homey.devices.on('device.update', (patch: any) => { 
+                    devices.onUpdate(patch) 
+                    const d = datas[patch.id];
+
+                    // Update all states for the data object
+                    Object
+                        .keys(patch)
+                        .filter(key => key !== 'id' && key !== 'uri')
+                        .forEach(key => (d.states[key].value as Writable<any>).set(patch[key]));
+                });
+
                 // For each device, subscribe for capability changes.
                 for(let deviceId in _devices) {
                     const device = _devices[deviceId];
@@ -77,6 +168,11 @@ export class HomeyManager {
                     await device.connect();
 
                     device.on('capability', (event: CapabilityEvent) => {
+                        const c = datas[device.uri + ':' + event.capabilityId];
+                        (c.states.value.value as Writable<any>).set(event.value);
+                        (c.states.lastUpdated.value as Writable<any>).set(event.transactionTime);
+                        c.events.updated.trigger.trigger(event.value);
+
                         const capability = device.capabilitiesObj[event.capabilityId];
 
                         if(capability !== undefined) {

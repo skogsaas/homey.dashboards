@@ -48,8 +48,6 @@
             })
         }
         
-        const apiKey = $page.url.searchParams.get('api-key');
-
         if($page.url.origin.includes('.homey.homeylocal.com') || 
             $page.url.origin.includes('.connect.athom.com') || 
             $page.url.hostname.includes('.local') || 
@@ -58,8 +56,10 @@
             localHosting = true;
         }
 
-        if(apiKey) {
-            localKey = apiKey;
+        const queryKey = $page.url.searchParams.get('api-key');
+
+        if(queryKey) {
+            localKey = queryKey;
             active = '#direct';
         }
     })
@@ -105,11 +105,12 @@
         });
 
         const loggedIn = await cloudApi.isLoggedIn();
+
         if (!loggedIn) {
             if (cloudApi.hasAuthorizationCode()) {
                 await cloudApi.authenticateWithAuthorizationCode();
             } else {
-                window.location =  cloudApi.getLoginUrl();
+                window.location = cloudApi.getLoginUrl();
                 return;
             }
         }

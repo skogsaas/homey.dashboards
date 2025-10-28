@@ -1,138 +1,170 @@
 <script lang="ts">
-    import type { ToggleSettings_v1 } from './ToggleSettings';
-    import type { WidgetContext } from '$lib/types/Widgets';
-    import type { DeviceMap, VariableMap } from '$lib/types/Homey';
-
-    import { devices, variables, homey, baseUrl } from '$lib/stores/homey';
+    import type { ToggleSettings_v2 } from './ToggleSettings';
+    import type { WidgetContext, WidgetDataObject, WidgetState } from '$lib/types/Widgets';
     import Icon from '$lib/components/Icon.svelte';
     import { getIcon } from '$lib/components/icons/utils';
-    import type { ValueWrapper } from '$lib/services/ValueWrapper';
-    import { VariableWrapper } from '$lib/services/VariableWrapper';
-    import { CapabilityWrapper } from '$lib/services/CapabilityWrapper';
+    import { type Unsubscriber, type Writable, writable } from 'svelte/store';
+    import { setStateValue } from '$lib/utils/bindings';
+    import { baseUrl } from '$lib/stores/homey';
     
-    export let settings: ToggleSettings_v1;
+    export let settings: ToggleSettings_v2;
     export let context: WidgetContext;
 
-    let uri: string | undefined;
-    let iconId: string | undefined;
-    let iconUrl: string | undefined;
-    
-    let wrapper: ValueWrapper | undefined;
-    let wrapperUri: string | undefined;
+    let label: Writable<string> = writable<string>();
+    let icon: Writable<string|undefined> = writable<string|undefined>();
+    let color: Writable<string> = writable<string>();
+    let size: Writable<string> = writable<string>();
+    let value: Writable<boolean> = writable<boolean>();
 
-    let label: string | undefined;
-    let checked: boolean = false;
-    let readonly: boolean = false;
-    let type: 'boolean' | 'number' | 'string' | 'enum' | undefined;
+    let labelSubscription: Unsubscriber | undefined;
+    let iconSubscription: Unsubscriber | undefined;
+    let colorSubscription: Unsubscriber | undefined;
+    let sizeSubscription: Unsubscriber | undefined;
+    let valueSubscription: Unsubscriber | undefined;
 
-    $: disabled = readonly || context.readonly || context.editable;
-
+    $: onContext(context);
     $: onSettings(settings);
-    $: onUri(uri, $variables, $devices);
+    $: disabled = context.readonly || context.editable;
+    $: colorClass = getColorClass($color);
+    $: sizeClass = getSizeClass($size);
 
-    function onSettings(_settings: ToggleSettings_v1) {
-        if(_settings.uri !== uri) {
-            uri = _settings.uri;
+    function onContext(_context: WidgetContext) {
+        const data: WidgetDataObject = {
+            label: 'Toggle',
+            type: 'widget',
+            states: { 
+                label: createLabelState(),
+                icon: createIconState(),
+                color: createColorState(),
+                size: createSizeState(),
+                value: createValueState()
+            },
+            events: {},
+            actions: {}
+        };
+
+        // Inject this widgets data into the context.
+        context.data[settings.id] = data;
+    }
+
+    function onSettings(_settings: ToggleSettings_v2) {
+        labelSubscription = setStateValue(context, _settings.label, 'Toggle', label, labelSubscription);
+        iconSubscription = setStateValue(context, _settings.icon, undefined, icon, iconSubscription);
+        colorSubscription = setStateValue(context, _settings.color, 'default', color, colorSubscription);
+        sizeSubscription = setStateValue(context, _settings.size, 'md', size, sizeSubscription);
+        valueSubscription = setStateValue(context, _settings.value, false, value, valueSubscription);
+
+        console.log(_settings);
+    }
+
+    function createLabelState() : WidgetState {
+        return {
+            label: 'Label',
+            type: 'string',
+            writable: true,
+            value: label
+        };
+    }
+
+    function createIconState() : WidgetState {
+        return {
+            label: 'Icon',
+            type: 'icon',
+            writable: true,
+            value: icon
+        };
+    }
+
+    function createColorState() : WidgetState {
+        return {
+            label: 'Color',
+            type: 'enum',
+            enums: {
+                default: 'Default',
+                neutral: 'Neutral',
+                primary: 'Primary',
+                secondary: 'Secondary',
+                accent: 'Accent',
+                info: 'Info',
+                success: 'Success',
+                warning: 'Warning',
+                error: 'Error',
+            },
+            writable: true,
+            value: color
+        };
+    }
+
+    function createSizeState() : WidgetState {
+        return {
+            label: 'Size',
+            type: 'enum',
+            enums: {
+                xs: 'Extra Small',
+                sm: 'Small',
+                md: 'Medium', // Default according to DaisyUI
+                lg: 'Large'            
+            },
+            writable: true,
+            value: size
+        };
+    }
+
+    function createValueState() : WidgetState {
+        return {
+            label: 'Value',
+            type: 'boolean',
+            writable: true,
+            value: value
+        };
+    }
+    
+    function getColorClass(_color: string) : string {
+        switch (_color) {
+            case 'neutral': return 'toggle-neutral';
+            case 'primary': return 'toggle-primary';
+            case 'secondary': return 'toggle-secondary';
+            case 'accent': return 'toggle-accent';
+            case 'info': return 'toggle-info';
+            case 'success': return 'toggle-success';
+            case 'warning': return 'toggle-warning';
+            case 'error': return 'toggle-error';
+            default: return '';
         }
     }
 
-    function onUri(
-        _uri: string | undefined,
-        _variables: VariableMap,
-        _devices: DeviceMap
-    ) {
-        if(_uri !== undefined && _uri !== wrapperUri) {
-            const segments = _uri.split(':');
-
-            // First do some cleanup from previous URI
-            if(wrapper !== undefined && wrapper) {
-                wrapper.destroy();
-                wrapper = undefined;
-                wrapperUri = undefined;
-            }
-
-            if(segments[1] === 'variable') {
-                getVariable(segments[2], _variables);
-            } else if (segments[1] === 'device' && segments.length === 4) {
-                getCapability(segments[2], segments[3], _devices);
-            }
-            // TODO: Flow token
+    function getSizeClass(_size: string) : string {
+        switch (_size) {
+            case 'xs': return 'toggle-xs';
+            case 'sm': return 'toggle-sm';
+            case 'md': return 'toggle-md'; // Default according to DaisyUI
+            case 'lg': return 'toggle-lg';
+            default: return '';
         }
     }
-
-    function getVariable(variableId: string, _variables: VariableMap) {
-        const variable = _variables[variableId];
-
-        if(variable === undefined) return;
-
-        wrapper = new VariableWrapper(variable, $homey!.logic);
-        wrapperUri = variable.uri;
-
-        label = variable.name;
-        iconId = 'variable';
-        iconUrl = undefined;
-        readonly = false;
-        type = variable.type;
-
-        onValue(wrapper.value);
-        wrapper.onValue(onValue);
-    }
-
-    function getCapability(deviceId: string, capabilityId: string, _devices: DeviceMap) {
-        const device = _devices[deviceId];
-
-        if(device === undefined) return;
-
-        const capability = device.capabilitiesObj[capabilityId];
-        
-        if(capability === undefined) return;
-
-        wrapper = new CapabilityWrapper(device, capabilityId);
-        wrapperUri = device.uri + ':' + capabilityId;
-
-        label = capability.title;
-        iconUrl = capability.iconObj?.url;
-        iconId = undefined;
-        readonly = !capability.setable;
-        type = capability.type;
-        
-        onValue(wrapper.value);
-        wrapper.onValue(onValue);
-    }
-
-    function onValue(_value: any) {
-        if(type === 'boolean') {
-            checked = _value as boolean;
-        } else if(type === 'number') {
-            checked = !!(_value as number)
-        } else {
-            checked = false;
-            readonly = true;
-        }
-    }
-
-    async function onChecked(_value: boolean) {
-        if(wrapper !== undefined && wrapper.value !== _value) {
-            await wrapper.setValue(_value);
+    
+    function onClick() {
+        if (!disabled) {
+            value.change(!value);
         }
     }
 
 </script>
 
 <label class="label cursor-pointer flex flex-row items-center p-0">
-    {#if settings.iconId !== undefined || iconId !== undefined}
-        <span>
-            <Icon data={getIcon(settings.iconId ?? iconId)} />
-        </span>
-    {:else if iconUrl !== undefined}
+    {#if $icon !== undefined && $icon.includes('/')}
         {#await $baseUrl then url}
             <span>
-                <img class="w-8 h-8 m-1 dark:invert" src={url + iconUrl} alt={iconId} />
+                <img class="w-8 h-8 m-1 dark:invert" src={url + $icon} alt={$icon} />
             </span>
         {/await}
+    {:else if $icon !== undefined}
+        <span>
+            <Icon data={getIcon($icon)} />
+        </span>
     {/if}
 
-    <span class="flex-1 overflow-ellipsis">{settings.label ?? label ?? uri ?? 'Not configured'}</span>
+    <span class="flex-1 overflow-ellipsis">{$label}</span>
 
-    <input type="checkbox" class="toggle toggle-primary" {disabled} checked={checked} on:click={e => onChecked(!checked)} />
+    <input type="checkbox" class="toggle {colorClass} {sizeClass}" {disabled} checked={$value} on:click={e => onClick()} />
 </label>

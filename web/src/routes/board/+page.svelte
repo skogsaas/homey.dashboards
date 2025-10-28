@@ -6,7 +6,7 @@
     import { page } from '$app/stores';
 
     // Stores
-    import { homey, dashboards as homeyDashboards, stores } from '$lib/stores/homey';
+    import { baseUrl, dataObjects, devices, homey, dashboards as homeyDashboards, stores } from '$lib/stores/homey';
     import { dashboards as localDashboards } from '$lib/stores/localstorage';
     import { editing } from '$lib/stores/editing';
 
@@ -18,7 +18,7 @@
     import StoreDialog from '$lib/components/StoreDialog.svelte';
 
     // Types
-    import type { WidgetContext, WidgetSettings_v1 } from '$lib/types/Widgets';
+    import type { WidgetContext, WidgetDataObject, WidgetSettings_v1 } from '$lib/types/Widgets';
     import type { DashboardMap, Dashboard_v2 } from '$lib/types/Store';
 
     // Utils
@@ -27,6 +27,7 @@
     import { v4 as uuid } from 'uuid';
     import DashboardListHero from '$lib/components/DashboardListHero.svelte';
     import { alerts } from '$lib/stores/alerting';
+    import { getDashboard } from '$lib/api/userdata';
     
     let dashboards: DashboardMap;
     let dashboard: Dashboard_v2 | undefined;
@@ -45,7 +46,10 @@
         editable: false,
         readonly: false,
         breadcrumbs: [],
+        data: { ...$dataObjects },
         select: () => {},
+        update: (_) => {},
+        remove: undefined
     }
 
     onMount(async () => {
@@ -54,19 +58,30 @@
         }
     });
 
-    function onDashboard(_dashboards: DashboardMap, _dashboardId: string | null) {
+    async function onDashboard(_dashboards: DashboardMap, _dashboardId: string | null) {
         const _dashboard = dashboards[_dashboardId ?? ''];
         
         if(_dashboard !== undefined && (dashboard === undefined || (dashboard !== _dashboard && !$editing))) {
-            const d = migrateDashboard(_dashboard);
-            migrated = d !== _dashboard;
+            console.log($homey);
+
+            let data = await getDashboard($baseUrl as string, dashboardId!);
+
+            if(data === null) {
+                // Dashboard could not be found using userdata API, fallback to the dashboard settings from the store.
+                data = _dashboard;
+            }
+
+            console.log('Migrate!');
+
+            const migratedData = migrateDashboard(data);
+            migrated = migratedData !== data;
 
             if(migrated) {
                 alerts.plain('Tip!', 'This dashboard has been updated to a newer version. If everything looks good, coinsider saving the dashboard.', 10000);
             }
 
-            dashboard = d;
-            root = d.root;
+            dashboard = migratedData;
+            root = migratedData.root;
         } else if(_dashboardId === null) {
             dashboard = undefined;
             root = undefined;

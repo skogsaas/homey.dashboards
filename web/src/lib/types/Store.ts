@@ -10,10 +10,18 @@ export interface Store_v1 {
     templates: Template_v1[];
 }
 
-export interface Dashboard_v2 {
-    id: string;
+export interface DashboardHeader_v1 {
+  id: string;
+  title: string;
+}
+
+export interface TemplateHeader_v1 {
+  id: string;
+  title: string;
+}
+
+export interface Dashboard_v2 extends DashboardHeader_v1 {
     version: number;
-    title: string;
 
     root: WidgetSettings_v1 | undefined;
 

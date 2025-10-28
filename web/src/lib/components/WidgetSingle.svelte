@@ -9,7 +9,7 @@
     import WidgetTypeList from './WidgetTypeList.svelte';
     import { findCreate } from '$lib/widgets';
     
-    export let id: string;
+    export let id: string | undefined;
     export let item: WidgetSettings_v1 | undefined;
     export let updateItem: (item: WidgetSettings_v1 | undefined) => void;
     export let context: WidgetContext;
@@ -17,7 +17,7 @@
     let classes = '';
 	export { classes as class };
 
-    $: selected = id === $selection;
+    $: selected = id !== undefined && id === $selection;
     $: childContext = { ...context, update: updateChild, remove: removeChild };
     $: extraClasses = context.editable && selected ? 'min-h-8' : 'min-h-8'
 
